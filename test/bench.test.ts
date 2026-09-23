@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseAaWeb } from "../src/sources/artificialAnalysis.ts";
+import { parseAaApi, parseAaWeb } from "../src/sources/artificialAnalysis.ts";
 
 // Mirrors the shape Artificial Analysis embeds in its models page flight data.
 const AA_FIXTURE = `<script>{"citation":"Artificial Analysis (2025). LLM benchmarks dataset.","data":[{"label":"Claude Opus 5.5 (max with fallback)","intelligenceIndex":57.62,"detailsUrl":"/models/claude-opus-5-5"},{"label":"GLM-5.3-Flash","intelligenceIndex":30.5,"detailsUrl":"/models/glm-5-3-flash"},{"label":"Qwen3.8 Max (0902)","intelligenceIndex":41.1,"detailsUrl":"/models/qwen3-8-max-0902"}]}</script>`;
@@ -15,5 +15,34 @@ describe("parseAaWeb", () => {
 
 	test("empty when no dataset present", () => {
 		expect(parseAaWeb("<html></html>").size).toBe(0);
+	});
+});
+
+describe("parseAaApi", () => {
+	const BODY = {
+		data: [
+			{
+				id: "abc",
+				name: "Claude Opus 5.5",
+				slug: "claude-opus-5-5",
+				evaluations: { artificial_analysis_intelligence_index: 57.6 },
+				median_output_tokens_per_second: 88.4,
+			},
+			{
+				name: "GLM-5.3 Flash",
+				intelligenceIndex: 30.5,
+				output_tokens_per_second: 114.9,
+			},
+			{ name: "No Scores Here" },
+		],
+	};
+
+	test("finds the index and speed regardless of nesting", () => {
+		const { intelligence, tps } = parseAaApi(BODY);
+		expect(intelligence.get("claudeopus55")).toBeCloseTo(57.6, 2);
+		expect(intelligence.get("glm53flash")).toBeCloseTo(30.5, 2);
+		expect(tps.get("claudeopus55")).toBeCloseTo(88.4, 2);
+		expect(tps.get("glm53flash")).toBeCloseTo(114.9, 2);
+		expect(intelligence.has("noscoresh")).toBe(false);
 	});
 });

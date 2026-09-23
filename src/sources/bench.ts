@@ -181,16 +181,16 @@ async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 					"--bench aa needs a key: set AA_API_KEY or pass --bench-key",
 				);
 			}
-			const intelligence = await loadAaApi(key);
-			if (intelligence.size === 0) {
+			const data = await loadAaApi(key);
+			if (data.intelligence.size === 0) {
 				throw new Error(
 					"Artificial Analysis returned no scores — check the API key and response shape",
 				);
 			}
 			return {
 				scheme: "aa",
-				data: { intelligence, tps: new Map() },
-				label: `Artificial Analysis (${intelligence.size} models)`,
+				data,
+				label: `Artificial Analysis (${data.intelligence.size} models, ${data.tps.size} speed)`,
 			};
 		}
 		case "file":

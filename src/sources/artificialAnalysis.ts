@@ -56,7 +56,9 @@ export function parseAaWeb(html: string): Map<string, number> {
 }
 
 /** Full catalog via the Artificial Analysis API. Needs a key. */
-export async function loadAaApi(key: string): Promise<Map<string, number>> {
+export async function loadAaApi(
+	key: string,
+): Promise<{ intelligence: Map<string, number>; tps: Map<string, number> }> {
 	const res = await fetch(API_URL, {
 		headers: { "x-api-key": key, "user-agent": "mpc/0.1" },
 	});
@@ -65,29 +67,70 @@ export async function loadAaApi(key: string): Promise<Map<string, number>> {
 			`Artificial Analysis API ${res.status}: set AA_API_KEY or use --bench cc / aa-web`,
 		);
 	}
-	const body = (await res.json()) as { data?: unknown[] };
-	const rows = Array.isArray(body.data) ? body.data : [];
-	return toMap(
-		rows
-			.map((row) => parseApiRow(row))
-			.filter((row): row is Scored => row !== null),
-	);
+	return parseAaApi(await res.json());
 }
 
-function parseApiRow(row: unknown): Scored | null {
-	if (!row || typeof row !== "object") return null;
-	const record = row as Record<string, unknown>;
-	const label = String(record.name ?? record.slug ?? record.id ?? "");
-	const slug = typeof record.slug === "string" ? record.slug : undefined;
-	const evaluations = record.evaluations as
-		| Record<string, unknown>
-		| undefined;
-	const raw =
-		evaluations?.artificial_analysis_intelligence_index ??
-		evaluations?.intelligence_index ??
-		record.intelligence_index ??
-		record.intelligenceIndex;
-	const score = Number(raw);
-	if (!label || !Number.isFinite(score)) return null;
-	return { label, slug, score };
+/** Pure parser over the AA API response, for tests and the loader. */
+export function parseAaApi(body: unknown): {
+	intelligence: Map<string, number>;
+	tps: Map<string, number>;
+} {
+	const root = (body ?? {}) as Record<string, unknown>;
+	const rows = Array.isArray(root.data)
+		? root.data
+		: Array.isArray(body)
+			? body
+			: Object.values(root).filter((v) => v && typeof v === "object");
+	const intelligence = new Map<string, number>();
+	const tps = new Map<string, number>();
+
+	for (const row of rows) {
+		if (!row || typeof row !== "object") continue;
+		const record = row as Record<string, unknown>;
+		const name = String(record.name ?? record.slug ?? record.id ?? "");
+		const slug = typeof record.slug === "string" ? record.slug : undefined;
+		const keys = [
+			normalizeKey(name),
+			slug ? normalizeKey(slug) : "",
+		].filter(Boolean);
+		if (keys.length === 0) continue;
+
+		const iq = findNumber(
+			record,
+			/intelligence.*index|intelligence_index/i,
+		);
+		if (iq !== null) {
+			for (const k of keys)
+				if (!intelligence.has(k)) intelligence.set(k, iq);
+		}
+		const speed = findNumber(
+			record,
+			/tokens?_?per_?second|output_tokens_per_second|(^|_)tps($|_)/i,
+		);
+		if (speed !== null) {
+			for (const k of keys) if (!tps.has(k)) tps.set(k, speed);
+		}
+	}
+	return { intelligence, tps };
+}
+
+/** Depth-first search for the first finite number under a matching key. */
+function findNumber(value: unknown, pattern: RegExp): number | null {
+	if (!value || typeof value !== "object") return null;
+	for (const [key, child] of Object.entries(
+		value as Record<string, unknown>,
+	)) {
+		if (
+			typeof child === "number" &&
+			Number.isFinite(child) &&
+			pattern.test(key)
+		) {
+			return child;
+		}
+	}
+	for (const child of Object.values(value as Record<string, unknown>)) {
+		const found = findNumber(child, pattern);
+		if (found !== null) return found;
+	}
+	return null;
 }
