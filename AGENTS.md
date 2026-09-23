@@ -117,7 +117,11 @@ distinct keys.
   the Go grid has no Intelligence). Unscored models are filled from the keyless AA page scrape.
 - `sources/artificialAnalysis.ts` parses the `{label, intelligenceIndex, detailsUrl}` dataset
   embedded in AA flight JSON. That page only embeds its chart top-N, so `aa-web` is **partial**;
-  full coverage needs `AA_API_KEY` (`--bench aa`). AA slugs normalize cleanly via `normalizeKey`
+  full coverage needs `AA_API_KEY` (`--bench aa`), which is **paginated** (`pagination.has_more`,
+  page_size 200) — follow every page or most models silently miss. The API row shape is
+  `{name, slug, evaluations.artificial_analysis_intelligence_index,
+  performance.median_output_tokens_per_second}`, one row per reasoning variant, so keep the best
+  per key. AA slugs normalize cleanly via `normalizeKey`
   (`qwen3-8-max-0902` -> `qwen38max0902`); slug keys win over label keys to keep variant suffixes.
 - `aa-web` caches to `$XDG_CACHE_HOME/mpc/ability-aa-web.json` (7d TTL, `--refresh` busts).
 - Ability and speed come from one source: CC's `Intelligence` and `Tok/s` columns (`BenchData`).

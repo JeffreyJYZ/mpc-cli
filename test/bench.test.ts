@@ -20,18 +20,20 @@ describe("parseAaWeb", () => {
 
 describe("parseAaApi", () => {
 	const BODY = {
+		pagination: { page: 1, page_size: 200, total_pages: 2, has_more: true },
 		data: [
 			{
 				id: "abc",
-				name: "Claude Opus 5.5",
+				name: "Claude Opus 5.5 (max)",
 				slug: "claude-opus-5-5",
 				evaluations: { artificial_analysis_intelligence_index: 57.6 },
-				median_output_tokens_per_second: 88.4,
+				performance: { median_output_tokens_per_second: 88.4 },
 			},
 			{
-				name: "GLM-5.3 Flash",
-				intelligenceIndex: 30.5,
-				output_tokens_per_second: 114.9,
+				name: "GLM-5.3 Flash (high)",
+				slug: "glm-5-3-flash",
+				evaluations: { artificial_analysis_intelligence_index: 30.5 },
+				performance: { median_output_tokens_per_second: 114.9 },
 			},
 			{ name: "No Scores Here" },
 		],

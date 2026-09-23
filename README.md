@@ -131,7 +131,7 @@ Unscored models show `ability —` and `VAL —`; they are excluded from the abi
 | `--bench` | source | coverage |
 | --- | --- | --- |
 | `cc` (default) | Command Code's `Intelligence` column | every matched model |
-| `aa` | Artificial Analysis API | full; needs `AA_API_KEY` |
+| `aa` | Artificial Analysis API (paginated) | full; needs `AA_API_KEY` |
 | `aa-web` | Artificial Analysis models page scrape | partial (only the models AA embeds) |
 | `file:<path>` / `url:<url>` | your JSON, `{ "model": score }` or `[{ model, score }]` | whatever you supply |
 

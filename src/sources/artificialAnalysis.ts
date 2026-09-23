@@ -55,22 +55,54 @@ export function parseAaWeb(html: string): Map<string, number> {
 	return toMap(parseEmbedded(html));
 }
 
-/** Full catalog via the Artificial Analysis API. Needs a key. */
+/** Full catalog via the Artificial Analysis API. Needs a key. Paginated. */
 export async function loadAaApi(
 	key: string,
 ): Promise<{ intelligence: Map<string, number>; tps: Map<string, number> }> {
-	const res = await fetch(API_URL, {
-		headers: { "x-api-key": key, "user-agent": "mpc/0.1" },
-	});
-	if (!res.ok) {
-		throw new Error(
-			`Artificial Analysis API ${res.status}: set AA_API_KEY or use --bench cc / aa-web`,
+	const intelligence = new Map<string, number>();
+	const tps = new Map<string, number>();
+	const pageSize = 200;
+	const maxPages = 20;
+
+	for (let page = 1; page <= maxPages; page++) {
+		const res = await fetch(
+			`${API_URL}?page=${page}&page_size=${pageSize}`,
+			{
+				headers: { "x-api-key": key, "user-agent": "mpc/0.1" },
+			},
 		);
+		if (!res.ok) {
+			throw new Error(
+				`Artificial Analysis API ${res.status}: set AA_API_KEY or use --bench cc / aa-web`,
+			);
+		}
+		const body = (await res.json()) as unknown;
+		mergeAaPage(parseAaApi(body), intelligence, tps);
+		const pagination = (body as { pagination?: { has_more?: boolean } })
+			.pagination;
+		if (!pagination?.has_more) break;
 	}
-	return parseAaApi(await res.json());
+
+	return { intelligence, tps };
 }
 
-/** Pure parser over the AA API response, for tests and the loader. */
+/** Keep the best variant per key; AA lists a row per reasoning effort. */
+function mergeAaPage(
+	page: { intelligence: Map<string, number>; tps: Map<string, number> },
+	intelligence: Map<string, number>,
+	tps: Map<string, number>,
+): void {
+	for (const [key, value] of page.intelligence) {
+		if (!intelligence.has(key) || value > (intelligence.get(key) ?? 0)) {
+			intelligence.set(key, value);
+		}
+	}
+	for (const [key, value] of page.tps) {
+		if (!tps.has(key) || value > (tps.get(key) ?? 0)) tps.set(key, value);
+	}
+}
+
+/** Pure parser over one AA API page, for tests and the loader. */
 export function parseAaApi(body: unknown): {
 	intelligence: Map<string, number>;
 	tps: Map<string, number>;
@@ -90,25 +122,24 @@ export function parseAaApi(body: unknown): {
 		const name = String(record.name ?? record.slug ?? record.id ?? "");
 		const slug = typeof record.slug === "string" ? record.slug : undefined;
 		const keys = [
-			normalizeKey(name),
 			slug ? normalizeKey(slug) : "",
+			normalizeKey(name),
 		].filter(Boolean);
 		if (keys.length === 0) continue;
 
-		const iq = findNumber(
-			record,
-			/intelligence.*index|intelligence_index/i,
-		);
+		const iq = findNumber(record, /intelligence_index/i);
 		if (iq !== null) {
-			for (const k of keys)
-				if (!intelligence.has(k)) intelligence.set(k, iq);
+			for (const k of keys) {
+				if (!intelligence.has(k) || iq > (intelligence.get(k) ?? 0)) {
+					intelligence.set(k, iq);
+				}
+			}
 		}
-		const speed = findNumber(
-			record,
-			/tokens?_?per_?second|output_tokens_per_second|(^|_)tps($|_)/i,
-		);
+		const speed = findNumber(record, /tokens_per_second|(^|_)tps($|_)/i);
 		if (speed !== null) {
-			for (const k of keys) if (!tps.has(k)) tps.set(k, speed);
+			for (const k of keys) {
+				if (!tps.has(k) || speed > (tps.get(k) ?? 0)) tps.set(k, speed);
+			}
 		}
 	}
 	return { intelligence, tps };
