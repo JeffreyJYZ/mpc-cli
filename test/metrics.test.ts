@@ -131,3 +131,61 @@ describe("buildRows", () => {
 		expect(solo?.cc).toBeDefined();
 	});
 });
+
+describe("ability value index", () => {
+	test("VAL is set for scored models and null otherwise", () => {
+		const entries = [
+			entry({
+				key: "smart",
+				pricing: {
+					input: 1,
+					output: 1,
+					cacheRead: 0,
+					cacheWrite: null,
+				},
+			}),
+			entry({
+				key: "dumb",
+				pricing: {
+					input: 1,
+					output: 1,
+					cacheRead: 0,
+					cacheWrite: null,
+				},
+			}),
+			entry({
+				key: "unscored",
+				pricing: {
+					input: 1,
+					output: 1,
+					cacheRead: 0,
+					cacheWrite: null,
+				},
+			}),
+		];
+		const ability = new Map([
+			["smart", 60],
+			["dumb", 10],
+		]);
+		const metrics = buildMetrics(
+			entries,
+			new Map([["cc", ccPlan]]),
+			workload,
+			ability,
+			0.4,
+		);
+		const byKey = new Map(entries.map((e, i) => [e.key, metrics[i]]));
+		expect(byKey.get("smart")?.ability).toBe(60);
+		expect(byKey.get("smart")?.valueIndex).toBeGreaterThan(
+			byKey.get("dumb")?.valueIndex ?? 0,
+		);
+		expect(byKey.get("unscored")?.ability).toBeNull();
+		expect(byKey.get("unscored")?.valueIndex).toBeNull();
+		for (const m of metrics) {
+			if (m.valueIndex !== null) {
+				expect(m.valueIndex).toBeGreaterThanOrEqual(0);
+				expect(m.valueIndex).toBeLessThanOrEqual(100);
+			}
+		}
+	});
+});

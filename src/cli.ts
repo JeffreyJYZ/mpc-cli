@@ -10,6 +10,7 @@ import {
 	renderText,
 	setColor,
 } from "./render.ts";
+import { loadAbility } from "./sources/bench.ts";
 import { CC_PLANS, loadCcCatalog, loadCcPlan } from "./sources/commandcode.ts";
 import {
 	loadOcGoCatalog,
@@ -28,6 +29,14 @@ interface Options {
 	only: "both" | "all";
 	columns?: string[];
 	width?: number;
+	fit: boolean;
+	bench: string;
+	benchWeight: number;
+	benchName?: string;
+	benchKey?: string;
+	noFallback: boolean;
+	refresh: boolean;
+	noAbility: boolean;
 	peak: boolean;
 	asc: boolean;
 	json: boolean;
@@ -55,6 +64,15 @@ Options:
   --metric <name>  sort by: index | req | cost | name (default index)
   --model <re>     only rows whose name matches (regex, falls back to substring)
   --only <scope>   both = models on both providers, all = union (default all)
+  --fit            show the widest column set that fits the terminal
+  --bench <src>    ability scores: cc | aa | aa-web | file:<path> | url:<url>
+                   (default cc, filled from the aa-web scrape for unscored models)
+  --bench-weight   ability share of VAL, 0-1 (default 0.4)
+  --bench-name     footer label for the source (else source's own)
+  --bench-key      Artificial Analysis API key (else AA_API_KEY)
+  --no-fallback    with --bench cc, do not fill from the aa-web scrape
+  --refresh        ignore the aa-web cache
+  --no-ability     hide ability and VAL
   --peak           use peak-rate rows (opencode Go DeepSeek off/on-peak)
   --asc            sort ascending instead of descending
   --detail         preset: add raw token rates and 5h/week columns
@@ -78,11 +96,14 @@ const COLUMN_HELP = `Available columns (--columns a,b,c):
   oc-per1k         opencode cost per 1,000 requests
   oc-reqdollar     opencode requests per $1 of subscription
   cc-*             the same set for the Command Code plan
+  ability          benchmark score for the model
   win              side with the lower per-request cost
-  idx              0-100 blended value score
+  idx              0-100 blended cost/value score
+  val              0-100 ability-aware value score
 
-Presets: default = model + allow/reqmo/per1k/reqdollar for both sides + win + idx
-         --detail = default + rates + req5h + reqwk`;
+Presets: default = model + allow/reqmo/per1k/reqdollar for both sides + win + idx + val
+         --detail = every column, untrimmed
+         --fit = every column, trimmed to the terminal width`;
 
 function parseIntFlag(name: string, value: string | undefined): number {
 	const n = Number(value);
@@ -100,6 +121,12 @@ export function parseArgs(argv: string[]): Options {
 		workload: { ...DEFAULTS },
 		metric: "index",
 		only: "all",
+		fit: false,
+		bench: "cc",
+		benchWeight: 0.4,
+		noFallback: false,
+		refresh: false,
+		noAbility: false,
 		peak: false,
 		asc: false,
 		json: false,
@@ -141,6 +168,39 @@ export function parseArgs(argv: string[]): Options {
 			}
 			case "--model":
 				options.model = next();
+				break;
+			case "--fit":
+				options.fit = true;
+				break;
+			case "--bench":
+				options.bench = next() ?? options.bench;
+				break;
+			case "--bench-weight":
+				options.benchWeight = Number(next());
+				if (
+					!Number.isFinite(options.benchWeight) ||
+					options.benchWeight < 0 ||
+					options.benchWeight > 1
+				) {
+					throw new Error(
+						"--bench-weight expects a number between 0 and 1",
+					);
+				}
+				break;
+			case "--bench-name":
+				options.benchName = next();
+				break;
+			case "--bench-key":
+				options.benchKey = next();
+				break;
+			case "--no-fallback":
+				options.noFallback = true;
+				break;
+			case "--refresh":
+				options.refresh = true;
+				break;
+			case "--no-ability":
+				options.noAbility = true;
 				break;
 			case "--width":
 				options.width = parseIntFlag("width", next());
@@ -226,10 +286,22 @@ function sortRows(
 }
 
 async function collect(options: Options) {
-	const [ocEntries, ccEntries, ccPlanInfo] = await Promise.all([
+	const [ocEntries, ccEntries, ccPlanInfo, ability] = await Promise.all([
 		loadOcGoCatalog(options.peak),
 		loadCcCatalog(options.ccPlan),
 		loadCcPlan(options.ccPlan),
+		options.noAbility
+			? Promise.resolve({
+					scores: new Map<string, number>(),
+					label: "",
+					note: undefined,
+				})
+			: loadAbility({
+					source: options.bench,
+					key: options.benchKey,
+					fallback: !options.noFallback,
+					refresh: options.refresh,
+				}),
 	]);
 	const ocPlanInfo = ocGoPlan(ocEntries);
 	const rows = buildRows(
@@ -238,8 +310,10 @@ async function collect(options: Options) {
 		ocPlanInfo,
 		ccPlanInfo,
 		options.workload,
+		ability.scores,
+		options.benchWeight,
 	);
-	return { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows };
+	return { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows, ability };
 }
 
 export async function run(argv: string[]): Promise<number> {
@@ -260,7 +334,8 @@ export async function run(argv: string[]): Promise<number> {
 	);
 
 	const requested =
-		options.columns ?? (options.detail ? DETAIL_COLUMNS : DEFAULT_COLUMNS);
+		options.columns ??
+		(options.detail || options.fit ? DETAIL_COLUMNS : DEFAULT_COLUMNS);
 	const unknown = requested.filter((id) => !COLUMN_IDS.includes(id));
 	if (unknown.length > 0) {
 		throw new Error(
@@ -268,10 +343,12 @@ export async function run(argv: string[]): Promise<number> {
 		);
 	}
 
-	const { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows } =
+	const { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows, ability } =
 		await collect(options);
 
-	if (options.check) return runCheck(options, ocEntries, ccEntries, rows);
+	if (options.check) {
+		return runCheck(options, ocEntries, ccEntries, rows, ability);
+	}
 
 	let result = rows.filter(
 		(r) =>
@@ -284,15 +361,20 @@ export async function run(argv: string[]): Promise<number> {
 		ocPlan: ocPlanInfo,
 		ccPlan: ccPlanInfo,
 		workload: options.workload,
+		abilityLabel: options.noAbility
+			? undefined
+			: (options.benchName ?? ability.label),
+		abilityNote: options.noAbility ? undefined : ability.note,
 	};
 	if (options.json) {
 		console.log(renderJson(result, meta));
 		return 0;
 	}
 	const limit = options.width ?? process.stdout.columns ?? 120;
-	const fitted = options.columns
-		? { ids: requested, dropped: [] as string[] }
-		: fitColumns(result, requested, limit);
+	const fitted =
+		options.fit && !options.columns
+			? fitColumns(result, requested, limit)
+			: { ids: requested, dropped: [] as string[] };
 	renderText(result, meta, fitted.ids, fitted.dropped);
 	console.log(
 		`\n${result.length} models · opencode Go vs Command Code ${ccPlanInfo.label} · ${ocEntries.length} opencode / ${ccEntries.length} Command Code entries`,
@@ -305,6 +387,7 @@ async function runCheck(
 	ocEntries: CatalogEntry[],
 	ccEntries: CatalogEntry[],
 	rows: CompareRow[],
+	ability: { label: string; note?: string; scores: Map<string, number> },
 ): Promise<number> {
 	const ocKeys = new Set(ocEntries.map((e) => e.key));
 	const ccKeys = new Set(ccEntries.map((e) => e.key));
@@ -319,6 +402,14 @@ async function runCheck(
 	console.log(
 		`free opencode models: ${ocEntries.filter((e) => e.allowance === 0).length}`,
 	);
+
+	const scored = rows.filter(
+		(r) => r.oc?.ability != null || r.cc?.ability != null,
+	).length;
+	console.log(
+		`ability source:       ${ability.label || "disabled"} (${ability.scores.size} scores, ${scored}/${rows.length} rows scored)`,
+	);
+	if (ability.note) console.log(`ability note:         ${ability.note}`);
 
 	const modelIds = await loadOcGoModelIds();
 	console.log(`opencode /zen/go/v1/models ids: ${modelIds.length}`);

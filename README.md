@@ -17,6 +17,9 @@ mpc --cc-plan go                      # ...or the $1 Go plan
 mpc --detail                          # add raw token rates + allowances
 mpc --model 'kimi|glm' --metric req   # filter, sort by requests/month
 mpc --in 2000 --cache 80000 --out 400 # override the fixed workload
+mpc --fit                             # widest column set that fits the terminal
+mpc --detail                          # every column, untrimmed (for copy/paste or agents)
+mpc --bench aa-web                    # ability scores from Artificial Analysis
 mpc --json                            # machine-readable output
 mpc --check                           # validate live sources and report drift
 ```
@@ -40,7 +43,15 @@ mpc --help
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
 | `--only <scope>` | `all` | `all` = union of both catalogs, `both` = only shared models |
 | `--width <n>` | terminal | force table width; otherwise auto-detect and drop optional columns (`rates`, `req/$`, `5h`/`wk`) to fit |
-| `--columns <ids>` | preset | comma-separated columns to show, in order (overrides `--detail` and auto-fit); `--columns help` lists ids |
+| `--fit` | off | show the widest column set that fits the terminal |
+| `--columns <ids>` | preset | comma-separated columns to show, in order (overrides presets); `--columns help` lists ids |
+| `--bench <src>` | `cc` | ability scores: `cc`, `aa`, `aa-web`, `file:<path>`, `url:<url>` |
+| `--bench-weight <n>` | `0.4` | ability share of `VAL`, 0-1 |
+| `--bench-name <label>` | source | footer label for the ability source |
+| `--bench-key <key>` | `AA_API_KEY` | Artificial Analysis API key |
+| `--no-fallback` | off | with `--bench cc`, skip the Artificial Analysis fill |
+| `--refresh` | off | ignore the `aa-web` cache |
+| `--no-ability` | off | hide `ability` and `VAL` |
 | `--peak` | off | use peak-rate rows instead of off-peak (DeepSeek) |
 | `--asc` | off | sort ascending |
 | `--detail` | off | preset: adds token rates and 5h/week columns |
@@ -67,8 +78,10 @@ mpc --help
 | `req/mo` | requests the allowance buys (`allowance / costPerRequest`) |
 | `$/1K` | what 1,000 requests cost you on the plan |
 | `req/$` | requests one dollar of subscription buys |
+| `ability` | benchmark score for the model |
 | `WIN` | side with the lower per-request cost |
-| `IDX` | 0-100 blended value score |
+| `IDX` | 0-100 blended cost/value score |
+| `VAL` | 0-100 ability-aware value score |
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set.
 
@@ -98,6 +111,29 @@ index = 100 * (0.60*volume + 0.20*cachePrice + 0.20*outputPrice)
 where `volume` is min-max normalised `log10(requestsPerMonth)` and the two price terms are
 min-max normalised and inverted (cheaper scores higher). Free models get `∞` requests and
 `index = 100`.
+
+## Ability scores (`VAL`)
+
+`VAL` reuses the `IDX` recipe with a benchmark term:
+
+```
+IDX = 100 * (0.60*volume + 0.20*cache + 0.20*output)
+VAL = 100 * (0.40*ability + 0.30*volume + 0.15*cache + 0.15*output)
+```
+
+`--bench-weight` sets the ability share; the remaining weight splits volume/cache/output 50/25/25.
+Unscored models show `ability —` and `VAL —`; they are excluded from the ability normalisation range.
+
+| `--bench` | source | coverage |
+| --- | --- | --- |
+| `cc` (default) | Command Code's `Intelligence` column | every matched model |
+| `aa` | Artificial Analysis API | full; needs `AA_API_KEY` |
+| `aa-web` | Artificial Analysis models page scrape | partial (only the models AA embeds) |
+| `file:<path>` / `url:<url>` | your JSON, `{ "model": score }` or `[{ model, score }]` | whatever you supply |
+
+Default is `cc`; models it does not score are filled from the `aa-web` scrape
+(`--no-fallback` to disable). The `aa-web` result is cached under
+`$XDG_CACHE_HOME/mpc/` (or `~/.cache/mpc/`) for 7 days; `--refresh` busts it.
 
 ## Model matching
 

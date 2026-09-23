@@ -84,6 +84,31 @@ function fmtRequests(value: number | undefined, hasEntry: boolean): string {
 	return fmtCount(value);
 }
 
+function fmtAbility(row: CompareRow): string {
+	const ability = row.oc?.ability ?? row.cc?.ability ?? null;
+	return ability === null ? "—" : ability.toFixed(1);
+}
+
+function valueScores(row: CompareRow): number[] {
+	return [row.oc?.valueIndex, row.cc?.valueIndex].filter(
+		(value): value is number => typeof value === "number",
+	);
+}
+
+function bestValue(row: CompareRow): string {
+	const scores = valueScores(row);
+	return scores.length === 0 ? "—" : Math.max(...scores).toString();
+}
+
+function valueStyle(row: CompareRow): string | undefined {
+	const scores = valueScores(row);
+	if (scores.length === 0) return "2";
+	const best = Math.max(...scores);
+	if (best >= 70) return "32";
+	if (best >= 40) return "33";
+	return "31";
+}
+
 interface Column {
 	header: string;
 	value: (row: CompareRow) => string;
@@ -222,6 +247,18 @@ const COLUMNS: Record<string, Column> = {
 		right: true,
 		style: idxStyle,
 	},
+	ability: {
+		header: "ability",
+		value: fmtAbility,
+		right: true,
+		style: (r) => ((r.oc?.ability ?? r.cc?.ability) === null ? "2" : "36"),
+	},
+	val: {
+		header: "VAL",
+		value: bestValue,
+		right: true,
+		style: valueStyle,
+	},
 };
 
 export const COLUMN_IDS = Object.keys(COLUMNS);
@@ -238,6 +275,7 @@ export const DEFAULT_COLUMNS = [
 	"cc-reqdollar",
 	"win",
 	"idx",
+	"val",
 ];
 
 export const DETAIL_COLUMNS = [
@@ -256,8 +294,10 @@ export const DETAIL_COLUMNS = [
 	"cc-reqmo",
 	"cc-per1k",
 	"cc-reqdollar",
+	"ability",
 	"win",
 	"idx",
+	"val",
 ];
 
 export function columns(ids: string[]): Column[] {
@@ -475,6 +515,9 @@ export interface ReportMeta {
 	ocPlan: PlanInfo;
 	ccPlan: PlanInfo;
 	workload: Workload;
+	/** Ability source label, e.g. "Command Code Intelligence". */
+	abilityLabel?: string;
+	abilityNote?: string;
 }
 
 export interface Tally {
@@ -562,6 +605,13 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 			`windows   rolling caps as % of monthly allowance: ${planTitle(meta.ocPlan)} ${windowPercents(meta.ocPlan)} · ${planTitle(meta.ccPlan)} ${windowPercents(meta.ccPlan)}`,
 		),
 	);
+	if (meta.abilityLabel) {
+		console.log(
+			dim(
+				`ability   ${meta.abilityLabel}${meta.abilityNote ? ` · ${meta.abilityNote}` : ""}`,
+			),
+		);
+	}
 
 	const t = tally(rows);
 	const parts = [`opencode ${t.ocWins}`, `Command Code ${t.ccWins}`];
@@ -596,7 +646,13 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 		`${dim("          ")}${dim("WIN    side cheaper per request")}`,
 	);
 	console.log(
+		`${dim("          ")}${dim("ability  benchmark score for the model (source above)")}`,
+	);
+	console.log(
 		`${dim("          ")}${dim("IDX    0-100 blended value: 60% request volume, 20% cache price, 20% output price")}`,
+	);
+	console.log(
+		`${dim("          ")}${dim("VAL    0-100 ability-aware value: ability + volume + cache + output, --bench-weight")}`,
 	);
 }
 

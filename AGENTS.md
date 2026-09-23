@@ -19,6 +19,8 @@ src/types.ts                 shared types + BOUNDARY
 src/html.ts                  HTML scrapers: parseTables, parseRoleRows, parseMoney, extractCatalog
 src/sources/commandcode.ts   cmduse plans --json + commandcode.ai/docs/plans/*
 src/sources/opencodeGo.ts    opencode.ai/docs/go + /zen/go/v1/models
+src/sources/bench.ts         ability scores: cc / aa / aa-web / file / url + cache
+src/sources/artificialAnalysis.ts  AA models page flight-JSON + API parser
 src/normalize.ts             cross-provider model key
 src/model-aliases.ts         branding aliases (Tencent Hy3 -> hy3, ...)
 src/metrics.ts               cost/request, req windows, multiplier, 0-100 index
@@ -108,14 +110,29 @@ distinct keys.
 - `index` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
   every model-provider entry; price terms inverted.
 
+## Ability scores
+
+- `sources/bench.ts` resolves benchmark scores; `--bench` picks the scheme. Default `cc` scrapes
+  Command Code's `Intelligence` column from a fixed reference page (GOAT, since plan pages vary and
+  the Go grid has no Intelligence). Unscored models are filled from the keyless AA page scrape.
+- `sources/artificialAnalysis.ts` parses the `{label, intelligenceIndex, detailsUrl}` dataset
+  embedded in AA flight JSON. That page only embeds its chart top-N, so `aa-web` is **partial**;
+  full coverage needs `AA_API_KEY` (`--bench aa`). AA slugs normalize cleanly via `normalizeKey`
+  (`qwen3-8-max-0902` -> `qwen38max0902`); slug keys win over label keys to keep variant suffixes.
+- `aa-web` caches to `$XDG_CACHE_HOME/mpc/ability-aa-web.json` (7d TTL, `--refresh` busts).
+- `VAL` uses `abilityWeight` (default 0.4); remaining weight splits volume/cache/output 50/25/25.
+  Unscored models get `valueIndex = null`; never coerce a missing score to zero.
+
 ## Rendering
 
 - `render.ts` owns the column registry (`COLUMNS`), presets (`DEFAULT_COLUMNS`, `DETAIL_COLUMNS`)
   and the grouped table. Group banner = provider (`planTitle`), so column headers stay unprefixed.
-- Width is auto-fitted: `fitColumns` drops optional columns, symmetric across providers, when the
-  table exceeds the terminal width (`process.stdout.columns`, `--width`, else 120). `drop` priority
-  on a `Column`: 1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` are never removed.
-  `--columns` bypasses fitting.
+- Modes: default = `DEFAULT_COLUMNS` (untrimmed); `--detail` = `DETAIL_COLUMNS` untrimmed;
+  `--fit` = `DETAIL_COLUMNS` trimmed to width; `--columns` = exact and bypasses everything.
+- `fitColumns` drops optional columns, symmetric across providers, when the table exceeds the
+  terminal width (`process.stdout.columns`, `--width`, else 120). `drop` priority on a `Column`:
+  1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` (model, ability, win, IDX, VAL)
+  are never removed.
 - `req/$` is exactly `1000 / $/1K`; kept because it reads more directly, but it is not independent
   information. `$/1K` is the plan-relative figure.
 - Colours follow cmduse: bold headings, dim secondary, cyan opencode, magenta Command Code, green

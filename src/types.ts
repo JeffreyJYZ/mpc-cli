@@ -64,8 +64,12 @@ export interface EntryMetrics {
 	payPerRequest: number;
 	/** Allowance per dollar of subscription — "$usage per $paid". */
 	multiplier: number;
+	/** Benchmark score for the model, or null when unscored. */
+	ability: number | null;
 	/** 0-100 blended value score, higher is better. */
 	index: number;
+	/** 0-100 ability-aware value score, null when the model is unscored. */
+	valueIndex: number | null;
 	free: boolean;
 }
 

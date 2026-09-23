@@ -227,6 +227,30 @@ export function extractCatalog(
 	return [...best.values()].map((v) => v.entry);
 }
 
+/**
+ * Pull one numeric column out of any tables that carry it, keyed by model.
+ * Used for benchmark columns like Command Code's "Intelligence".
+ */
+export function extractNumericColumn(
+	tables: Table[],
+	header: RegExp,
+): Map<string, number> {
+	const scores = new Map<string, number>();
+	for (const table of tables) {
+		const headerCells = (table[0] ?? []).map(cellText);
+		const col = headerIndex(headerCells, header);
+		if (col < 0) continue;
+		for (const cells of table.slice(1)) {
+			const rawName = cellText((cells[0] ?? "").split(BOUNDARY)[0] ?? "");
+			const key = normalizeKey(rawName);
+			if (!key || scores.has(key)) continue;
+			const match = (cells[col] ?? "").match(/-?[0-9]+(?:\.[0-9]+)?/);
+			if (match) scores.set(key, Number(match[0]));
+		}
+	}
+	return scores;
+}
+
 export async function fetchText(url: string): Promise<string> {
 	const res = await fetch(url, {
 		headers: { "user-agent": "mpc/0.1 (+model price compare)" },

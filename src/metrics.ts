@@ -78,6 +78,8 @@ export function buildMetrics(
 	entries: CatalogEntry[],
 	plans: Map<ProviderId, PlanInfo>,
 	workload: Workload,
+	ability: Map<string, number> = new Map(),
+	abilityWeight = 0.4,
 ): EntryMetrics[] {
 	const metrics: EntryMetrics[] = entries.map((entry) => {
 		const plan = plans.get(entry.provider);
@@ -100,12 +102,62 @@ export function buildMetrics(
 			requestsPerWeek: ratios.week * requestsPerMonth,
 			payPerRequest: free ? 0 : (plan.price * cost) / entry.allowance,
 			multiplier: plan.price > 0 ? entry.allowance / plan.price : 0,
+			ability: ability.get(entry.key) ?? null,
 			index: 0,
+			valueIndex: null,
 			free,
 		};
 	});
 	assignIndex(metrics);
+	assignValueIndex(metrics, abilityWeight);
 	return metrics;
+}
+
+/**
+ * Ability-aware value score. Ability gets `abilityWeight`; the rest is split
+ * volume/cache/output in 50/25/25 proportion. Unscored models stay null.
+ */
+function assignValueIndex(
+	metrics: EntryMetrics[],
+	abilityWeight: number,
+): void {
+	const weight = Math.min(Math.max(abilityWeight, 0), 1);
+	const scored = metrics.filter((m) => m.ability !== null);
+	const ability = minmax(scored.map((m) => m.ability ?? 0));
+	const priced = metrics.filter((m) => Number.isFinite(m.requestsPerMonth));
+	const volume = minmax(
+		priced.map((m) => Math.log10(Math.max(m.requestsPerMonth, 1))),
+	);
+	const cache = minmax(priced.map((m) => m.pricing.cacheRead));
+	const output = minmax(priced.map((m) => m.pricing.output));
+
+	const volumeByIndex = new Map<EntryMetrics, number>();
+	priced.forEach((m, i) => volumeByIndex.set(m, volume[i] ?? 0.5));
+	const cacheByIndex = new Map<EntryMetrics, number>();
+	priced.forEach((m, i) => cacheByIndex.set(m, cache[i] ?? 0.5));
+	const outputByIndex = new Map<EntryMetrics, number>();
+	priced.forEach((m, i) => outputByIndex.set(m, output[i] ?? 0.5));
+	const abilityByIndex = new Map<EntryMetrics, number>();
+	scored.forEach((m, i) => abilityByIndex.set(m, ability[i] ?? 0.5));
+
+	const rest = 1 - weight;
+	const wVolume = rest * 0.5;
+	const wCache = rest * 0.25;
+	const wOutput = rest * 0.25;
+
+	for (const m of scored) {
+		if (!Number.isFinite(m.requestsPerMonth)) {
+			m.valueIndex = 100;
+			continue;
+		}
+		m.valueIndex = Math.round(
+			100 *
+				(weight * (abilityByIndex.get(m) ?? 0.5) +
+					wVolume * (volumeByIndex.get(m) ?? 0.5) +
+					wCache * (1 - (cacheByIndex.get(m) ?? 0.5)) +
+					wOutput * (1 - (outputByIndex.get(m) ?? 0.5))),
+		);
+	}
 }
 
 function indexByKey(
@@ -126,6 +178,8 @@ export function buildRows(
 	ocPlan: PlanInfo,
 	ccPlan: PlanInfo,
 	workload: Workload,
+	ability: Map<string, number> = new Map(),
+	abilityWeight = 0.4,
 ): CompareRow[] {
 	const plans = new Map<ProviderId, PlanInfo>([
 		["oc-go", ocPlan],
@@ -136,6 +190,8 @@ export function buildRows(
 		[...ocEntries, ...ccEntries],
 		plans,
 		workload,
+		ability,
+		abilityWeight,
 	);
 	const ocByKey = indexByKey(
 		ocEntries,
