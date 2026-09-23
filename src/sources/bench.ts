@@ -22,7 +22,10 @@ export interface AbilityOptions {
 	refresh?: boolean;
 }
 
-const CC_REFERENCE_PAGE = "https://commandcode.ai/docs/plans/goat";
+const CC_REFERENCE_PAGES = [
+	"https://commandcode.ai/docs/plans/goat",
+	"https://commandcode.ai/docs/plans/pro",
+];
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 interface Resolved {
@@ -80,8 +83,22 @@ async function loadAaWebCached(refresh: boolean): Promise<Map<string, number>> {
 }
 
 async function loadCc(): Promise<Map<string, number>> {
-	const tables = await parseTables(await fetchText(CC_REFERENCE_PAGE));
-	return extractNumericColumn(tables, /intelligence/i);
+	// Command Code only publishes Intelligence on the GOAT and Pro catalogs.
+	const maps = await Promise.all(
+		CC_REFERENCE_PAGES.map(async (url) =>
+			extractNumericColumn(
+				await parseTables(await fetchText(url)),
+				/intelligence/i,
+			),
+		),
+	);
+	const scores = new Map<string, number>();
+	for (const map of maps) {
+		for (const [key, score] of map) {
+			if (!scores.has(key)) scores.set(key, score);
+		}
+	}
+	return scores;
 }
 
 function parseJsonScores(text: string): Map<string, number> {
