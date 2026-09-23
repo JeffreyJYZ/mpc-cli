@@ -120,7 +120,10 @@ distinct keys.
   full coverage needs `AA_API_KEY` (`--bench aa`). AA slugs normalize cleanly via `normalizeKey`
   (`qwen3-8-max-0902` -> `qwen38max0902`); slug keys win over label keys to keep variant suffixes.
 - `aa-web` caches to `$XDG_CACHE_HOME/mpc/ability-aa-web.json` (7d TTL, `--refresh` busts).
-- `VAL` uses `abilityWeight` (default 0.4); remaining weight splits volume/cache/output 50/25/25.
+- Ability and speed come from one source: CC's `Intelligence` and `Tok/s` columns (`BenchData`).
+  A model with no speed figure gets the neutral 0.5 in VAL, not a penalty.
+- `VAL` uses `abilityWeight` (default 0.35) and `tpsWeight` (default 0.10); remaining weight splits
+  volume/cache/output 50/25/25.
   Unscored models get `valueIndex = null`; never coerce a missing score to zero.
 
 ## Rendering
@@ -132,7 +135,7 @@ distinct keys.
 - `fitColumns` drops optional columns, symmetric across providers, when the table exceeds the
   terminal width (`process.stdout.columns`, `--width`, else 120). `drop` priority on a `Column`:
   1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` (model, ability, win, IDX, VAL)
-  are never removed.
+  are never removed. `tps` has drop priority 4.
 - `req/$` is exactly `1000 / $/1K`; kept because it reads more directly, but it is not independent
   information. `$/1K` is the plan-relative figure.
 - Colours follow cmduse: bold headings, dim secondary, cyan opencode, magenta Command Code, green

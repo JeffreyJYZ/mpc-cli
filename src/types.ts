@@ -66,6 +66,8 @@ export interface EntryMetrics {
 	multiplier: number;
 	/** Benchmark score for the model, or null when unscored. */
 	ability: number | null;
+	/** Output tokens per second, or null when unknown. */
+	tps: number | null;
 	/** 0-100 blended value score, higher is better. */
 	index: number;
 	/** 0-100 ability-aware value score, null when the model is unscored. */

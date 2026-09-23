@@ -7,8 +7,14 @@ import { loadAaApi, loadAaWeb } from "./artificialAnalysis.ts";
 
 export type AbilitySource = "cc" | "aa" | "aa-web" | "file" | "url";
 
-export interface AbilityResult {
-	scores: Map<string, number>;
+/** Benchmark data, keyed by canonical model key. */
+export interface BenchData {
+	intelligence: Map<string, number>;
+	/** Output tokens per second, when the source publishes it. */
+	tps: Map<string, number>;
+}
+
+export interface AbilityResult extends BenchData {
 	label: string;
 	/** Note about coverage limits, shown in the footer. */
 	note?: string;
@@ -27,11 +33,16 @@ const CC_REFERENCE_PAGES = [
 	"https://commandcode.ai/docs/plans/pro",
 ];
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const TPS_HEADER = /tok\s*\/?\s*s|tokens?\s*per\s*sec/i;
 
 interface Resolved {
 	scheme: AbilitySource;
-	scores: Map<string, number>;
+	data: BenchData;
 	label: string;
+}
+
+function emptyData(): BenchData {
+	return { intelligence: new Map(), tps: new Map() };
 }
 
 function cachePath(): string {
@@ -82,23 +93,26 @@ async function loadAaWebCached(refresh: boolean): Promise<Map<string, number>> {
 	return scores;
 }
 
-async function loadCc(): Promise<Map<string, number>> {
-	// Command Code only publishes Intelligence on the GOAT and Pro catalogs.
-	const maps = await Promise.all(
+async function loadCc(): Promise<BenchData> {
+	// Command Code only publishes Intelligence and Tok/s on the GOAT/Pro catalogs.
+	const pages = await Promise.all(
 		CC_REFERENCE_PAGES.map(async (url) =>
-			extractNumericColumn(
-				await parseTables(await fetchText(url)),
-				/intelligence/i,
-			),
+			parseTables(await fetchText(url)),
 		),
 	);
-	const scores = new Map<string, number>();
-	for (const map of maps) {
-		for (const [key, score] of map) {
-			if (!scores.has(key)) scores.set(key, score);
+	const data = emptyData();
+	for (const tables of pages) {
+		for (const [key, score] of extractNumericColumn(
+			tables,
+			/intelligence/i,
+		)) {
+			if (!data.intelligence.has(key)) data.intelligence.set(key, score);
+		}
+		for (const [key, tps] of extractNumericColumn(tables, TPS_HEADER)) {
+			if (!data.tps.has(key)) data.tps.set(key, tps);
 		}
 	}
-	return scores;
+	return data;
 }
 
 function parseJsonScores(text: string): Map<string, number> {
@@ -148,15 +162,18 @@ async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 		case "cc":
 			return {
 				scheme: "cc",
-				scores: await loadCc(),
+				data: await loadCc(),
 				label: "Command Code Intelligence",
 			};
-		case "aa-web":
+		case "aa-web": {
+			const data = emptyData();
+			data.intelligence = await loadAaWebCached(Boolean(opts.refresh));
 			return {
 				scheme: "aa-web",
-				scores: await loadAaWebCached(Boolean(opts.refresh)),
+				data,
 				label: "Artificial Analysis (web, partial)",
 			};
+		}
 		case "aa": {
 			const key = opts.key ?? process.env.AA_API_KEY;
 			if (!key) {
@@ -164,30 +181,30 @@ async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 					"--bench aa needs a key: set AA_API_KEY or pass --bench-key",
 				);
 			}
-			const scores = await loadAaApi(key);
-			if (scores.size === 0) {
+			const intelligence = await loadAaApi(key);
+			if (intelligence.size === 0) {
 				throw new Error(
 					"Artificial Analysis returned no scores — check the API key and response shape",
 				);
 			}
 			return {
 				scheme: "aa",
-				scores,
-				label: `Artificial Analysis (${scores.size} models)`,
+				data: { intelligence, tps: new Map() },
+				label: `Artificial Analysis (${intelligence.size} models)`,
 			};
 		}
 		case "file":
 			if (!arg) throw new Error("--bench file:<path> needs a path");
 			return {
 				scheme: "file",
-				scores: await loadFile(arg),
+				data: { intelligence: await loadFile(arg), tps: new Map() },
 				label: `bench file ${arg}`,
 			};
 		case "url":
 			if (!arg) throw new Error("--bench url:<url> needs a url");
 			return {
 				scheme: "url",
-				scores: await loadUrl(arg),
+				data: { intelligence: await loadUrl(arg), tps: new Map() },
 				label: `bench ${arg}`,
 			};
 		default:
@@ -218,24 +235,27 @@ export async function loadAbility(
 ): Promise<AbilityResult> {
 	const primary = await resolvePrimary(opts);
 	if (!opts.fallback) {
-		return { scores: primary.scores, label: primary.label };
+		return { ...primary.data, label: primary.label };
 	}
 
 	const fills: string[] = [];
 	if (primary.scheme !== "cc") {
-		const added = merge(primary.scores, await loadCc());
+		const cc = await loadCc();
+		const added =
+			merge(primary.data.intelligence, cc.intelligence) +
+			merge(primary.data.tps, cc.tps);
 		if (added > 0) fills.push(`${added} from Command Code`);
 	}
 	if (primary.scheme !== "aa-web" && primary.scheme !== "aa") {
 		const added = merge(
-			primary.scores,
+			primary.data.intelligence,
 			await loadAaWebCached(Boolean(opts.refresh)),
 		);
 		if (added > 0) fills.push(`${added} from Artificial Analysis`);
 	}
 
 	return {
-		scores: primary.scores,
+		...primary.data,
 		label: primary.label,
 		note: fills.length > 0 ? `filled ${fills.join(", ")}` : undefined,
 	};

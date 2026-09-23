@@ -89,6 +89,11 @@ function fmtAbility(row: CompareRow): string {
 	return ability === null ? "—" : ability.toFixed(1);
 }
 
+function fmtTps(row: CompareRow): string {
+	const tps = row.oc?.tps ?? row.cc?.tps ?? null;
+	return tps === null ? "—" : Math.round(tps).toString();
+}
+
 function valueScores(row: CompareRow): number[] {
 	return [row.oc?.valueIndex, row.cc?.valueIndex].filter(
 		(value): value is number => typeof value === "number",
@@ -253,6 +258,13 @@ const COLUMNS: Record<string, Column> = {
 		right: true,
 		style: (r) => ((r.oc?.ability ?? r.cc?.ability) === null ? "2" : "36"),
 	},
+	tps: {
+		header: "tps",
+		value: fmtTps,
+		right: true,
+		style: (r) => ((r.oc?.tps ?? r.cc?.tps) === null ? "2" : "36"),
+		drop: 4,
+	},
 	val: {
 		header: "VAL",
 		value: bestValue,
@@ -295,6 +307,7 @@ export const DETAIL_COLUMNS = [
 	"cc-per1k",
 	"cc-reqdollar",
 	"ability",
+	"tps",
 	"win",
 	"idx",
 	"val",
@@ -649,10 +662,13 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 		`${dim("          ")}${dim("ability  benchmark score for the model (source above)")}`,
 	);
 	console.log(
+		`${dim("          ")}${dim("tps    output tokens per second (source above)")}`,
+	);
+	console.log(
 		`${dim("          ")}${dim("IDX    0-100 blended value: 60% request volume, 20% cache price, 20% output price")}`,
 	);
 	console.log(
-		`${dim("          ")}${dim("VAL    0-100 ability-aware value: ability + volume + cache + output, --bench-weight")}`,
+		`${dim("          ")}${dim("VAL    0-100 ability-aware value: ability + speed + volume + cache + output")}`,
 	);
 }
 

@@ -79,7 +79,9 @@ export function buildMetrics(
 	plans: Map<ProviderId, PlanInfo>,
 	workload: Workload,
 	ability: Map<string, number> = new Map(),
-	abilityWeight = 0.4,
+	abilityWeight = 0.35,
+	tps: Map<string, number> = new Map(),
+	tpsWeight = 0.1,
 ): EntryMetrics[] {
 	const metrics: EntryMetrics[] = entries.map((entry) => {
 		const plan = plans.get(entry.provider);
@@ -103,27 +105,33 @@ export function buildMetrics(
 			payPerRequest: free ? 0 : (plan.price * cost) / entry.allowance,
 			multiplier: plan.price > 0 ? entry.allowance / plan.price : 0,
 			ability: ability.get(entry.key) ?? null,
+			tps: tps.get(entry.key) ?? null,
 			index: 0,
 			valueIndex: null,
 			free,
 		};
 	});
 	assignIndex(metrics);
-	assignValueIndex(metrics, abilityWeight);
+	assignValueIndex(metrics, abilityWeight, tpsWeight);
 	return metrics;
 }
 
 /**
- * Ability-aware value score. Ability gets `abilityWeight`; the rest is split
- * volume/cache/output in 50/25/25 proportion. Unscored models stay null.
+ * Ability-aware value score. Ability and speed get their own weights; the rest
+ * splits volume/cache/output 50/25/25. Unscored models stay null. A model with
+ * no speed figure gets the neutral 0.5 rather than a penalty.
  */
 function assignValueIndex(
 	metrics: EntryMetrics[],
 	abilityWeight: number,
+	tpsWeight: number,
 ): void {
-	const weight = Math.min(Math.max(abilityWeight, 0), 1);
+	const wAbility = Math.min(Math.max(abilityWeight, 0), 1);
+	const wTps = Math.min(Math.max(tpsWeight, 0), 1 - wAbility);
 	const scored = metrics.filter((m) => m.ability !== null);
 	const ability = minmax(scored.map((m) => m.ability ?? 0));
+	const speeded = metrics.filter((m) => m.tps !== null);
+	const speed = minmax(speeded.map((m) => m.tps ?? 0));
 	const priced = metrics.filter((m) => Number.isFinite(m.requestsPerMonth));
 	const volume = minmax(
 		priced.map((m) => Math.log10(Math.max(m.requestsPerMonth, 1))),
@@ -139,8 +147,10 @@ function assignValueIndex(
 	priced.forEach((m, i) => outputByIndex.set(m, output[i] ?? 0.5));
 	const abilityByIndex = new Map<EntryMetrics, number>();
 	scored.forEach((m, i) => abilityByIndex.set(m, ability[i] ?? 0.5));
+	const speedByIndex = new Map<EntryMetrics, number>();
+	speeded.forEach((m, i) => speedByIndex.set(m, speed[i] ?? 0.5));
 
-	const rest = 1 - weight;
+	const rest = Math.max(0, 1 - wAbility - wTps);
 	const wVolume = rest * 0.5;
 	const wCache = rest * 0.25;
 	const wOutput = rest * 0.25;
@@ -152,7 +162,8 @@ function assignValueIndex(
 		}
 		m.valueIndex = Math.round(
 			100 *
-				(weight * (abilityByIndex.get(m) ?? 0.5) +
+				(wAbility * (abilityByIndex.get(m) ?? 0.5) +
+					wTps * (speedByIndex.get(m) ?? 0.5) +
 					wVolume * (volumeByIndex.get(m) ?? 0.5) +
 					wCache * (1 - (cacheByIndex.get(m) ?? 0.5)) +
 					wOutput * (1 - (outputByIndex.get(m) ?? 0.5))),
@@ -179,7 +190,9 @@ export function buildRows(
 	ccPlan: PlanInfo,
 	workload: Workload,
 	ability: Map<string, number> = new Map(),
-	abilityWeight = 0.4,
+	abilityWeight = 0.35,
+	tps: Map<string, number> = new Map(),
+	tpsWeight = 0.1,
 ): CompareRow[] {
 	const plans = new Map<ProviderId, PlanInfo>([
 		["oc-go", ocPlan],
@@ -192,6 +205,8 @@ export function buildRows(
 		workload,
 		ability,
 		abilityWeight,
+		tps,
+		tpsWeight,
 	);
 	const ocByKey = indexByKey(
 		ocEntries,

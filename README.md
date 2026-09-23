@@ -46,7 +46,8 @@ mpc --help
 | `--fit` | off | show the widest column set that fits the terminal |
 | `--columns <ids>` | preset | comma-separated columns to show, in order (overrides presets); `--columns help` lists ids |
 | `--bench <src>` | `cc` | ability scores: `cc`, `aa`, `aa-web`, `file:<path>`, `url:<url>` |
-| `--bench-weight <n>` | `0.4` | ability share of `VAL`, 0-1 |
+| `--bench-weight <n>` | `0.35` | ability share of `VAL`, 0-1 |
+| `--tps-weight <n>` | `0.10` | output-speed share of `VAL`, 0-1 |
 | `--bench-name <label>` | source | footer label for the ability source |
 | `--bench-key <key>` | `AA_API_KEY` | Artificial Analysis API key |
 | `--no-fallback` | off | with `--bench cc`, skip the Artificial Analysis fill |
@@ -79,6 +80,7 @@ mpc --help
 | `$/1K` | what 1,000 requests cost you on the plan |
 | `req/$` | requests one dollar of subscription buys |
 | `ability` | benchmark score for the model |
+| `tps` | output tokens per second |
 | `WIN` | side with the lower per-request cost |
 | `IDX` | 0-100 blended cost/value score |
 | `VAL` | 0-100 ability-aware value score |
@@ -118,10 +120,12 @@ min-max normalised and inverted (cheaper scores higher). Free models get `∞` r
 
 ```
 IDX = 100 * (0.60*volume + 0.20*cache + 0.20*output)
-VAL = 100 * (0.40*ability + 0.30*volume + 0.15*cache + 0.15*output)
+VAL = 100 * (0.35*ability + 0.10*tps + 0.25*volume + 0.15*cache + 0.15*output)
 ```
 
-`--bench-weight` sets the ability share; the remaining weight splits volume/cache/output 50/25/25.
+`--bench-weight` and `--tps-weight` set the ability and speed shares; the remaining weight
+splits volume/cache/output 50/25/25. Ability and `tps` come from the same source, so `--bench cc`
+reads both Command Code's `Intelligence` and `Tok/s` columns.
 Unscored models show `ability —` and `VAL —`; they are excluded from the ability normalisation range.
 
 | `--bench` | source | coverage |

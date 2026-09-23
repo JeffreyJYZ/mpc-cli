@@ -32,6 +32,7 @@ interface Options {
 	fit: boolean;
 	bench: string;
 	benchWeight: number;
+	tpsWeight: number;
 	benchName?: string;
 	benchKey?: string;
 	noFallback: boolean;
@@ -67,7 +68,8 @@ Options:
   --fit            show the widest column set that fits the terminal
   --bench <src>    ability scores: cc | aa | aa-web | file:<path> | url:<url>
                    (default cc, filled from the aa-web scrape for unscored models)
-  --bench-weight   ability share of VAL, 0-1 (default 0.4)
+  --bench-weight   ability share of VAL, 0-1 (default 0.35)
+  --tps-weight     output-speed share of VAL, 0-1 (default 0.1)
   --bench-name     footer label for the source (else source's own)
   --bench-key      Artificial Analysis API key (else AA_API_KEY)
   --no-fallback    with --bench cc, do not fill from the aa-web scrape
@@ -123,7 +125,8 @@ export function parseArgs(argv: string[]): Options {
 		only: "all",
 		fit: false,
 		bench: "cc",
-		benchWeight: 0.4,
+		benchWeight: 0.35,
+		tpsWeight: 0.1,
 		noFallback: false,
 		refresh: false,
 		noAbility: false,
@@ -184,6 +187,18 @@ export function parseArgs(argv: string[]): Options {
 				) {
 					throw new Error(
 						"--bench-weight expects a number between 0 and 1",
+					);
+				}
+				break;
+			case "--tps-weight":
+				options.tpsWeight = Number(next());
+				if (
+					!Number.isFinite(options.tpsWeight) ||
+					options.tpsWeight < 0 ||
+					options.tpsWeight > 1
+				) {
+					throw new Error(
+						"--tps-weight expects a number between 0 and 1",
 					);
 				}
 				break;
@@ -292,7 +307,8 @@ async function collect(options: Options) {
 		loadCcPlan(options.ccPlan),
 		options.noAbility
 			? Promise.resolve({
-					scores: new Map<string, number>(),
+					intelligence: new Map<string, number>(),
+					tps: new Map<string, number>(),
 					label: "",
 					note: undefined,
 				})
@@ -310,8 +326,10 @@ async function collect(options: Options) {
 		ocPlanInfo,
 		ccPlanInfo,
 		options.workload,
-		ability.scores,
+		ability.intelligence,
 		options.benchWeight,
+		ability.tps,
+		options.tpsWeight,
 	);
 	return { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows, ability };
 }
@@ -387,7 +405,12 @@ async function runCheck(
 	ocEntries: CatalogEntry[],
 	ccEntries: CatalogEntry[],
 	rows: CompareRow[],
-	ability: { label: string; note?: string; scores: Map<string, number> },
+	ability: {
+		label: string;
+		note?: string;
+		intelligence: Map<string, number>;
+		tps: Map<string, number>;
+	},
 ): Promise<number> {
 	const ocKeys = new Set(ocEntries.map((e) => e.key));
 	const ccKeys = new Set(ccEntries.map((e) => e.key));
@@ -407,7 +430,7 @@ async function runCheck(
 		(r) => r.oc?.ability != null || r.cc?.ability != null,
 	).length;
 	console.log(
-		`ability source:       ${ability.label || "disabled"} (${ability.scores.size} scores, ${scored}/${rows.length} rows scored)`,
+		`ability source:       ${ability.label || "disabled"} (${ability.intelligence.size} scores, ${ability.tps.size} speed, ${scored}/${rows.length} rows scored)`,
 	);
 	if (ability.note) console.log(`ability note:         ${ability.note}`);
 	const unscored = rows

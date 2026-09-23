@@ -15,6 +15,7 @@ function metric(payPerRequest: number): EntryMetrics {
 		payPerRequest,
 		multiplier: 1,
 		ability: null,
+		tps: null,
 		index: 0,
 		valueIndex: null,
 		free: payPerRequest === 0,
