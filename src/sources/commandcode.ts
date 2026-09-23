@@ -1,0 +1,144 @@
+import { extractCatalog, fetchText, parseTables } from "../html.ts";
+import type { CatalogEntry, PlanInfo } from "../types.ts";
+
+interface CcPlanDef {
+	/** cmduse plan name. */
+	cmduse: string;
+	label: string;
+	/** Docs page slug under /docs/plans/. */
+	slug: string;
+	/** Allowance column header on the docs page. */
+	creditHeader: RegExp;
+	/**
+	 * Allowance assumed for rate-only models the docs list without a credits
+	 * row (the "older models also available" set). Documented as the standard
+	 * 2x rate: $20 on the $10 GOAT plan, $30 on the $20 Pro plan.
+	 */
+	standardAllowance?: number;
+}
+
+export const CC_PLANS: Record<string, CcPlanDef> = {
+	goat: {
+		cmduse: "GOAT",
+		label: "GOAT",
+		slug: "goat",
+		creditHeader: /monthly credit/i,
+		standardAllowance: 20,
+	},
+	pro: {
+		cmduse: "Pro",
+		label: "Pro",
+		slug: "pro",
+		creditHeader: /monthly credit/i,
+		standardAllowance: 30,
+	},
+	max10: {
+		cmduse: "Max 10x",
+		label: "Max 10x",
+		slug: "max",
+		creditHeader: /max\s*10/i,
+	},
+	max20: {
+		cmduse: "Max 20x",
+		label: "Max 20x",
+		slug: "max",
+		creditHeader: /max\s*20/i,
+	},
+};
+
+interface CmdusePlan {
+	name: string;
+	price: string;
+	creditsMonthly: string;
+	fiveHour: string;
+	weekly: string;
+}
+
+function money(value: string): number | null {
+	const m = value.match(/\$?\s*([0-9]+(?:\.[0-9]+)?)/);
+	return m ? Number(m[1]) : null;
+}
+
+async function cmdusePlans(): Promise<CmdusePlan[]> {
+	let proc: Bun.Subprocess<"pipe", "pipe", "pipe">;
+	try {
+		proc = Bun.spawn(["cmduse", "plans", "--json"], {
+			stdout: "pipe",
+			stderr: "pipe",
+		});
+	} catch {
+		throw new Error(
+			"`cmduse` not found on PATH — install the command-code CLI to read live plan limits.",
+		);
+	}
+	const [out, err, code] = await Promise.all([
+		new Response(proc.stdout).text(),
+		new Response(proc.stderr).text(),
+		proc.exited,
+	]);
+	if (code !== 0) {
+		throw new Error(`cmduse plans --json failed (${code}): ${err.trim()}`);
+	}
+	return JSON.parse(out) as CmdusePlan[];
+}
+
+/** Plan price + windows for a Command Code plan, from the official JSON. */
+export async function loadCcPlan(planId: string): Promise<PlanInfo> {
+	const def = CC_PLANS[planId];
+	if (!def) {
+		throw new Error(
+			`unknown Command Code plan "${planId}" (have: ${Object.keys(CC_PLANS).join(", ")})`,
+		);
+	}
+	const plans = await cmdusePlans();
+	const match = plans.find((p) => p.name === def.cmduse);
+	if (!match) {
+		throw new Error(
+			`cmduse plans --json has no plan named "${def.cmduse}"`,
+		);
+	}
+	return {
+		provider: "cc",
+		id: planId,
+		label: def.label,
+		price: money(match.price) ?? 0,
+		credits: money(match.creditsMonthly) ?? 0,
+		fiveHour: money(match.fiveHour),
+		weekly: money(match.weekly),
+	};
+}
+
+/** Per-model token rates + monthly credit allowance for a Command Code plan. */
+export async function loadCcCatalog(planId: string): Promise<CatalogEntry[]> {
+	const def = CC_PLANS[planId];
+	if (!def) throw new Error(`unknown Command Code plan "${planId}"`);
+	const url = `https://commandcode.ai/docs/plans/${def.slug}`;
+	const html = await fetchText(url);
+	const tables = await parseTables(html);
+	const entries = extractCatalog(tables, {
+		provider: "cc",
+		plan: def.label,
+		creditHeader: def.creditHeader,
+	});
+	if (entries.length === 0) {
+		throw new Error(
+			`no model tables parsed from ${url} — docs layout may have changed`,
+		);
+	}
+	// Fill models the page lists with rates but no per-model credits row.
+	if (def.standardAllowance !== undefined) {
+		const extra = extractCatalog(tables, {
+			provider: "cc",
+			plan: def.label,
+			defaultAllowance: def.standardAllowance,
+		});
+		const seen = new Set(entries.map((e) => e.key));
+		for (const entry of extra) {
+			if (!seen.has(entry.key)) {
+				seen.add(entry.key);
+				entries.push(entry);
+			}
+		}
+	}
+	return entries;
+}
