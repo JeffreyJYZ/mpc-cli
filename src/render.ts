@@ -90,6 +90,8 @@ interface Column {
 	right?: boolean;
 	/** Optional SGR code applied to the padded cell (green 32, dim 2, ...). */
 	style?: (row: CompareRow) => string | undefined;
+	/** Lower values are dropped first when the table is too wide. */
+	drop?: number;
 }
 
 /** Which side is cheaper per request on this row. */
@@ -125,6 +127,7 @@ const COLUMNS: Record<string, Column> = {
 		header: "rates",
 		value: (r) => pricingTriple(r.oc),
 		style: (r) => (r.oc?.free ? "32" : undefined),
+		drop: 1,
 	},
 	"oc-allow": {
 		header: "allow",
@@ -134,11 +137,13 @@ const COLUMNS: Record<string, Column> = {
 	},
 	"oc-req5h": {
 		header: "5h",
+		drop: 3,
 		value: (r) => fmtRequests(r.oc?.requestsPerFiveHour, Boolean(r.oc)),
 		right: true,
 	},
 	"oc-reqwk": {
 		header: "wk",
+		drop: 3,
 		value: (r) => fmtRequests(r.oc?.requestsPerWeek, Boolean(r.oc)),
 		right: true,
 	},
@@ -158,11 +163,13 @@ const COLUMNS: Record<string, Column> = {
 		value: (r) => fmtPerDollar(r.oc),
 		right: true,
 		style: sideStyle("oc"),
+		drop: 2,
 	},
 	"cc-rates": {
 		header: "rates",
 		value: (r) => pricingTriple(r.cc),
 		style: (r) => (r.cc?.free ? "32" : undefined),
+		drop: 1,
 	},
 	"cc-allow": {
 		header: "allow",
@@ -172,11 +179,13 @@ const COLUMNS: Record<string, Column> = {
 	},
 	"cc-req5h": {
 		header: "5h",
+		drop: 3,
 		value: (r) => fmtRequests(r.cc?.requestsPerFiveHour, Boolean(r.cc)),
 		right: true,
 	},
 	"cc-reqwk": {
 		header: "wk",
+		drop: 3,
 		value: (r) => fmtRequests(r.cc?.requestsPerWeek, Boolean(r.cc)),
 		right: true,
 	},
@@ -196,6 +205,7 @@ const COLUMNS: Record<string, Column> = {
 		value: (r) => fmtPerDollar(r.cc),
 		right: true,
 		style: sideStyle("cc"),
+		drop: 2,
 	},
 	win: {
 		header: "WIN",
@@ -256,6 +266,58 @@ export function columns(ids: string[]): Column[] {
 		if (!column) throw new Error(`unknown column "${id}"`);
 		return column;
 	});
+}
+
+/** Printed width of the whole table, in characters (ANSI colour not counted). */
+export function tableWidth(rows: CompareRow[], ids: string[]): number {
+	const cols = columns(ids);
+	const widths = cols.map((c) => c.header.length);
+	for (const row of rows) {
+		cols.forEach((c, i) => {
+			const len = c.value(row).length;
+			if (len > (widths[i] ?? 0)) widths[i] = len;
+		});
+	}
+	const segs = buildSegments(ids, cols, widths);
+	if (segs.length === 0) return 0;
+	return (
+		segs.reduce((sum, seg) => sum + seg.width, 0) +
+		BAR.length * (segs.length - 1)
+	);
+}
+
+export interface FitResult {
+	ids: string[];
+	dropped: string[];
+	width: number;
+}
+
+/**
+ * Drop optional columns, widest-first, until the table fits `limit`. Columns
+ * with the same `drop` value are removed together, so both providers stay
+ * symmetric.
+ */
+export function fitColumns(
+	rows: CompareRow[],
+	ids: string[],
+	limit: number,
+): FitResult {
+	let current = [...ids];
+	const dropped: string[] = [];
+	while (limit > 0 && tableWidth(rows, current) > limit) {
+		const levels = current
+			.map((id) => columns([id])[0]?.drop)
+			.filter((drop): drop is number => drop !== undefined);
+		if (levels.length === 0) break;
+		const lowest = Math.min(...levels);
+		const remove = new Set(
+			current.filter((id) => columns([id])[0]?.drop === lowest),
+		);
+		if (remove.size === 0) break;
+		current = current.filter((id) => !remove.has(id));
+		dropped.push(...remove);
+	}
+	return { ids: current, dropped, width: tableWidth(rows, current) };
 }
 
 function bestIndex(row: CompareRow): number {
@@ -542,11 +604,20 @@ export function renderText(
 	rows: CompareRow[],
 	meta: ReportMeta,
 	columnIds: string[],
+	dropped: string[] = [],
 ): void {
 	printTable(rows, columnIds, {
 		oc: { title: planTitle(meta.ocPlan), color: "1;36" },
 		cc: { title: planTitle(meta.ccPlan), color: "1;35" },
 	});
+	if (dropped.length > 0) {
+		console.log(
+			paint(
+				"2",
+				`\ndropped for width: ${[...new Set(dropped)].join(", ")} (use --columns to force, --width <n> to widen)`,
+			),
+		);
+	}
 	console.log();
 	footer(rows, meta);
 }

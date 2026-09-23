@@ -108,6 +108,19 @@ distinct keys.
 - `index` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
   every model-provider entry; price terms inverted.
 
+## Rendering
+
+- `render.ts` owns the column registry (`COLUMNS`), presets (`DEFAULT_COLUMNS`, `DETAIL_COLUMNS`)
+  and the grouped table. Group banner = provider (`planTitle`), so column headers stay unprefixed.
+- Width is auto-fitted: `fitColumns` drops optional columns, symmetric across providers, when the
+  table exceeds the terminal width (`process.stdout.columns`, `--width`, else 120). `drop` priority
+  on a `Column`: 1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` are never removed.
+  `--columns` bypasses fitting.
+- `req/$` is exactly `1000 / $/1K`; kept because it reads more directly, but it is not independent
+  information. `$/1K` is the plan-relative figure.
+- Colours follow cmduse: bold headings, dim secondary, cyan opencode, magenta Command Code, green
+  winner/best, IDX green-yellow-red. Auto-off when stdout is not a TTY or `NO_COLOR` is set.
+
 ## Sources and drift
 
 Live, per run — no cache. `mpc --check` reports parse counts, unmatched model keys, and the

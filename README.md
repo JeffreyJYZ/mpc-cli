@@ -39,7 +39,8 @@ mpc --help
 | `--metric <name>` | `index` | sort by `index`, `req`, `cost` or `name` |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
 | `--only <scope>` | `all` | `all` = union of both catalogs, `both` = only shared models |
-| `--columns <ids>` | preset | comma-separated columns to show, in order (overrides `--detail`); `--columns help` lists ids |
+| `--width <n>` | terminal | force table width; otherwise auto-detect and drop optional columns (`rates`, `req/$`, `5h`/`wk`) to fit |
+| `--columns <ids>` | preset | comma-separated columns to show, in order (overrides `--detail` and auto-fit); `--columns help` lists ids |
 | `--peak` | off | use peak-rate rows instead of off-peak (DeepSeek) |
 | `--asc` | off | sort ascending |
 | `--detail` | off | preset: adds token rates and 5h/week columns |

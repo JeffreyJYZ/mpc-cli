@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { fmtUsd, tally } from "../src/render.ts";
+import { fitColumns, fmtUsd, tableWidth, tally } from "../src/render.ts";
 import type { CompareRow, EntryMetrics } from "../src/types.ts";
 
 function metric(payPerRequest: number): EntryMetrics {
@@ -51,6 +51,45 @@ describe("tally", () => {
 		const t = tally([row("a", 0, 5), row("b", 5, 0)]);
 		expect(t.ocWins).toBe(1);
 		expect(t.ccWins).toBe(1);
+	});
+});
+
+describe("fitColumns", () => {
+	test("drops optional columns symmetrically to fit", () => {
+		const rows = [row("a", 1, 2), row("b", 3, 2)];
+		const wide = [
+			"model",
+			"oc-rates",
+			"oc-allow",
+			"oc-per1k",
+			"cc-rates",
+			"cc-allow",
+			"cc-per1k",
+			"win",
+			"idx",
+		];
+		const before = tableWidth(rows, wide);
+		const fit = fitColumns(rows, wide, 40);
+		expect(fit.width).toBeLessThan(before);
+		expect(fit.dropped).toContain("oc-rates");
+		expect(fit.dropped).toContain("cc-rates");
+		// rates dropped from both sides or neither, never one.
+		expect(fit.ids.includes("oc-rates")).toBe(fit.ids.includes("cc-rates"));
+	});
+
+	test("never drops columns without a drop priority", () => {
+		const rows = [row("a", 1, 2)];
+		const ids = ["model", "oc-allow", "cc-allow", "win", "idx"];
+		const fit = fitColumns(rows, ids, 5);
+		expect(fit.ids).toEqual(ids);
+	});
+
+	test("keeps everything when it already fits", () => {
+		const rows = [row("a", 1, 2)];
+		const ids = ["model", "win", "idx"];
+		const fit = fitColumns(rows, ids, 10_000);
+		expect(fit.ids).toEqual(ids);
+		expect(fit.dropped).toEqual([]);
 	});
 });
 

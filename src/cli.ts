@@ -5,6 +5,7 @@ import {
 	COLUMN_IDS,
 	DEFAULT_COLUMNS,
 	DETAIL_COLUMNS,
+	fitColumns,
 	renderJson,
 	renderText,
 	setColor,
@@ -26,6 +27,7 @@ interface Options {
 	model?: string;
 	only: "both" | "all";
 	columns?: string[];
+	width?: number;
 	peak: boolean;
 	asc: boolean;
 	json: boolean;
@@ -56,6 +58,8 @@ Options:
   --peak           use peak-rate rows (opencode Go DeepSeek off/on-peak)
   --asc            sort ascending instead of descending
   --detail         preset: add raw token rates and 5h/week columns
+  --width <n>      force table width; otherwise auto-detect and drop optional
+                   columns (rates, req/$, 5h/wk) to fit the terminal
   --columns <ids>  comma-separated columns to show, in order (overrides --detail).
                    ids: ${COLUMN_IDS.join(", ")}
                    use --columns help for descriptions
@@ -137,6 +141,9 @@ export function parseArgs(argv: string[]): Options {
 			}
 			case "--model":
 				options.model = next();
+				break;
+			case "--width":
+				options.width = parseIntFlag("width", next());
 				break;
 			case "--columns": {
 				const value = next() ?? "";
@@ -252,9 +259,9 @@ export async function run(argv: string[]): Promise<number> {
 			!process.env.NO_COLOR,
 	);
 
-	const columnIds =
+	const requested =
 		options.columns ?? (options.detail ? DETAIL_COLUMNS : DEFAULT_COLUMNS);
-	const unknown = columnIds.filter((id) => !COLUMN_IDS.includes(id));
+	const unknown = requested.filter((id) => !COLUMN_IDS.includes(id));
 	if (unknown.length > 0) {
 		throw new Error(
 			`unknown column(s): ${unknown.join(", ")} — valid: ${COLUMN_IDS.join(", ")}`,
@@ -282,7 +289,11 @@ export async function run(argv: string[]): Promise<number> {
 		console.log(renderJson(result, meta));
 		return 0;
 	}
-	renderText(result, meta, columnIds);
+	const limit = options.width ?? process.stdout.columns ?? 120;
+	const fitted = options.columns
+		? { ids: requested, dropped: [] as string[] }
+		: fitColumns(result, requested, limit);
+	renderText(result, meta, fitted.ids, fitted.dropped);
 	console.log(
 		`\n${result.length} models · opencode Go vs Command Code ${ccPlanInfo.label} · ${ocEntries.length} opencode / ${ccEntries.length} Command Code entries`,
 	);
