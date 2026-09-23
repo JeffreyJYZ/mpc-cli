@@ -64,6 +64,45 @@ export async function parseTables(html: string): Promise<Table[]> {
 }
 
 /**
+ * Parse `role="row"` div grids (Command Code's model catalog on some plan
+ * pages) into the same Table shape as parseTables.
+ */
+export async function parseRoleRows(html: string): Promise<Table[]> {
+	let grid: Table | null = null;
+	let row: string[] | null = null;
+	let cell: string | null = null;
+
+	const rewriter = new HTMLRewriter()
+		.on('div[role="row"]', {
+			element(el) {
+				grid ??= [];
+				const start = grid;
+				row = [];
+				el.onEndTag(() => {
+					if (row && start) start.push(row);
+					row = null;
+				});
+			},
+		})
+		.on('div[role="row"] > div', {
+			element(el) {
+				const current = row;
+				cell = "";
+				el.onEndTag(() => {
+					if (current) current.push((cell ?? "").trim());
+					cell = null;
+				});
+			},
+			text(chunk) {
+				if (cell !== null) cell += `${chunk.text}${BOUNDARY}`;
+			},
+		});
+
+	await rewriter.transform(new Response(html)).text();
+	return grid ? [grid] : [];
+}
+
+/**
  * Pull USD out of a price/allowance cell. Cells carry BOUNDARY text-node
  * boundaries; each segment is scanned and the last one carrying a price wins,
  * which skips trailing multiplier notes like "4x". "Free" is 0, em-dash null.
@@ -137,8 +176,8 @@ export function extractCatalog(
 		const header = (table[0] ?? []).map(cellText);
 		if (header.length < 4) continue;
 
-		const inCol = headerIndex(header, /^input$/i);
-		const outCol = headerIndex(header, /^output$/i);
+		const inCol = headerIndex(header, /^input/i);
+		const outCol = headerIndex(header, /^output/i);
 		const cacheCol = headerIndex(header, /cache(d)?\s*read/i);
 		const creditCol = creditHeader ? headerIndex(header, creditHeader) : -2;
 		const writeCol = headerIndex(header, /cache\s*write/i);

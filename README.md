@@ -13,6 +13,7 @@ each request really costs you.
 ```sh
 mpc                                   # oc-go Go vs Command Code GOAT, default workload
 mpc --cc-plan pro                     # compare against Command Code Pro
+mpc --cc-plan go                      # ...or the $1 Go plan
 mpc --detail                          # add raw token rates + allowances
 mpc --model 'kimi|glm' --metric req   # filter, sort by requests/month
 mpc --in 2000 --cache 80000 --out 400 # override the fixed workload
@@ -31,7 +32,7 @@ mpc --help
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
-| `--cc-plan <id>` | `goat` | Command Code plan: `goat`, `pro`, `max10`, `max20` |
+| `--cc-plan <id>` | `goat` | Command Code plan: `go`, `goat`, `pro`, `max10`, `max20` |
 | `--in <n>` | `800` | fixed input tokens per request |
 | `--cache <n>` | `50000` | fixed cache-read tokens per request |
 | `--out <n>` | `200` | fixed output tokens per request |
@@ -106,12 +107,16 @@ present on only one side still appear; the other column shows `—`.
 
 ## Notes and limits
 
-- The Command Code **Go** ($1) plan is not supported: its docs page publishes no per-model
-  table. Only `goat`, `pro`, `max10`, `max20` are available.
+- Command Code plans are read from their docs pages: `goat`, `pro` and the Max plans list
+  explicit per-model credits; the **Go** ($1) plan publishes only a rate list, so every model
+  draws on the plan's whole $10 credit pool.
 - Models Command Code lists with rates but no explicit credits row (the "older models also
   available" set) use the documented standard allowance ($20 on GOAT, $30 on Pro).
 - opencode Go has no shared credit pool; each model carries its own monthly limit, so the
   plan's "credits" figure is the sum of those limits (an upper bound, not a pool).
+- `$/1K` and `req/$` are plan-relative: they divide by the plan's own price, so a cheaper
+  subscription can post a lower per-request cost while buying fewer requests. Compare
+  `req/mo` for volume and `$/1K` for the effective rate.
 - Values reflect the docs at fetch time; active deals are picked up automatically.
 
 ## Development

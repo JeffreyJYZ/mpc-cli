@@ -1,4 +1,9 @@
-import { extractCatalog, fetchText, parseTables } from "../html.ts";
+import {
+	extractCatalog,
+	fetchText,
+	parseRoleRows,
+	parseTables,
+} from "../html.ts";
 import type { CatalogEntry, PlanInfo } from "../types.ts";
 
 interface CcPlanDef {
@@ -7,17 +12,26 @@ interface CcPlanDef {
 	label: string;
 	/** Docs page slug under /docs/plans/. */
 	slug: string;
-	/** Allowance column header on the docs page. */
-	creditHeader: RegExp;
+	/** Allowance column header; omitted when the page publishes no credits column. */
+	creditHeader?: RegExp;
 	/**
-	 * Allowance assumed for rate-only models the docs list without a credits
-	 * row (the "older models also available" set). Documented as the standard
-	 * 2x rate: $20 on the $10 GOAT plan, $30 on the $20 Pro plan.
+	 * Allowance for models the docs list without an explicit credits row.
+	 * GOAT/Pro: the standard 2x rate ($20 / $30). Go: the whole $10 plan pool,
+	 * since Go publishes no per-model allowances.
 	 */
 	standardAllowance?: number;
+	/** Parse the model list from a `role="row"` div grid instead of <table>. */
+	grid?: boolean;
 }
 
 export const CC_PLANS: Record<string, CcPlanDef> = {
+	go: {
+		cmduse: "Go",
+		label: "Go",
+		slug: "go",
+		grid: true,
+		standardAllowance: 10,
+	},
 	goat: {
 		cmduse: "GOAT",
 		label: "GOAT",
@@ -45,7 +59,6 @@ export const CC_PLANS: Record<string, CcPlanDef> = {
 		creditHeader: /max\s*20/i,
 	},
 };
-
 interface CmdusePlan {
 	name: string;
 	price: string;
@@ -114,6 +127,24 @@ export async function loadCcCatalog(planId: string): Promise<CatalogEntry[]> {
 	if (!def) throw new Error(`unknown Command Code plan "${planId}"`);
 	const url = `https://commandcode.ai/docs/plans/${def.slug}`;
 	const html = await fetchText(url);
+
+	if (!def.creditHeader) {
+		// No credits column: the plan publishes a rate-only model list, so every
+		// model draws on the plan's whole credit pool.
+		const grid = await parseRoleRows(html);
+		const entries = extractCatalog(grid, {
+			provider: "cc",
+			plan: def.label,
+			defaultAllowance: def.standardAllowance ?? 0,
+		});
+		if (entries.length === 0) {
+			throw new Error(
+				`no model rows parsed from ${url} — docs layout may have changed`,
+			);
+		}
+		return entries;
+	}
+
 	const tables = await parseTables(html);
 	const entries = extractCatalog(tables, {
 		provider: "cc",
