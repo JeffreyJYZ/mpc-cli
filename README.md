@@ -65,7 +65,7 @@ mpc --help
 | `req/5h`, `req/wk` (`--detail`) | requests the plan's rolling 5-hour / weekly window allows |
 | `req/mo` | requests the allowance buys (`allowance / costPerRequest`) |
 | `$/1K` | what 1,000 requests cost you on the plan |
-| `req/$` | requests one dollar of subscription buys |
+| `req/$` (optional) | requests one dollar of subscription buys — exactly `1000 / $/1K` |
 | `WIN` | side with the lower per-request cost |
 | `IDX` | 0-100 blended value score |
 
@@ -114,7 +114,7 @@ present on only one side still appear; the other column shows `—`.
   available" set) use the documented standard allowance ($20 on GOAT, $30 on Pro).
 - opencode Go has no shared credit pool; each model carries its own monthly limit, so the
   plan's "credits" figure is the sum of those limits (an upper bound, not a pool).
-- `$/1K` and `req/$` are plan-relative: they divide by the plan's own price, so a cheaper
+- `$/1K` is plan-relative: it divides by the plan's own price, so a cheaper
   subscription can post a lower per-request cost while buying fewer requests. Compare
   `req/mo` for volume and `$/1K` for the effective rate.
 - Values reflect the docs at fetch time; active deals are picked up automatically.
