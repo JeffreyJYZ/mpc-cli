@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { buildRows } from "./metrics.ts";
+import { normalizeKey } from "./normalize.ts";
 import {
 	COLUMN_IDS,
 	DEFAULT_COLUMNS,
@@ -310,6 +311,13 @@ async function runCheck(
 
 	const modelIds = await loadOcGoModelIds();
 	console.log(`oc-go /zen/go/v1/models ids: ${modelIds.length}`);
+
+	// live oc-go model ids the docs pricing table does not cover.
+	const unpriced = modelIds.filter((id) => !ocKeys.has(normalizeKey(id)));
+	console.log(
+		`oc-go ids missing from docs table (${unpriced.length}): ${unpriced.join(", ") || "—"}`,
+	);
+
 	console.log(
 		`\nonly in oc-go (${onlyOc.length}): ${onlyOc.join(", ") || "—"}`,
 	);
