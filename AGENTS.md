@@ -94,7 +94,7 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
 `normalizeKey` lowercases, drops the vendor prefix and parentheticals, strips punctuation,
 then applies `model-aliases.ts`. Add an alias whenever a model appears on one side only
 because of branding (check `mpc --check`, which lists `only in oc-go` / `only in cc`). Speed
-variants (GLM-5.2 Fast, Kimi K2.7 Code HighSpeed, MiMo V6 Pro UltraSpeed) are intentionally
+variants (GLM-5.2 Fast, Kimi K2.7 Code HighSpeed, MiMo V2.6 Pro UltraSpeed) are intentionally
 distinct keys.
 
 ## Metrics semantics
