@@ -410,6 +410,15 @@ async function runCheck(
 		`ability source:       ${ability.label || "disabled"} (${ability.scores.size} scores, ${scored}/${rows.length} rows scored)`,
 	);
 	if (ability.note) console.log(`ability note:         ${ability.note}`);
+	const unscored = rows
+		.filter((r) => (r.oc?.ability ?? r.cc?.ability ?? null) === null)
+		.map((r) => r.key);
+	if (unscored.length > 0) {
+		const head = unscored.slice(0, 20).join(", ");
+		const more =
+			unscored.length > 20 ? `  +${unscored.length - 20} more` : "";
+		console.log(`ability missing (${unscored.length}): ${head}${more}`);
+	}
 
 	const modelIds = await loadOcGoModelIds();
 	console.log(`opencode /zen/go/v1/models ids: ${modelIds.length}`);

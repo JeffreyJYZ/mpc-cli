@@ -17,13 +17,19 @@ export interface AbilityResult {
 export interface AbilityOptions {
 	source: string;
 	key?: string;
-	/** Fall back to the keyless AA scrape for models the primary missed. */
+	/** Fill models the primary source misses from the other sources. */
 	fallback?: boolean;
 	refresh?: boolean;
 }
 
 const CC_REFERENCE_PAGE = "https://commandcode.ai/docs/plans/goat";
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+interface Resolved {
+	scheme: AbilitySource;
+	scores: Map<string, number>;
+	label: string;
+}
 
 function cachePath(): string {
 	const base = process.env.XDG_CACHE_HOME ?? join(homedir(), ".cache");
@@ -112,6 +118,68 @@ async function loadUrl(url: string): Promise<Map<string, number>> {
 	return parseJsonScores(await fetchText(url));
 }
 
+/** Load the requested source. */
+async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
+	const [scheme, arg] = opts.source.includes(":")
+		? [
+				opts.source.split(":")[0] ?? "",
+				opts.source.slice(opts.source.indexOf(":") + 1),
+			]
+		: [opts.source, undefined];
+
+	switch (scheme) {
+		case "cc":
+			return {
+				scheme: "cc",
+				scores: await loadCc(),
+				label: "Command Code Intelligence",
+			};
+		case "aa-web":
+			return {
+				scheme: "aa-web",
+				scores: await loadAaWebCached(Boolean(opts.refresh)),
+				label: "Artificial Analysis (web, partial)",
+			};
+		case "aa": {
+			const key = opts.key ?? process.env.AA_API_KEY;
+			if (!key) {
+				throw new Error(
+					"--bench aa needs a key: set AA_API_KEY or pass --bench-key",
+				);
+			}
+			const scores = await loadAaApi(key);
+			if (scores.size === 0) {
+				throw new Error(
+					"Artificial Analysis returned no scores — check the API key and response shape",
+				);
+			}
+			return {
+				scheme: "aa",
+				scores,
+				label: `Artificial Analysis (${scores.size} models)`,
+			};
+		}
+		case "file":
+			if (!arg) throw new Error("--bench file:<path> needs a path");
+			return {
+				scheme: "file",
+				scores: await loadFile(arg),
+				label: `bench file ${arg}`,
+			};
+		case "url":
+			if (!arg) throw new Error("--bench url:<url> needs a url");
+			return {
+				scheme: "url",
+				scores: await loadUrl(arg),
+				label: `bench ${arg}`,
+			};
+		default:
+			throw new Error(
+				`unknown --bench "${opts.source}" (cc | aa | aa-web | file:<path> | url:<url>)`,
+			);
+	}
+}
+
 function merge(into: Map<string, number>, from: Map<string, number>): number {
 	let added = 0;
 	for (const [key, score] of from) {
@@ -124,69 +192,34 @@ function merge(into: Map<string, number>, from: Map<string, number>): number {
 }
 
 /**
- * Load benchmark scores. Default source is Command Code's own Intelligence
- * column; models it does not score are filled from the keyless Artificial
- * Analysis scrape.
+ * Load benchmark scores. The chosen source leads; unless --no-fallback, any
+ * model it misses is filled from the other sources (Command Code, then the
+ * keyless Artificial Analysis scrape) so a model scored anywhere shows a value.
  */
 export async function loadAbility(
 	opts: AbilityOptions,
 ): Promise<AbilityResult> {
-	const [scheme, arg] = opts.source.includes(":")
-		? [
-				opts.source.split(":")[0],
-				opts.source.slice(opts.source.indexOf(":") + 1),
-			]
-		: [opts.source, undefined];
-
-	switch (scheme) {
-		case "cc":
-			return withFallback(
-				await loadCc(),
-				"Command Code Intelligence",
-				opts,
-			);
-		case "aa-web":
-			return {
-				scores: await loadAaWebCached(Boolean(opts.refresh)),
-				label: "Artificial Analysis (web, partial)",
-				note: "web scrape covers only the models AA embeds",
-			};
-		case "aa": {
-			const key = opts.key ?? process.env.AA_API_KEY;
-			if (!key) {
-				throw new Error(
-					"--bench aa needs a key: set AA_API_KEY or pass --bench-key",
-				);
-			}
-			return {
-				scores: await loadAaApi(key),
-				label: "Artificial Analysis",
-			};
-		}
-		case "file":
-			if (!arg) throw new Error("--bench file:<path> needs a path");
-			return { scores: await loadFile(arg), label: `bench file ${arg}` };
-		case "url":
-			if (!arg) throw new Error("--bench url:<url> needs a url");
-			return { scores: await loadUrl(arg), label: `bench ${arg}` };
-		default:
-			throw new Error(
-				`unknown --bench "${opts.source}" (cc | aa | aa-web | file:<path> | url:<url>)`,
-			);
+	const primary = await resolvePrimary(opts);
+	if (!opts.fallback) {
+		return { scores: primary.scores, label: primary.label };
 	}
-}
 
-async function withFallback(
-	scores: Map<string, number>,
-	label: string,
-	opts: AbilityOptions,
-): Promise<AbilityResult> {
-	if (!opts.fallback) return { scores, label };
-	const fallback = await loadAaWebCached(Boolean(opts.refresh));
-	if (fallback.size === 0) return { scores, label };
+	const fills: string[] = [];
+	if (primary.scheme !== "cc") {
+		const added = merge(primary.scores, await loadCc());
+		if (added > 0) fills.push(`${added} from Command Code`);
+	}
+	if (primary.scheme !== "aa-web" && primary.scheme !== "aa") {
+		const added = merge(
+			primary.scores,
+			await loadAaWebCached(Boolean(opts.refresh)),
+		);
+		if (added > 0) fills.push(`${added} from Artificial Analysis`);
+	}
+
 	return {
-		scores,
-		label,
-		note: `filled ${merge(scores, fallback)} unscored models from Artificial Analysis`,
+		scores: primary.scores,
+		label: primary.label,
+		note: fills.length > 0 ? `filled ${fills.join(", ")}` : undefined,
 	};
 }

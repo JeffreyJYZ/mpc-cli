@@ -77,7 +77,7 @@ export async function loadAaApi(key: string): Promise<Map<string, number>> {
 function parseApiRow(row: unknown): Scored | null {
 	if (!row || typeof row !== "object") return null;
 	const record = row as Record<string, unknown>;
-	const label = String(record.name ?? record.slug ?? "");
+	const label = String(record.name ?? record.slug ?? record.id ?? "");
 	const slug = typeof record.slug === "string" ? record.slug : undefined;
 	const evaluations = record.evaluations as
 		| Record<string, unknown>
