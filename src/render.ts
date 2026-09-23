@@ -221,9 +221,11 @@ export const DEFAULT_COLUMNS = [
 	"oc-allow",
 	"oc-reqmo",
 	"oc-per1k",
+	"oc-reqdollar",
 	"cc-allow",
 	"cc-reqmo",
 	"cc-per1k",
+	"cc-reqdollar",
 	"win",
 	"idx",
 ];
@@ -236,12 +238,14 @@ export const DETAIL_COLUMNS = [
 	"oc-reqwk",
 	"oc-reqmo",
 	"oc-per1k",
+	"oc-reqdollar",
 	"cc-rates",
 	"cc-allow",
 	"cc-req5h",
 	"cc-reqwk",
 	"cc-reqmo",
 	"cc-per1k",
+	"cc-reqdollar",
 	"win",
 	"idx",
 ];
@@ -522,6 +526,9 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 	);
 	console.log(
 		`${dim("          ")}${dim("$/1K   your cost per 1,000 requests, at the plan's price")}`,
+	);
+	console.log(
+		`${dim("          ")}${dim("req/$  requests one dollar of subscription buys")}`,
 	);
 	console.log(
 		`${dim("          ")}${dim("WIN    side cheaper per request")}`,
