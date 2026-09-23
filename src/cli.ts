@@ -65,17 +65,17 @@ Options:
   -h, --help       show this help`;
 
 const COLUMN_HELP = `Available columns (--columns a,b,c):
-  model          model name
-  oc-rates       oc-go in/out/cache token rates ($/M)
-  oc-allow       oc-go monthly allowance for the model
-  oc-req5h       requests the oc-go 5-hour window allows
-  oc-reqwk       requests the oc-go weekly window allows
-  oc-reqmo       requests the oc-go monthly allowance buys
-  oc-per1k       oc-go cost per 1,000 requests
-  oc-reqdollar   oc-go requests per $1 of subscription
-  cc-*           same set for the Command Code plan
-  win            side with the lower per-request cost
-  idx            0-100 blended value score
+  model            model name
+  oc-rates         opencode in/out/cache token rates ($/M)
+  oc-allow         opencode monthly allowance for the model
+  oc-req5h         requests the opencode 5-hour window allows
+  oc-reqwk         requests the opencode weekly window allows
+  oc-reqmo         requests the opencode monthly allowance buys
+  oc-per1k         opencode cost per 1,000 requests
+  oc-reqdollar     opencode requests per $1 of subscription
+  cc-*             the same set for the Command Code plan
+  win              side with the lower per-request cost
+  idx              0-100 blended value score
 
 Presets: default = model + allow/reqmo/per1k/reqdollar for both sides + win + idx
          --detail = default + rates + req5h + reqwk`;
@@ -284,7 +284,7 @@ export async function run(argv: string[]): Promise<number> {
 	}
 	renderText(result, meta, columnIds);
 	console.log(
-		`\n${result.length} models · oc-go Go vs cc ${ccPlanInfo.label} · ${ocEntries.length} oc-go / ${ccEntries.length} cc entries`,
+		`\n${result.length} models · opencode Go vs Command Code ${ccPlanInfo.label} · ${ocEntries.length} opencode / ${ccEntries.length} Command Code entries`,
 	);
 	return 0;
 }
@@ -300,27 +300,29 @@ async function runCheck(
 	const onlyOc = [...ocKeys].filter((k) => !ccKeys.has(k));
 	const onlyCc = [...ccKeys].filter((k) => !ocKeys.has(k));
 
-	console.log(`oc-go entries parsed: ${ocEntries.length}`);
-	console.log(`cc entries parsed:    ${ccEntries.length}`);
+	console.log(`opencode entries parsed: ${ocEntries.length}`);
+	console.log(`Command Code entries: ${ccEntries.length}`);
 	console.log(
 		`matched models:       ${rows.filter((r) => r.oc && r.cc).length}`,
 	);
 	console.log(
-		`free oc-go models:    ${ocEntries.filter((e) => e.allowance === 0).length}`,
+		`free opencode models: ${ocEntries.filter((e) => e.allowance === 0).length}`,
 	);
 
 	const modelIds = await loadOcGoModelIds();
-	console.log(`oc-go /zen/go/v1/models ids: ${modelIds.length}`);
+	console.log(`opencode /zen/go/v1/models ids: ${modelIds.length}`);
 
 	// live oc-go model ids the docs pricing table does not cover.
 	const unpriced = modelIds.filter((id) => !ocKeys.has(normalizeKey(id)));
 	console.log(
-		`oc-go ids missing from docs table (${unpriced.length}): ${unpriced.join(", ") || "—"}`,
+		`opencode ids missing from docs table (${unpriced.length}): ${unpriced.join(", ") || "—"}`,
 	);
 
 	console.log(
-		`\nonly in oc-go (${onlyOc.length}): ${onlyOc.join(", ") || "—"}`,
+		`\nonly in opencode (${onlyOc.length}): ${onlyOc.join(", ") || "—"}`,
 	);
-	console.log(`only in cc (${onlyCc.length}): ${onlyCc.join(", ") || "—"}`);
+	console.log(
+		`only in Command Code (${onlyCc.length}): ${onlyCc.join(", ") || "—"}`,
+	);
 	return 0;
 }
