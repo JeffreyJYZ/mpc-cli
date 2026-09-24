@@ -45,9 +45,9 @@ function pricingTriple(m: EntryMetrics | undefined): string {
 }
 
 function winner(row: CompareRow): string {
-	// One-sided rows are not wins; "*" marks the only provider that has it.
-	if (!row.oc) return `${shortProviderName("cc")}*`;
-	if (!row.cc) return `${shortProviderName("oc-go")}*`;
+	// One-sided rows are not wins; name the side that carries the model.
+	if (!row.oc) return `${shortProviderName("cc")} only`;
+	if (!row.cc) return `${shortProviderName("oc-go")} only`;
 	const side = cheaperSide(row);
 	if (side === "tie") return "tie";
 	return shortProviderName(side === "oc" ? "oc-go" : "cc");
