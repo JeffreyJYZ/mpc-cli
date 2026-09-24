@@ -3,6 +3,21 @@
 Agent-facing notes for `mpc`. The README is user-facing — keep it that way; put
 architecture, gotchas and contributor rules here.
 
+## Sibling repos (same owner)
+
+`mpc` is downstream of a second repo, `~/dev/plugins/command-code-zed` — same author, local-only
+(never push/publish without explicit go):
+
+| sibling | mpc's dependency on it |
+| --- | --- |
+| `cmduse` (Rust CLI, `cli/`) | shelled out for `plans --json` (plan price/windows), `-1 --json` (account totals, coverage), `model --json --since <ISO>` (windowed per-model local usage) |
+| `@jeffreyjyz/opencode-command-code` (`opencode/`) | the opencode provider plugin appends per-request usage to `~/.cache/mpc/usage.jsonl`, which `--usage` reads |
+
+Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and the usage
+log line (`ts, provider, model, input, cacheRead, cacheWrite, output, costUsd`). A change on either
+side updates the other in the same effort. `CMDUSE_BIN` points every cmduse call at a dev build
+(`cmdusedev`).
+
 ## What this is
 
 A `bun`/TypeScript CLI comparing model pricing across **OpenCode Go** and **CommandCode**
