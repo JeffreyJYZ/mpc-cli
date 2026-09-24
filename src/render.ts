@@ -248,6 +248,7 @@ const COLUMNS: Record<string, Column> = {
 	win: {
 		header: "WIN",
 		value: winner,
+		right: true,
 		style: (r) => {
 			const side = cheaperSide(r);
 			if (side === "none") return "2";
@@ -507,7 +508,7 @@ function printTable(
 					renderSegment(
 						seg,
 						seg.columns.map((c) => c.header),
-						false,
+						true,
 					),
 				),
 			)
