@@ -72,9 +72,8 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
   provider plugin's log is only a fallback for when the DB is missing; `cmduse model --json --since`
   (cmduse 0.6.x+) and `data/logs.ts` cover CommandCode CLI sessions. `CMDUSE_BIN` overrides the
   cmduse binary (dev builds).
-- The plugin (`~/dev/plugins/command-code-zed`) writes that log from
-  `message.updated` events — the only complete per-model source, since neither the account API nor
-  Studio exposes a model dimension.
+- The account API has no per-model dimension (Studio's surface is the same endpoint), which is why
+  the opencode store — and, secondarily, the provider plugin's log — are the per-model sources.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals). Local logs
   are partial by nature, so the report always prints a coverage line against `cmduse -1` totals and
   warns when coverage < 90%. `--usage-file` is the escape hatch for a complete mix.
