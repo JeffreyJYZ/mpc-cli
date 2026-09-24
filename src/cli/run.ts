@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { loadUsage } from "../data/usage.ts";
+import { loadUsage } from "../data/usage/index.ts";
 import { renderUsage } from "../view/layout/usage.ts";
 import {
 	COLUMN_IDS,
@@ -75,6 +75,7 @@ export async function run(argv: string[]): Promise<number> {
 			options.usageFile,
 			options.usageWindow,
 			options.usageLog,
+			options.usageDb,
 		);
 		const projection = project(
 			usage.entries,

@@ -1,8 +1,8 @@
 import { Database } from "bun:sqlite";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { normalizeKey } from "../keys.ts";
-import type { UsageEntry } from "./usage.ts";
+import { normalizeKey } from "../../keys.ts";
+import type { UsageEntry } from "./parse.ts";
 
 /** Default location of opencode's message store. */
 export function defaultOpencodeDb(): string {

@@ -55,18 +55,6 @@ export function buildMetrics(
 	return metrics;
 }
 
-function _indexByKey(
-	entries: CatalogEntry[],
-	metrics: EntryMetrics[],
-): Map<string, EntryMetrics> {
-	const byKey = new Map<string, EntryMetrics>();
-	entries.forEach((entry, i) => {
-		const metric = metrics[i];
-		if (metric) byKey.set(entry.key, metric);
-	});
-	return byKey;
-}
-
 export { lookupAbility } from "./ability.ts";
 export { costPerRequest, windowRatios } from "./cost.ts";
 export { buildRows } from "./rows.ts";

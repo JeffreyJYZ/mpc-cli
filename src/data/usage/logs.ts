@@ -1,8 +1,8 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { normalizeKey } from "../keys.ts";
-import type { UsageEntry } from "./usage.ts";
+import { normalizeKey } from "../../keys.ts";
+import type { UsageEntry } from "./parse.ts";
 
 interface Totals {
 	requests: number;
@@ -80,7 +80,7 @@ export function scanLogs(
 			continue;
 		}
 		for (const raw of text.split("\n")) {
-			if (!raw || !raw.includes('"usage"')) continue;
+			if (!raw?.includes('"usage"')) continue;
 			let line: Line;
 			try {
 				line = JSON.parse(raw) as Line;

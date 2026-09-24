@@ -1,4 +1,4 @@
-import type { UsageEntry } from "../../data/usage.ts";
+import type { UsageEntry } from "../../data/usage/index.ts";
 import type { CatalogEntry, PlanInfo, ProviderId } from "../../types.ts";
 
 const PER_MILLION = 1_000_000;
@@ -59,7 +59,6 @@ function side(
 	periodCost: number,
 	months: number,
 ): SideProjection {
-	const _perMonth = Math.max(months, 1e-9);
 	const requests = Math.max(usage.requests, 1e-9);
 	const costPerRequest = periodCost / requests;
 	const payPerRequest =

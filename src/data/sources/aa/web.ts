@@ -2,7 +2,6 @@ import { normalizeKey } from "../../../keys.ts";
 import { fetchText } from "../../scrape/index.ts";
 
 const MODELS_URL = "https://artificialanalysis.ai/models";
-const _API_URL = "https://artificialanalysis.ai/api/v2/data/llms/models";
 
 /** A model label and its Artificial Analysis Intelligence Index. */
 interface Scored {

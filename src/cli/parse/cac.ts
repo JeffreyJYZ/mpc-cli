@@ -64,6 +64,14 @@ export function parseFlags(argv: string[]): Bag {
 		)
 		.option("--usage-file <path>", "read usage from a JSON file instead")
 		.option(
+			"--usage-window <w>",
+			"usage range: period | all | <n>d (default period)",
+		)
+		.option(
+			"--usage-db <path>",
+			"opencode message store (default ~/.local/share/opencode/opencode.db)",
+		)
+		.option(
 			"--usage-log <path>",
 			"provider usage log (default ~/.cache/mpc/usage.jsonl)",
 		)
