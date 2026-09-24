@@ -129,6 +129,9 @@ distinct keys.
 - `VAL` uses `abilityWeight` (default 0.35) and `tpsWeight` (default 0.10); remaining weight splits
   volume/cache/output 50/25/25.
   Unscored models get `valueIndex = null`; never coerce a missing score to zero.
+- `lookupAbility` makes speed variants (`...Fast`, `...HighSpeed`, `...UltraSpeed`, `...FlashX`)
+  inherit the base model's ability, since the weights are the same. Throughput is never inherited —
+  serving differs. Add suffixes to `SPEED_SUFFIXES` in `metrics.ts` only when that is true.
 
 ## Rendering
 

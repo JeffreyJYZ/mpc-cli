@@ -23,6 +23,30 @@ export function costPerRequest(
 	);
 }
 
+/** Speed-variant suffixes that share the base model's weights. */
+const SPEED_SUFFIXES = ["ultraspeed", "highspeed", "flashx", "fastx", "fast"];
+
+/**
+ * Benchmark lookup. A speed variant (`...Fast`, `...HighSpeed`, `...UltraSpeed`)
+ * has the base model's weights, so it inherits the base ability when the
+ * benchmark has no row of its own. Throughput is not inherited, since serving
+ * differs.
+ */
+export function lookupAbility(
+	scores: Map<string, number>,
+	key: string,
+): number | null {
+	const direct = scores.get(key);
+	if (direct !== undefined) return direct;
+	for (const suffix of SPEED_SUFFIXES) {
+		if (key.endsWith(suffix)) {
+			const base = scores.get(key.slice(0, -suffix.length));
+			if (base !== undefined) return base;
+		}
+	}
+	return null;
+}
+
 function minmax(values: number[]): number[] {
 	if (values.length === 0) return [];
 	const min = Math.min(...values);
@@ -104,7 +128,7 @@ export function buildMetrics(
 			requestsPerWeek: ratios.week * requestsPerMonth,
 			payPerRequest: free ? 0 : (plan.price * cost) / entry.allowance,
 			multiplier: plan.price > 0 ? entry.allowance / plan.price : 0,
-			ability: ability.get(entry.key) ?? null,
+			ability: lookupAbility(ability, entry.key),
 			tps: tps.get(entry.key) ?? null,
 			index: 0,
 			valueIndex: null,

@@ -126,7 +126,9 @@ VAL = 100 * (0.35*ability + 0.10*tps + 0.25*volume + 0.15*cache + 0.15*output)
 `--bench-weight` and `--tps-weight` set the ability and speed shares; the remaining weight
 splits volume/cache/output 50/25/25. Ability and `tps` come from the same source, so `--bench cc`
 reads both Command Code's `Intelligence` and `Tok/s` columns.
-Unscored models show `ability —` and `VAL —`; they are excluded from the ability normalisation range.
+Speed variants (`…Fast`, `…HighSpeed`, `…UltraSpeed`, `…FlashX`) inherit their base model's
+ability — same weights — but not its throughput. Unscored models show `ability —` and `VAL —` and
+are excluded from the ability normalisation range.
 
 | `--bench` | source | coverage |
 | --- | --- | --- |

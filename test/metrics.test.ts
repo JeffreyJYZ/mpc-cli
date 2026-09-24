@@ -1,5 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { buildMetrics, buildRows, costPerRequest } from "../src/metrics.ts";
+import {
+	buildMetrics,
+	buildRows,
+	costPerRequest,
+	lookupAbility,
+} from "../src/metrics.ts";
 import type { CatalogEntry, PlanInfo, Workload } from "../src/types.ts";
 
 const workload: Workload = { input: 1_000, cacheRead: 50_000, output: 200 };
@@ -129,6 +134,25 @@ describe("buildRows", () => {
 		const solo = rows.find((r) => r.key === "solo");
 		expect(solo?.oc).toBeUndefined();
 		expect(solo?.cc).toBeDefined();
+	});
+});
+
+describe("lookupAbility", () => {
+	const scores = new Map([
+		["glm52", 33.7],
+		["deepseekv4flash", 34.3],
+		["kimik27code", 25.8],
+	]);
+	test("exact key wins", () => {
+		expect(lookupAbility(scores, "glm52")).toBe(33.7);
+	});
+	test("speed variants inherit the base model ability", () => {
+		expect(lookupAbility(scores, "glm52fast")).toBe(33.7);
+		expect(lookupAbility(scores, "deepseekv4flashfast")).toBe(34.3);
+		expect(lookupAbility(scores, "kimik27codehighspeed")).toBe(25.8);
+	});
+	test("no base means no score", () => {
+		expect(lookupAbility(scores, "mimov26proultraspeed")).toBeNull();
 	});
 });
 
