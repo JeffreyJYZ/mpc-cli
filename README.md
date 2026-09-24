@@ -39,7 +39,7 @@ mpc --help
 | `--in <n>` | `800` | fixed input tokens per request |
 | `--cache <n>` | `50000` | fixed cache-read tokens per request |
 | `--out <n>` | `200` | fixed output tokens per request |
-| `--metric <name>` | `index` | sort by `index`, `req`, `cost` or `name` |
+| `--metric <name>` | `val` | sort by `val`, `index`, `req`, `cost` or `name`; rows with no `VAL` always sort last |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
 | `--only <scope>` | `all` | `all` = union of both catalogs, `both` = only shared models |
 | `--width <n>` | terminal | force table width; otherwise auto-detect and drop optional columns (`rates`, `req/$`, `5h`/`wk`) to fit |
@@ -137,9 +137,9 @@ are excluded from the ability normalisation range.
 | `aa-web` | Artificial Analysis models page scrape | partial (only the models AA embeds) |
 | `file:<path>` / `url:<url>` | your JSON, `{ "model": score }` or `[{ model, score }]` | whatever you supply |
 
-Default is `cc`; models it does not score are filled from Artificial Analysis —
-the full API when `AA_API_KEY` is set, otherwise the keyless `aa-web` scrape
-(`--no-fallback` to disable). The `aa-web` result is cached under
+Default is `cc`. Because CC's `Intelligence` column and Artificial Analysis publish the same
+index, CC is used alone — no second round-trip. Pick `--bench aa` for AA's own catalog; other
+sources fall back to CC, then to `--no-fallback` to disable. The `aa-web` result is cached under
 `$XDG_CACHE_HOME/mpc/` (or `~/.cache/mpc/`) for 7 days; `--refresh` busts it.
 
 ## Model matching

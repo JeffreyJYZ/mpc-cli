@@ -10,7 +10,7 @@ describe("parseArgs", () => {
 			cacheRead: 50_000,
 			output: 200,
 		});
-		expect(o.metric).toBe("index");
+		expect(o.metric).toBe("val");
 		expect(o.only).toBe("all");
 	});
 

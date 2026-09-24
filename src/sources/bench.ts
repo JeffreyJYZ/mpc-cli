@@ -268,17 +268,19 @@ export async function loadAbility(
 	opts: AbilityOptions,
 ): Promise<AbilityResult> {
 	const primary = await resolvePrimary(opts);
-	if (!opts.fallback) {
+	// Command Code and Artificial Analysis publish the same index, so when CC
+	// leads there is nothing worth a second round-trip.
+	if (!opts.fallback || primary.scheme === "cc") {
 		return { ...primary.data, label: primary.label };
 	}
 
 	const fills: string[] = [];
-	if (primary.scheme !== "cc") {
+	{
 		const cc = await loadCc();
 		const added =
 			merge(primary.data.intelligence, cc.intelligence, opts.keys) +
 			merge(primary.data.tps, cc.tps, opts.keys);
-		if (added > 0) fills.push(`${added} models from Command Code`);
+		if (added > 0) fills.push(`${added} values from Command Code`);
 	}
 	if (primary.scheme !== "aa-web" && primary.scheme !== "aa") {
 		const fallback = await loadAaFallback(opts);

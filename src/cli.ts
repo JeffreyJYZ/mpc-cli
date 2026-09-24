@@ -19,7 +19,7 @@ import {
 } from "./sources/opencodeGo.ts";
 import type { CatalogEntry, CompareRow, Workload } from "./types.ts";
 
-type Metric = "index" | "req" | "cost" | "name";
+type Metric = "val" | "index" | "req" | "cost" | "name";
 
 interface Options {
 	ccPlan: string;
@@ -62,7 +62,8 @@ Options:
   --in <n>         fixed input tokens per request (default ${DEFAULTS.input})
   --cache <n>      fixed cache-read tokens per request (default ${DEFAULTS.cacheRead})
   --out <n>        fixed output tokens per request (default ${DEFAULTS.output})
-  --metric <name>  sort by: index | req | cost | name (default index)
+  --metric <name>  sort by: val | index | req | cost | name (default val)
+                   rows with no VAL always sort last
   --model <re>     only rows whose name matches (regex, falls back to substring)
   --only <scope>   both = models on both providers, all = union (default all)
   --fit            show the widest column set that fits the terminal
@@ -121,7 +122,7 @@ export function parseArgs(argv: string[]): Options {
 	const options: Options = {
 		ccPlan: "goat",
 		workload: { ...DEFAULTS },
-		metric: "index",
+		metric: "val",
 		only: "all",
 		fit: false,
 		bench: "cc",
@@ -163,7 +164,11 @@ export function parseArgs(argv: string[]): Options {
 				break;
 			case "--metric": {
 				const value = next();
-				if (!["index", "req", "cost", "name"].includes(value ?? "")) {
+				if (
+					!["val", "index", "req", "cost", "name"].includes(
+						value ?? "",
+					)
+				) {
 					throw new Error(`unknown --metric "${value}"`);
 				}
 				options.metric = value as Metric;
@@ -279,7 +284,13 @@ function sortRows(
 	asc: boolean,
 ): CompareRow[] {
 	const dir = asc ? 1 : -1;
+	// Rows without a score always sit at the bottom, either direction.
+	const nullable = (r: CompareRow): number | null =>
+		Math.max(r.oc?.valueIndex ?? -1, r.cc?.valueIndex ?? -1) >= 0
+			? Math.max(r.oc?.valueIndex ?? -1, r.cc?.valueIndex ?? -1)
+			: null;
 	const by = {
+		val: (r: CompareRow) => nullable(r) ?? Number.NEGATIVE_INFINITY,
 		name: (r: CompareRow) => -r.name.localeCompare(r.name),
 		index: (r: CompareRow) =>
 			Math.max(r.oc?.index ?? -1, r.cc?.index ?? -1),
@@ -297,6 +308,13 @@ function sortRows(
 				: Number.NEGATIVE_INFINITY;
 		},
 	};
+	if (metric === "val") {
+		const scored = rows.filter((r) => nullable(r) !== null);
+		const unscored = rows.filter((r) => nullable(r) === null);
+		return [...scored]
+			.sort((a, b) => ((nullable(a) ?? 0) - (nullable(b) ?? 0)) * dir)
+			.concat(unscored);
+	}
 	return [...rows].sort((a, b) => (by[metric](a) - by[metric](b)) * dir);
 }
 

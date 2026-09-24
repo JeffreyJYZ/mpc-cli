@@ -127,6 +127,8 @@ distinct keys.
   per key. AA slugs normalize cleanly via `normalizeKey`
   (`qwen3-8-max-0902` -> `qwen38max0902`); slug keys win over label keys to keep variant suffixes.
 - `aa-web` caches to `$XDG_CACHE_HOME/mpc/ability-aa-web.json` (7d TTL, `--refresh` busts).
+- CC's `Intelligence` and AA's index are the *same* benchmark (agree to ~2dp), so `--bench cc`
+  returns early without an AA round-trip. Only non-cc primaries fill from CC / AA.
 - Ability and speed come from one source: CC's `Intelligence` and `Tok/s` columns (`BenchData`).
   A model with no speed figure gets the neutral 0.5 in VAL, not a penalty.
 - `VAL` uses `abilityWeight` (default 0.35) and `tpsWeight` (default 0.10); remaining weight splits
@@ -141,6 +143,7 @@ distinct keys.
 
 - `render.ts` owns the column registry (`COLUMNS`), presets (`DEFAULT_COLUMNS`, `DETAIL_COLUMNS`)
   and the grouped table. Group banner = provider (`planTitle`), so column headers stay unprefixed.
+- Default sort is `val`; rows with `valueIndex === null` always sort last, either direction.
 - Modes: default = `DEFAULT_COLUMNS` (untrimmed); `--detail` = `DETAIL_COLUMNS` untrimmed;
   `--fit` = `DETAIL_COLUMNS` trimmed to width; `--columns` = exact and bypasses everything.
 - `fitColumns` drops optional columns, symmetric across providers, when the table exceeds the
