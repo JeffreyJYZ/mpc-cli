@@ -46,7 +46,11 @@ export function parseArgs(argv: string[]): Options {
 		.option("--no-fallback", "do not fill misses from other sources")
 		.option("--refresh", "ignore the aa-web cache")
 		.option("--no-ability", "hide ability and VAL")
-		.option("--peak", "peak-rate rows (OpenCode DeepSeek)");
+		.option("--peak", "peak-rate rows (OpenCode DeepSeek)")
+		.option("--asc", "flip the default sort direction")
+		.option("--json", "machine-readable output")
+		.option("--no-color", "disable ANSI colour")
+		.option("--check", "validate live sources and exit");
 	cli.example("mpc --fit");
 	cli.example("mpc --cc-plan pro --metric perreq");
 	cli.help();
