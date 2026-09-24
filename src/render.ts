@@ -45,8 +45,9 @@ function pricingTriple(m: EntryMetrics | undefined): string {
 }
 
 function winner(row: CompareRow): string {
-	// One-sided rows are not wins; the tally counts them separately.
-	if (!row.oc || !row.cc) return "only";
+	// One-sided rows are not wins; name the side that carries the model.
+	if (!row.oc) return `${providerName("cc")} only`;
+	if (!row.cc) return `${providerName("oc-go")} only`;
 	const side = cheaperSide(row);
 	if (side === "tie") return "tie";
 	return side === "oc" ? "OpenCode" : "CommandCode";
