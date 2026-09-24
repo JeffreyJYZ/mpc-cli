@@ -48,6 +48,10 @@ mpc --usage --usage-months 2                     # scale a partial window to a m
 mpc --usage --json                               # full projection
 ```
 
+`--usage` prefers `cmduse model --json --since <ISO>` when the installed cmduse supports the
+window (0.6.x+), and falls back to scanning the session logs itself otherwise. Set `CMDUSE_BIN`
+to point at a dev build (e.g. `cmdusedev`) instead of the installed `cmduse`.
+
 **Scope caveat.** `--usage` reads **local session logs only**. They contain the usage from this
 machine's CommandCode CLI sessions and may cover only part of your account period (other
 machines, other harnesses and the Provider API are not included). The report prints a coverage

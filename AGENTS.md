@@ -51,9 +51,9 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 ## Usage projection
 
-- `--usage` scans `~/.commandcode/projects/**/*.jsonl` itself (`data/logs.ts`), because
-  `cmduse model --json` is local-only and undocumented-scope. Assistant records carry
-  `usage{tokens,costUsd}` + `timestamp` + `model`, so a billing-period window is possible.
+- `--usage` prefers `cmduse model --json --since <ISO>` (cmduse 0.6.x+ windows the local scan);
+  `data/logs.ts` is the fallback for an older/absent cmduse. `CMDUSE_BIN` overrides the binary for
+  every cmduse call (plans, summary, model) so a dev build (`cmdusedev`) can be tested.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals). Local logs
   are partial by nature, so the report always prints a coverage line against `cmduse -1` totals and
   warns when coverage < 90%. `--usage-file` is the escape hatch for a complete mix.

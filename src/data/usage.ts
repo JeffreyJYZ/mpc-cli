@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { normalizeKey } from "../keys.ts";
+import { runCmduse } from "./cmduse.ts";
 import { scanLogs } from "./logs.ts";
 
 export interface UsageEntry {
@@ -75,16 +76,10 @@ export function parseUsage(text: string): UsageEntry[] {
 
 /** Best-effort account summary, used only for the coverage line. */
 export async function accountSummary(): Promise<AccountSummary | undefined> {
+	const result = await runCmduse(["-1", "--json", "-p"]);
+	if (!result.ok) return undefined;
 	try {
-		const proc = Bun.spawn(["cmduse", "-1", "--json", "-p"], {
-			stdout: "pipe",
-			stderr: "pipe",
-		});
-		const [out] = await Promise.all([
-			new Response(proc.stdout).text(),
-			proc.exited,
-		]);
-		const body = JSON.parse(out) as {
+		const body = JSON.parse(result.stdout) as {
 			summary?: { requests?: number; cost?: number };
 			periodEnd?: string;
 		};
@@ -95,6 +90,23 @@ export async function accountSummary(): Promise<AccountSummary | undefined> {
 		};
 	} catch {
 		return undefined;
+	}
+}
+
+/**
+ * Per-model usage from cmduse. Needs a cmduse that understands `--since`
+ * (0.6.x with the window feature); returns null on an older build so the
+ * caller can fall back to scanning the session logs itself.
+ */
+async function cmduseModel(since?: Date): Promise<UsageEntry[] | null> {
+	const args = ["model", "--json"];
+	if (since) args.push("--since", since.toISOString());
+	const result = await runCmduse(args);
+	if (!result.ok || !result.stdout.trim()) return null;
+	try {
+		return parseUsage(result.stdout);
+	} catch {
+		return null;
 	}
 }
 
@@ -143,9 +155,10 @@ export async function loadUsage(
 	}
 	const account = await accountSummary();
 	const since = sinceFor(window, account);
+	const fromCmduse = await cmduseModel(since);
 	return {
-		entries: scanLogs(since),
-		label: "local session logs",
+		entries: fromCmduse ?? scanLogs(since),
+		label: fromCmduse ? "cmduse model --json" : "local session logs",
 		window: label(window, since),
 		account,
 	};

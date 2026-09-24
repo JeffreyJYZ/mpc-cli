@@ -1,3 +1,5 @@
+import { runCmduse } from "../../cmduse.ts";
+
 interface CmdusePlan {
 	name: string;
 	price: string;
@@ -12,24 +14,11 @@ export function money(value: string): number | null {
 }
 
 export async function cmdusePlans(): Promise<CmdusePlan[]> {
-	let proc: Bun.Subprocess<"pipe", "pipe", "pipe">;
-	try {
-		proc = Bun.spawn(["cmduse", "plans", "--json"], {
-			stdout: "pipe",
-			stderr: "pipe",
-		});
-	} catch {
+	const result = await runCmduse(["plans", "--json"]);
+	if (!result.ok) {
 		throw new Error(
-			"`cmduse` not found on PATH — install the command-code CLI to read live plan limits.",
+			`cmduse plans --json failed: ${result.stderr.trim() || "is the command-code CLI installed?"}`,
 		);
 	}
-	const [out, err, code] = await Promise.all([
-		new Response(proc.stdout).text(),
-		new Response(proc.stderr).text(),
-		proc.exited,
-	]);
-	if (code !== 0) {
-		throw new Error(`cmduse plans --json failed (${code}): ${err.trim()}`);
-	}
-	return JSON.parse(out) as CmdusePlan[];
+	return JSON.parse(result.stdout) as CmdusePlan[];
 }
