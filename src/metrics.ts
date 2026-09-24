@@ -24,7 +24,7 @@ export function costPerRequest(
 }
 
 /** Speed-variant suffixes that share the base model's weights. */
-const SPEED_SUFFIXES = ["ultraspeed", "highspeed", "flashx", "fastx", "fast"];
+const SPEED_SUFFIXES = ["ultraspeed", "highspeed", "fastx", "fast"];
 
 /**
  * Benchmark lookup. A speed variant (`...Fast`, `...HighSpeed`, `...UltraSpeed`)
@@ -38,6 +38,12 @@ export function lookupAbility(
 ): number | null {
 	const direct = scores.get(key);
 	if (direct !== undefined) return direct;
+	// FlashX is the faster tier of Flash, not of the base model: "glm53flashx"
+	// inherits "glm53flash", not "glm53".
+	if (key.endsWith("flashx")) {
+		const flash = scores.get(`${key.slice(0, -"flashx".length)}flash`);
+		if (flash !== undefined) return flash;
+	}
 	for (const suffix of SPEED_SUFFIXES) {
 		if (key.endsWith(suffix)) {
 			const base = scores.get(key.slice(0, -suffix.length));
