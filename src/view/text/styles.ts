@@ -65,11 +65,23 @@ export const freeStyle =
 	(row: Row): string | undefined =>
 		pick(row)?.free ? "32" : undefined;
 
+let costCuts: [number, number] = [30, 60];
+let valCuts: [number, number] = [40, 70];
+
+/** Configure the green/yellow cut-offs for COST and VAL. */
+export function setThresholds(
+	cost: [number, number],
+	val: [number, number],
+): void {
+	costCuts = cost;
+	valCuts = val;
+}
+
 /** COST is inverted (0 = cheapest/best), so colour the other way round. */
 export const costStyle = (r: Row): string | undefined => {
 	const cost = 100 - bestIndex(r);
-	if (cost <= 30) return "32";
-	if (cost <= 60) return "33";
+	if (cost <= costCuts[0]) return "32";
+	if (cost <= costCuts[1]) return "33";
 	return "31";
 };
 
@@ -77,8 +89,8 @@ export const valueStyle = (row: Row): string | undefined => {
 	const scores = valueScores(row);
 	if (scores.length === 0) return "2";
 	const best = Math.max(...scores);
-	if (best >= 70) return "32";
-	if (best >= 40) return "33";
+	if (best >= valCuts[1]) return "32";
+	if (best >= valCuts[0]) return "33";
 	return "31";
 };
 

@@ -1,31 +1,21 @@
 import { cac } from "cac";
 import pkg from "../../../package.json" with { type: "json" };
-import { DEFAULTS, type Options } from "../options.ts";
+import type { Options } from "../options.ts";
 import { type Bag, toOptions } from "./map.ts";
 
-export function parseArgs(argv: string[]): Options {
+/** Raw CLI bag: exactly what the user typed, no config, no defaults. */
+export function parseFlags(argv: string[]): Bag {
 	const cli = cac("mpc");
 	cli.option(
 		"--cc-plan <id>",
 		"CommandCode plan: go, goat, pro, max10, max20",
-		{
-			default: "goat",
-		},
 	)
-		.option("--in <n>", "input tokens per request", {
-			default: DEFAULTS.input,
-		})
-		.option("--cache <n>", "cache-read tokens per request", {
-			default: DEFAULTS.cacheRead,
-		})
-		.option("--out <n>", "output tokens per request", {
-			default: DEFAULTS.output,
-		})
-		.option("--metric <name>", "val | cost | perreq | req | name", {
-			default: "val",
-		})
+		.option("--in <n>", "input tokens per request")
+		.option("--cache <n>", "cache-read tokens per request")
+		.option("--out <n>", "output tokens per request")
+		.option("--metric <name>", "val | cost | perreq | req | name")
 		.option("--model <re>", "only rows whose name matches")
-		.option("--only <scope>", "both | all", { default: "all" })
+		.option("--only <scope>", "both | all")
 		.option("--fit", "widest column set that fits the terminal")
 		.option("--detail", "every column, untrimmed")
 		.option("--width <n>", "force table width")
@@ -33,11 +23,20 @@ export function parseArgs(argv: string[]): Options {
 			"--columns <ids>",
 			"comma-separated columns (--columns help to list)",
 		)
-		.option("--bench <src>", "cc | aa | aa-web | file:<path> | url:<url>", {
-			default: "cc",
-		})
-		.option("--bench-weight <n>", "ability share of VAL", { default: 0.35 })
-		.option("--tps-weight <n>", "speed share of VAL", { default: 0.1 })
+		.option("--preset <name>", "named column preset from config")
+		.option("--bench <src>", "cc | aa | aa-web | file:<path> | url:<url>")
+		.option("--bench-weight <n>", "ability share of VAL")
+		.option("--tps-weight <n>", "speed share of VAL")
+		.option("--val-weights <w>", "ability,tps,volume,cache,output shares")
+		.option("--idx-weights <w>", "volume,cache,output shares for COST")
+		.option("--scale <mode>", "log | linear for skewed terms")
+		.option(
+			"--inherit-suffixes <s>",
+			"comma-separated speed-variant suffixes",
+		)
+		.option("--window <pair>", "override five-hour,weekly window ratios")
+		.option("--cost-thresholds <p>", "green,yellow COST cut-offs")
+		.option("--val-thresholds <p>", "yellow,green VAL cut-offs")
 		.option("--bench-name <label>", "footer label for the source")
 		.option(
 			"--bench-key <key>",
@@ -49,12 +48,23 @@ export function parseArgs(argv: string[]): Options {
 		.option("--peak", "peak-rate rows (OpenCode DeepSeek)")
 		.option("--asc", "flip the default sort direction")
 		.option("--json", "machine-readable output")
-		.option("--no-color", "disable ANSI colour")
-		.option("--check", "validate live sources and exit");
-	cli.example("mpc --fit");
-	cli.example("mpc --cc-plan pro --metric perreq");
+		.option("--format <name>", "table | json | csv | md")
+		.option("--color <mode>", "auto | always | never")
+		.option("--check", "validate live sources and exit")
+		.option(
+			"--config <path>",
+			"config file (default: ~/.config/mpc/config.json)",
+		)
+		.option("--no-config", "ignore the config file")
+		.option("--plugin <paths>", "extra config plugins, comma-separated")
+		.option("--print-config", "print the effective settings and exit");
 	cli.help();
 	cli.version(pkg.version);
 	const parsed = cli.parse(["node", "mpc", ...argv], { run: false });
-	return toOptions((parsed.options ?? {}) as Bag);
+	return (parsed.options ?? {}) as Bag;
+}
+
+/** CLI-only options, with defaults. Config is applied by resolveOptions. */
+export function parseArgs(argv: string[]): Options {
+	return toOptions(parseFlags(argv));
 }

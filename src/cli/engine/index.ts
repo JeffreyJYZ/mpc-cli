@@ -7,16 +7,20 @@ import type {
 } from "../../types.ts";
 import { lookupAbility } from "./ability.ts";
 import { costPerRequest, windowRatios } from "./cost.ts";
-import { assignIndex, assignValueIndex } from "./score.ts";
+import {
+	assignIndex,
+	assignValueIndex,
+	DEFAULT_SCORE,
+	type ScoreConfig,
+} from "./score.ts";
 
 export function buildMetrics(
 	entries: CatalogEntry[],
 	plans: Map<ProviderId, PlanInfo>,
 	workload: Workload,
 	ability: Map<string, number> = new Map(),
-	abilityWeight = 0.35,
 	tps: Map<string, number> = new Map(),
-	tpsWeight = 0.1,
+	config: ScoreConfig = DEFAULT_SCORE,
 ): EntryMetrics[] {
 	const metrics: EntryMetrics[] = entries.map((entry) => {
 		const plan = plans.get(entry.provider);
@@ -27,7 +31,7 @@ export function buildMetrics(
 		const requestsPerMonth = free
 			? Number.POSITIVE_INFINITY
 			: entry.allowance / cost;
-		const ratios = windowRatios(plan);
+		const ratios = windowRatios(plan, config.window);
 		return {
 			provider: entry.provider,
 			plan: entry.plan,
@@ -39,15 +43,15 @@ export function buildMetrics(
 			requestsPerWeek: ratios.week * requestsPerMonth,
 			payPerRequest: free ? 0 : (plan.price * cost) / entry.allowance,
 			multiplier: plan.price > 0 ? entry.allowance / plan.price : 0,
-			ability: lookupAbility(ability, entry.key),
+			ability: lookupAbility(ability, entry.key, config.inheritSuffixes),
 			tps: tps.get(entry.key) ?? null,
 			index: 0,
 			valueIndex: null,
 			free,
 		};
 	});
-	assignIndex(metrics);
-	assignValueIndex(metrics, abilityWeight, tpsWeight);
+	assignIndex(metrics, config.idxWeights, config.scale);
+	assignValueIndex(metrics, config);
 	return metrics;
 }
 

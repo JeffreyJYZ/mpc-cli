@@ -20,7 +20,11 @@ export function costPerRequest(
  * OpenCode Go fixes this at 20%/50%; CommandCode derives it from the plan's own
  * 5-hour / weekly dollar caps.
  */
-export function windowRatios(plan: PlanInfo): { five: number; week: number } {
+export function windowRatios(
+	plan: PlanInfo,
+	override?: [number, number],
+): { five: number; week: number } {
+	if (override) return { five: override[0], week: override[1] };
 	if (plan.provider === "oc-go") return { five: 0.2, week: 0.5 };
 	if (plan.fiveHour !== null && plan.weekly !== null && plan.credits > 0) {
 		return {

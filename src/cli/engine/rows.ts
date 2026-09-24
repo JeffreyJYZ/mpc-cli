@@ -7,6 +7,7 @@ import type {
 	Workload,
 } from "../../types.ts";
 import { buildMetrics } from "./index.ts";
+import { DEFAULT_SCORE, type ScoreConfig } from "./score.ts";
 
 function indexByKey(
 	entries: CatalogEntry[],
@@ -27,9 +28,8 @@ export function buildRows(
 	ccPlan: PlanInfo,
 	workload: Workload,
 	ability: Map<string, number> = new Map(),
-	abilityWeight = 0.35,
 	tps: Map<string, number> = new Map(),
-	tpsWeight = 0.1,
+	config: ScoreConfig = DEFAULT_SCORE,
 ): CompareRow[] {
 	const plans = new Map<ProviderId, PlanInfo>([
 		["oc-go", ocPlan],
@@ -41,9 +41,8 @@ export function buildRows(
 		plans,
 		workload,
 		ability,
-		abilityWeight,
 		tps,
-		tpsWeight,
+		config,
 	);
 	const ocByKey = indexByKey(ocEntries, all.slice(0, ocEntries.length));
 	const ccByKey = indexByKey(ccEntries, all.slice(ocEntries.length));

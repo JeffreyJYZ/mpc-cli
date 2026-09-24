@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import { buildMetrics } from "../../../src/cli/engine/index.ts";
+import { DEFAULT_SCORE } from "../../../src/cli/engine/score.ts";
 import { ccPlan, entry, workload } from "../fixtures.ts";
 
 describe("buildMetrics", () => {
@@ -74,7 +75,8 @@ describe("ability value index", () => {
 			new Map([["cc", ccPlan]]),
 			workload,
 			ability,
-			0.4,
+			new Map(),
+			{ ...DEFAULT_SCORE, abilityWeight: 0.4 },
 		);
 		const byKey = new Map(entries.map((e, i) => [e.key, metrics[i]]));
 		expect(byKey.get("smart")?.ability).toBe(60);

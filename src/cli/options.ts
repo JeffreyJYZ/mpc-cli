@@ -1,6 +1,9 @@
 import type { Workload } from "../types.ts";
 
 export type Metric = "val" | "cost" | "perreq" | "req" | "name";
+export type ColorMode = "auto" | "always" | "never";
+export type ScaleMode = "log" | "linear";
+export type Format = "table" | "json" | "csv" | "md";
 
 export interface Options {
 	ccPlan: string;
@@ -9,11 +12,21 @@ export interface Options {
 	model?: string;
 	only: "both" | "all";
 	columns?: string[];
+	preset?: string;
+	presets: Record<string, string[]>;
+	detail: boolean;
 	width?: number;
 	fit: boolean;
 	bench: string;
 	benchWeight: number;
 	tpsWeight: number;
+	idxWeights?: number[];
+	valWeights?: number[];
+	scale: ScaleMode;
+	inheritSuffixes?: string[];
+	window?: [number, number];
+	costThresholds: [number, number];
+	valThresholds: [number, number];
 	benchName?: string;
 	benchKey?: string;
 	noFallback: boolean;
@@ -22,20 +35,36 @@ export interface Options {
 	peak: boolean;
 	asc: boolean;
 	json: boolean;
-	detail: boolean;
-	noColor: boolean;
+	format: Format;
+	colorMode: ColorMode;
 	check: boolean;
-	help: boolean;
+	printConfig: boolean;
+	plugins: string[];
 }
 
-export const DEFAULTS = { input: 800, cacheRead: 50_000, output: 200 };
+export const DEFAULTS = {
+	input: 800,
+	cacheRead: 50_000,
+	output: 200,
+};
+
 const METRICS: Metric[] = ["val", "cost", "perreq", "req", "name"];
+const FORMATS: Format[] = ["table", "json", "csv", "md"];
 
 export function parseMetric(value: string | undefined): Metric {
 	if (!METRICS.includes(value as Metric)) {
 		throw new Error(`unknown --metric "${value}"`);
 	}
 	return value as Metric;
+}
+
+export function parseFormat(value: string | undefined): Format {
+	if (!FORMATS.includes(value as Format)) {
+		throw new Error(
+			`unknown --format "${value}" (table | json | csv | md)`,
+		);
+	}
+	return value as Format;
 }
 
 export function parseOnly(value: string | undefined): "both" | "all" {

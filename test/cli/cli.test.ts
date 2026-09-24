@@ -12,7 +12,7 @@ describe("parseArgs", () => {
 		});
 		expect(o.metric).toBe("val");
 		expect(o.only).toBe("all");
-		expect(o.noColor).toBe(false);
+		expect(o.colorMode).toBe("auto");
 	});
 
 	test("workload overrides, space and equals forms", () => {
@@ -37,7 +37,7 @@ describe("parseArgs", () => {
 
 	test("--no-* flags map to the negated option", () => {
 		const o = parseArgs(["--no-color", "--no-fallback", "--no-ability"]);
-		expect(o.noColor).toBe(true);
+		expect(o.colorMode).toBe("never");
 		expect(o.noFallback).toBe(true);
 		expect(o.noAbility).toBe(true);
 	});

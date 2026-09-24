@@ -21,7 +21,10 @@ function planBlock(plan: PlanInfo): { title: string; rest: string } {
 	};
 }
 
-function windowPercents(plan: PlanInfo): string {
+function windowPercents(plan: PlanInfo, override?: [number, number]): string {
+	if (override) {
+		return `${Math.round(override[0] * 100)}% / ${Math.round(override[1] * 100)}%`;
+	}
 	if (plan.provider === "oc-go") return "20% / 50%";
 	if (plan.fiveHour !== null && plan.weekly !== null && plan.credits > 0) {
 		return `${Math.round((plan.fiveHour / plan.credits) * 100)}% / ${Math.round(
@@ -51,7 +54,7 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 	);
 	line(
 		"windows",
-		`rolling caps as % of monthly allowance: ${planTitle(meta.ocPlan)} ${windowPercents(meta.ocPlan)} · ${planTitle(meta.ccPlan)} ${windowPercents(meta.ccPlan)}`,
+		`rolling caps as % of monthly allowance: ${planTitle(meta.ocPlan)} ${windowPercents(meta.ocPlan, meta.window)} · ${planTitle(meta.ccPlan)} ${windowPercents(meta.ccPlan, meta.window)}`,
 	);
 	if (meta.abilityLabel) {
 		line(

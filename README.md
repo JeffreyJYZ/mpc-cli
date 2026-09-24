@@ -34,6 +34,39 @@ bun link
 mpc --help
 ```
 
+## Config file
+
+Every flag persists. `mpc` reads `~/.config/mpc/config.json` (or `$XDG_CONFIG_HOME/mpc/config.json`),
+overridden by CLI flags, and `--config <path>` / `--no-config` control it. Keys are the camelCase
+flag names, negations are plain booleans:
+
+```json
+{
+  "ccPlan": "goat",
+  "columns": ["model", "oc-per1k", "cc-per1k", "val"],
+  "presets": { "cheap": ["model", "oc-per1k", "cc-per1k", "cost"] },
+  "metric": "val",
+  "benchWeight": 0.4,
+  "valWeights": [0.4, 0.1, 0.25, 0.15, 0.1],
+  "color": false,
+  "plugins": ["./work.json", "mpc-preset-openai"]
+}
+```
+
+`--print-config` prints the effective settings.
+
+### Plugins
+
+`plugins` (or `--plugin a,b`) layer config fragments between the defaults and your config:
+
+```
+defaults  <  plugins (listed order)  <  user config  <  CLI flags
+```
+
+Relative paths resolve against the config file's directory. A plugin is a `.json` file, or a
+`.js`/`.ts`/package whose default export is a config object (or a sync/async function returning
+one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as your shell.
+
 ## Options
 
 | Flag | Default | Meaning |
@@ -56,6 +89,20 @@ mpc --help
 | `--no-fallback` | off | with `--bench cc`, skip the Artificial Analysis fill |
 | `--refresh` | off | ignore the `aa-web` cache |
 | `--no-ability` | off | hide `ability` and `VAL` |
+| `--preset <name>` | — | named column set from `presets` in config |
+| `--idx-weights <a,b,c>` | `0.6,0.2,0.2` | COST weights (volume, cache, output), normalised |
+| `--val-weights <a,b,c,d,e>` | see above | VAL weights (ability, tps, volume, cache, output) |
+| `--scale <mode>` | `log` | `log` or `linear` normalisation for skewed terms |
+| `--inherit-suffixes <s>` | built-in | speed-variant suffixes that inherit ability |
+| `--window <five,week>` | derived | override rolling-window ratios |
+| `--cost-thresholds <g,y>` | `30,60` | COST colour cut-offs |
+| `--val-thresholds <y,g>` | `40,70` | VAL colour cut-offs |
+| `--format <name>` | `table` | `table`, `json`, `csv`, `md` |
+| `--color <mode>` | `auto` | `auto`, `always`, `never` |
+| `--config <path>` | XDG | config file |
+| `--no-config` | off | ignore config and plugins |
+| `--plugin <paths>` | — | extra config plugins, comma-separated |
+| `--print-config` | — | print effective settings and exit |
 | `-h, --help` | — | generated help (cac) |
 | `-v, --version` | — | print version |
 | `--peak` | off | use peak-rate rows instead of off-peak (DeepSeek) |

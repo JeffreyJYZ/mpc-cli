@@ -3,7 +3,20 @@ import { loadCcCatalog } from "../../data/sources/cc/catalog.ts";
 import { loadCcPlan } from "../../data/sources/cc/plans.ts";
 import { loadOcGoCatalog, ocGoPlan } from "../../data/sources/opencode.ts";
 import { buildRows } from "../engine/index.ts";
+import type { ScoreConfig } from "../engine/score.ts";
 import type { Options } from "../options.ts";
+
+function scoreConfig(options: Options): ScoreConfig {
+	return {
+		abilityWeight: options.benchWeight,
+		tpsWeight: options.tpsWeight,
+		idxWeights: options.idxWeights,
+		valWeights: options.valWeights,
+		scale: options.scale,
+		inheritSuffixes: options.inheritSuffixes,
+		window: options.window,
+	};
+}
 
 export async function collect(options: Options) {
 	const [ocEntries, ccEntries, ccPlanInfo] = await Promise.all([
@@ -37,9 +50,8 @@ export async function collect(options: Options) {
 		ccPlanInfo,
 		options.workload,
 		ability.intelligence,
-		options.benchWeight,
 		ability.tps,
-		options.tpsWeight,
+		scoreConfig(options),
 	);
 	return { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows, ability };
 }

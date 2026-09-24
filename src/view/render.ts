@@ -3,18 +3,20 @@ import { footer } from "./footer.ts";
 import { tally } from "./layout/segments.ts";
 import { printTable } from "./layout/table.ts";
 import type { ReportMeta } from "./schema.ts";
-import { paint, planTitle, setColor } from "./text/index.ts";
+import { paint, planTitle, setColor, setColorMode } from "./text/index.ts";
 
 export { fitColumns, tableWidth } from "./layout/fit.ts";
 export { tally } from "./layout/segments.ts";
 export { COLUMN_IDS, columns } from "./schema.ts";
+export { renderCsv, renderMarkdown } from "./text/export.ts";
 export {
 	fmtUsd,
 	planTitle,
 	providerName,
 	shortProviderName,
 } from "./text/index.ts";
-export { setColor };
+export { setThresholds } from "./text/styles.ts";
+export { setColor, setColorMode };
 
 export function renderText(
 	rows: CompareRow[],

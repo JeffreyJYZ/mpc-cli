@@ -49,6 +49,19 @@ bun link                       # exposes the `mpc` binary
 
 Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun test` all clean.
 
+## Config and plugins
+
+- Precedence: defaults < plugins (listed order) < user config < CLI. `resolveBag(argv)` in
+  `cli/config.ts` merges them; `parseFlags` (raw CLI) and `parseArgs` (CLI-only Options) stay
+  sync so tests never touch the filesystem.
+- `cli/plugins.ts`: a plugin is `.json`, or a `.js`/`.ts`/package default-exporting a config bag
+  or a factory `(ctx) => bag`. Relative paths resolve against the config file's directory.
+- Every flag is persistable because the config keys are the raw camelCase bag; `assertKnown`
+  validates every layer, so typos in a plugin or config fail loud.
+- All scoring knobs live in `ScoreConfig` (`cli/engine/score.ts`): `idxWeights`, `valWeights`,
+  `scale`, `inheritSuffixes`, `window`. Colour thresholds go through `setThresholds`, colour mode
+  through `setColorMode`.
+
 ## CLI parsing
 
 - Flags are declared once in `src/cli/parser.ts` and parsed with `cac`; it owns `--help` and

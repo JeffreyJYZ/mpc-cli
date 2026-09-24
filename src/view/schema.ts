@@ -54,6 +54,8 @@ export interface ReportMeta {
 	/** Ability source label, e.g. "CommandCode Intelligence". */
 	abilityLabel?: string;
 	abilityNote?: string;
+	/** Override for the rolling-window ratios, five-hour then weekly. */
+	window?: [number, number];
 }
 
 import { CC_COLUMNS } from "./columns/cc.ts";

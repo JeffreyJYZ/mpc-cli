@@ -4,35 +4,56 @@ import {
 	DEFAULT_COLUMNS,
 	DETAIL_COLUMNS,
 	fitColumns,
+	renderCsv,
 	renderJson,
+	renderMarkdown,
 	renderText,
-	setColor,
+	setColorMode,
+	setThresholds,
+	tally,
 } from "../view/render.ts";
+import { describeConfig, resolveBag } from "./config.ts";
 import { runCheck } from "./flow/check.ts";
 import { collect } from "./flow/collect.ts";
 import { matches, sortRows } from "./flow/sort.ts";
 import { COLUMN_HELP } from "./options.ts";
-import { parseArgs } from "./parse/cac.ts";
+import { type Bag, toOptions } from "./parse/map.ts";
 
 export type { Metric, Options } from "./options.ts";
 export { parseArgs } from "./parse/cac.ts";
 
+function columnIds(bag: Bag, options: ReturnType<typeof toOptions>): string[] {
+	const presets = (bag.presets ?? {}) as Record<string, unknown>;
+	const named = options.preset ? presets[options.preset] : undefined;
+	if (options.columns) return options.columns;
+	if (named) {
+		return Array.isArray(named)
+			? named.map(String)
+			: String(named)
+					.split(",")
+					.map((id) => id.trim())
+					.filter(Boolean);
+	}
+	if (options.preset) throw new Error(`unknown preset "${options.preset}"`);
+	return options.detail || options.fit ? DETAIL_COLUMNS : DEFAULT_COLUMNS;
+}
+
 export async function run(argv: string[]): Promise<number> {
-	const options = parseArgs(argv);
+	const bag = await resolveBag(argv);
+	if (bag.printConfig === true) {
+		process.stdout.write(describeConfig(bag));
+		return 0;
+	}
+	const options = toOptions(bag);
 	if (options.columns?.includes("help")) {
 		console.log(COLUMN_HELP);
 		return 0;
 	}
 
-	setColor(
-		!options.noColor &&
-			Boolean(process.stdout.isTTY) &&
-			!process.env.NO_COLOR,
-	);
+	setColorMode(options.colorMode);
+	setThresholds(options.costThresholds, options.valThresholds);
 
-	const requested =
-		options.columns ??
-		(options.detail || options.fit ? DETAIL_COLUMNS : DEFAULT_COLUMNS);
+	const requested = columnIds(bag, options);
 	const unknown = requested.filter((id) => !COLUMN_IDS.includes(id));
 	if (unknown.length > 0) {
 		throw new Error(
@@ -42,7 +63,6 @@ export async function run(argv: string[]): Promise<number> {
 
 	const { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows, ability } =
 		await collect(options);
-
 	if (options.check) {
 		return runCheck(options, ocEntries, ccEntries, rows, ability);
 	}
@@ -56,7 +76,6 @@ export async function run(argv: string[]): Promise<number> {
 		options.metric,
 		options.asc,
 	);
-
 	const meta = {
 		ocPlan: ocPlanInfo,
 		ccPlan: ccPlanInfo,
@@ -65,9 +84,19 @@ export async function run(argv: string[]): Promise<number> {
 			? undefined
 			: (options.benchName ?? ability.label),
 		abilityNote: options.noAbility ? undefined : ability.note,
+		window: options.window,
 	};
-	if (options.json) {
+
+	if (options.format === "json" || options.json) {
 		console.log(renderJson(result, meta));
+		return 0;
+	}
+	if (options.format === "csv") {
+		process.stdout.write(renderCsv(result, tally(result)));
+		return 0;
+	}
+	if (options.format === "md") {
+		process.stdout.write(renderMarkdown(result, [ocPlanInfo, ccPlanInfo]));
 		return 0;
 	}
 

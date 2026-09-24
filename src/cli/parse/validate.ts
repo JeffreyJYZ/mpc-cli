@@ -45,6 +45,20 @@ const KNOWN = new Set([
 	"columns",
 	"color",
 	"check",
+	"config",
+	"printConfig",
+	"plugins",
+	"plugin",
+	"preset",
+	"presets",
+	"format",
+	"scale",
+	"idxWeights",
+	"valWeights",
+	"inheritSuffixes",
+	"window",
+	"costThresholds",
+	"valThresholds",
 ]);
 
 /** Reject undeclared flags before mapping. */
