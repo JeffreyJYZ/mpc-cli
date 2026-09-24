@@ -179,15 +179,25 @@ function assignValueIndex(
 	const output = logMinmax(priced.map((m) => m.pricing.output));
 
 	const volumeByIndex = new Map<EntryMetrics, number>();
-	priced.forEach((m, i) => volumeByIndex.set(m, volume[i] ?? 0.5));
+	priced.forEach((m, i) => {
+		volumeByIndex.set(m, volume[i] ?? 0.5);
+	});
 	const cacheByIndex = new Map<EntryMetrics, number>();
-	priced.forEach((m, i) => cacheByIndex.set(m, cache[i] ?? 0.5));
+	priced.forEach((m, i) => {
+		cacheByIndex.set(m, cache[i] ?? 0.5);
+	});
 	const outputByIndex = new Map<EntryMetrics, number>();
-	priced.forEach((m, i) => outputByIndex.set(m, output[i] ?? 0.5));
+	priced.forEach((m, i) => {
+		outputByIndex.set(m, output[i] ?? 0.5);
+	});
 	const abilityByIndex = new Map<EntryMetrics, number>();
-	scored.forEach((m, i) => abilityByIndex.set(m, ability[i] ?? 0.5));
+	scored.forEach((m, i) => {
+		abilityByIndex.set(m, ability[i] ?? 0.5);
+	});
 	const speedByIndex = new Map<EntryMetrics, number>();
-	speeded.forEach((m, i) => speedByIndex.set(m, speed[i] ?? 0.5));
+	speeded.forEach((m, i) => {
+		speedByIndex.set(m, speed[i] ?? 0.5);
+	});
 
 	const rest = Math.max(0, 1 - wAbility - wTps);
 	const wVolume = rest * 0.5;

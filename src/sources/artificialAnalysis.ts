@@ -17,8 +17,7 @@ function parseEmbedded(html: string): Scored[] {
 		/"label":"([^"]+)","intelligenceIndex":([0-9.]+)(?:,"detailsUrl":"([^"]*)")?/g;
 	const out: Scored[] = [];
 	const seen = new Set<string>();
-	let match: RegExpExecArray | null;
-	while ((match = re.exec(html)) !== null) {
+	for (let match = re.exec(html); match !== null; match = re.exec(html)) {
 		const label = match[1] ?? "";
 		const score = Number(match[2]);
 		const slug = match[3]?.split("/").pop();

@@ -442,12 +442,6 @@ export async function run(argv: string[]): Promise<number> {
 	return 0;
 }
 
-function commonPrefix(a: string, b: string): number {
-	let i = 0;
-	while (i < a.length && i < b.length && a[i] === b[i]) i++;
-	return i;
-}
-
 async function runCheck(
 	_options: Options,
 	ocEntries: CatalogEntry[],
