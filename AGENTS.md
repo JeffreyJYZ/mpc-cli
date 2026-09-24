@@ -155,7 +155,7 @@ distinct keys.
 - `req/$` is exactly `1000 / $/1K`; kept because it reads more directly, but it is not independent
   information. `$/1K` is the plan-relative figure.
 - Colours follow cmduse: bold headings, dim secondary, cyan OpenCode, magenta CommandCode, green
-  winner/best, IDX green-yellow-red. Auto-off when stdout is not a TTY or `NO_COLOR` is set.
+  winner/best, COST green-yellow-red. Auto-off when stdout is not a TTY or `NO_COLOR` is set.
 
 ## Sources and drift
 

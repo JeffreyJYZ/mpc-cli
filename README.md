@@ -116,7 +116,7 @@ min-max normalised and inverted (cheaper scores higher). Free models get `∞` r
 
 ## Ability scores (`VAL`)
 
-`VAL` reuses the `IDX` recipe with a benchmark term:
+`VAL` reuses the `COST` recipe with a benchmark term:
 
 ```
 COST = 100 * (0.60*volume + 0.20*cache + 0.20*output)
