@@ -96,7 +96,7 @@ async function loadAaWebCached(refresh: boolean): Promise<Map<string, number>> {
 }
 
 async function loadCc(): Promise<BenchData> {
-	// Command Code only publishes Intelligence and Tok/s on the GOAT/Pro catalogs.
+	// CommandCode only publishes Intelligence and Tok/s on the GOAT/Pro catalogs.
 	const pages = await Promise.all(
 		CC_REFERENCE_PAGES.map(async (url) =>
 			parseTables(await fetchText(url)),
@@ -165,7 +165,7 @@ async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 			return {
 				scheme: "cc",
 				data: await loadCc(),
-				label: "Command Code Intelligence",
+				label: "CommandCode Intelligence",
 			};
 		case "aa-web": {
 			const data = emptyData();
@@ -261,14 +261,14 @@ async function loadAaFallback(
 
 /**
  * Load benchmark scores. The chosen source leads; unless --no-fallback, any
- * model it misses is filled from the other sources (Command Code, then
+ * model it misses is filled from the other sources (CommandCode, then
  * Artificial Analysis) so a model scored anywhere shows a value.
  */
 export async function loadAbility(
 	opts: AbilityOptions,
 ): Promise<AbilityResult> {
 	const primary = await resolvePrimary(opts);
-	// Command Code and Artificial Analysis publish the same index, so when CC
+	// CommandCode and Artificial Analysis publish the same index, so when CC
 	// leads there is nothing worth a second round-trip.
 	if (!opts.fallback || primary.scheme === "cc") {
 		return { ...primary.data, label: primary.label };
@@ -280,7 +280,7 @@ export async function loadAbility(
 		const added =
 			merge(primary.data.intelligence, cc.intelligence, opts.keys) +
 			merge(primary.data.tps, cc.tps, opts.keys);
-		if (added > 0) fills.push(`${added} values from Command Code`);
+		if (added > 0) fills.push(`${added} values from CommandCode`);
 	}
 	if (primary.scheme !== "aa-web" && primary.scheme !== "aa") {
 		const fallback = await loadAaFallback(opts);

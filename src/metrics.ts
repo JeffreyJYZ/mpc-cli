@@ -99,7 +99,7 @@ function assignIndex(metrics: EntryMetrics[]): void {
 
 /**
  * Fraction of the monthly allowance each rolling window allows, per
- * provider. opencode Go fixes this at 20%/50%; Command Code derives it from
+ * provider. OpenCode Go fixes this at 20%/50%; CommandCode derives it from
  * the plan's own 5-hour / weekly dollar caps.
  */
 function windowRatios(plan: PlanInfo): { five: number; week: number } {

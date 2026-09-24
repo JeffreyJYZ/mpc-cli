@@ -53,12 +53,12 @@ const DEFAULTS = {
 	output: 200,
 };
 
-const USAGE = `mpc — compare model pricing across opencode Go and Command Code plans
+const USAGE = `mpc — compare model pricing across OpenCode Go and CommandCode plans
 
 Usage: mpc [options]
 
 Options:
-  --cc-plan <id>   Command Code plan: ${Object.keys(CC_PLANS).join(", ")} (default goat)
+  --cc-plan <id>   CommandCode plan: ${Object.keys(CC_PLANS).join(", ")} (default goat)
   --in <n>         fixed input tokens per request (default ${DEFAULTS.input})
   --cache <n>      fixed cache-read tokens per request (default ${DEFAULTS.cacheRead})
   --out <n>        fixed output tokens per request (default ${DEFAULTS.output})
@@ -76,7 +76,7 @@ Options:
   --no-fallback    with --bench cc, do not fill from the aa-web scrape
   --refresh        ignore the aa-web cache
   --no-ability     hide ability and VAL
-  --peak           use peak-rate rows (opencode Go DeepSeek off/on-peak)
+  --peak           use peak-rate rows (OpenCode Go DeepSeek off/on-peak)
   --asc            sort ascending instead of descending
   --detail         preset: add raw token rates and 5h/week columns
   --width <n>      force table width; otherwise auto-detect and drop optional
@@ -91,14 +91,14 @@ Options:
 
 const COLUMN_HELP = `Available columns (--columns a,b,c):
   model            model name
-  oc-rates         opencode in/out/cache token rates ($/M)
-  oc-allow         opencode monthly allowance for the model
-  oc-req5h         requests the opencode 5-hour window allows
-  oc-reqwk         requests the opencode weekly window allows
-  oc-reqmo         requests the opencode monthly allowance buys
-  oc-per1k         opencode cost per 1,000 requests
-  oc-reqdollar     opencode requests per $1 of subscription
-  cc-*             the same set for the Command Code plan
+  oc-rates         OpenCode in/out/cache token rates ($/M)
+  oc-allow         OpenCode monthly allowance for the model
+  oc-req5h         requests the OpenCode 5-hour window allows
+  oc-reqwk         requests the OpenCode weekly window allows
+  oc-reqmo         requests the OpenCode monthly allowance buys
+  oc-per1k         OpenCode cost per 1,000 requests
+  oc-reqdollar     OpenCode requests per $1 of subscription
+  cc-*             the same set for the CommandCode plan
   ability          benchmark score for the model
   win              side with the lower per-request cost
   idx              0-100 blended cost/value score
@@ -418,7 +418,7 @@ export async function run(argv: string[]): Promise<number> {
 			: { ids: requested, dropped: [] as string[] };
 	renderText(result, meta, fitted.ids, fitted.dropped);
 	console.log(
-		`\n${result.length} models · opencode Go vs Command Code ${ccPlanInfo.label} · ${ocEntries.length} opencode / ${ccEntries.length} Command Code entries`,
+		`\n${result.length} models · OpenCode Go vs CommandCode ${ccPlanInfo.label} · ${ocEntries.length} OpenCode / ${ccEntries.length} CommandCode entries`,
 	);
 	return 0;
 }
@@ -446,13 +446,13 @@ async function runCheck(
 	const onlyOc = [...ocKeys].filter((k) => !ccKeys.has(k));
 	const onlyCc = [...ccKeys].filter((k) => !ocKeys.has(k));
 
-	console.log(`opencode entries parsed: ${ocEntries.length}`);
-	console.log(`Command Code entries: ${ccEntries.length}`);
+	console.log(`OpenCode entries parsed: ${ocEntries.length}`);
+	console.log(`CommandCode entries: ${ccEntries.length}`);
 	console.log(
 		`matched models:       ${rows.filter((r) => r.oc && r.cc).length}`,
 	);
 	console.log(
-		`free opencode models: ${ocEntries.filter((e) => e.allowance === 0).length}`,
+		`free OpenCode models: ${ocEntries.filter((e) => e.allowance === 0).length}`,
 	);
 
 	const scored = rows.filter(
@@ -473,19 +473,19 @@ async function runCheck(
 	}
 
 	const modelIds = await loadOcGoModelIds();
-	console.log(`opencode /zen/go/v1/models ids: ${modelIds.length}`);
+	console.log(`OpenCode /zen/go/v1/models ids: ${modelIds.length}`);
 
 	// live oc-go model ids the docs pricing table does not cover.
 	const unpriced = modelIds.filter((id) => !ocKeys.has(normalizeKey(id)));
 	console.log(
-		`opencode ids missing from docs table (${unpriced.length}): ${unpriced.join(", ") || "—"}`,
+		`OpenCode ids missing from docs table (${unpriced.length}): ${unpriced.join(", ") || "—"}`,
 	);
 
 	console.log(
-		`\nonly in opencode (${onlyOc.length}): ${onlyOc.join(", ") || "—"}`,
+		`\nonly in OpenCode (${onlyOc.length}): ${onlyOc.join(", ") || "—"}`,
 	);
 	console.log(
-		`only in Command Code (${onlyCc.length}): ${onlyCc.join(", ") || "—"}`,
+		`only in CommandCode (${onlyCc.length}): ${onlyCc.join(", ") || "—"}`,
 	);
 	return 0;
 }

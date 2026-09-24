@@ -49,15 +49,15 @@ function winner(row: CompareRow): string {
 	if (!row.oc || !row.cc) return "only";
 	const side = cheaperSide(row);
 	if (side === "tie") return "tie";
-	return side === "oc" ? "opencode" : "Command Code";
+	return side === "oc" ? "OpenCode" : "CommandCode";
 }
 
 /** Provider display name. */
 export function providerName(provider: ProviderId): string {
-	return provider === "oc-go" ? "opencode" : "Command Code";
+	return provider === "oc-go" ? "OpenCode" : "CommandCode";
 }
 
-/** e.g. "opencode Go", "Command Code GOAT". */
+/** e.g. "OpenCode Go", "CommandCode GOAT". */
 export function planTitle(plan: PlanInfo): string {
 	return `${providerName(plan.provider)} ${plan.label}`;
 }
@@ -529,7 +529,7 @@ export interface ReportMeta {
 	ocPlan: PlanInfo;
 	ccPlan: PlanInfo;
 	workload: Workload;
-	/** Ability source label, e.g. "Command Code Intelligence". */
+	/** Ability source label, e.g. "CommandCode Intelligence". */
 	abilityLabel?: string;
 	abilityNote?: string;
 }
@@ -628,7 +628,7 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 	}
 
 	const t = tally(rows);
-	const parts = [`opencode ${t.ocWins}`, `Command Code ${t.ccWins}`];
+	const parts = [`OpenCode ${t.ocWins}`, `CommandCode ${t.ccWins}`];
 	if (t.ties > 0) parts.push(`tie ${t.ties}`);
 	console.log(
 		dim(
@@ -637,7 +637,7 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 	);
 	console.log(
 		dim(
-			`          exclusive: opencode ${t.ocOnly} · Command Code ${t.ccOnly}`,
+			`          exclusive: OpenCode ${t.ocOnly} · CommandCode ${t.ccOnly}`,
 		),
 	);
 

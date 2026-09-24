@@ -4,9 +4,9 @@
  * the shared canonical form. Applied after normalizeKey's base cleaning.
  */
 export const ALIASES: Record<string, string> = {
-	// Command Code prefixes these with "Tencent"; opencode Go does not.
+	// CommandCode prefixes these with "Tencent"; OpenCode Go does not.
 	tencenthy3: "hy3",
 	tencenthy4preview: "hy4preview",
-	// Command Code writes "(exp)"; opencode Go writes "-exp".
+	// CommandCode writes "(exp)"; OpenCode Go writes "-exp".
 	deepseekv4flashvision: "deepseekv4flashvisionexp",
 };

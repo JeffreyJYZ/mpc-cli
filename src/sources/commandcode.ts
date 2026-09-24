@@ -95,12 +95,12 @@ async function cmdusePlans(): Promise<CmdusePlan[]> {
 	return JSON.parse(out) as CmdusePlan[];
 }
 
-/** Plan price + windows for a Command Code plan, from the official JSON. */
+/** Plan price + windows for a CommandCode plan, from the official JSON. */
 export async function loadCcPlan(planId: string): Promise<PlanInfo> {
 	const def = CC_PLANS[planId];
 	if (!def) {
 		throw new Error(
-			`unknown Command Code plan "${planId}" (have: ${Object.keys(CC_PLANS).join(", ")})`,
+			`unknown CommandCode plan "${planId}" (have: ${Object.keys(CC_PLANS).join(", ")})`,
 		);
 	}
 	const plans = await cmdusePlans();
@@ -121,10 +121,10 @@ export async function loadCcPlan(planId: string): Promise<PlanInfo> {
 	};
 }
 
-/** Per-model token rates + monthly credit allowance for a Command Code plan. */
+/** Per-model token rates + monthly credit allowance for a CommandCode plan. */
 export async function loadCcCatalog(planId: string): Promise<CatalogEntry[]> {
 	const def = CC_PLANS[planId];
-	if (!def) throw new Error(`unknown Command Code plan "${planId}"`);
+	if (!def) throw new Error(`unknown CommandCode plan "${planId}"`);
 	const url = `https://commandcode.ai/docs/plans/${def.slug}`;
 	const html = await fetchText(url);
 

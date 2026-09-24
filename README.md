@@ -1,6 +1,6 @@
 # mpc — model price compare
 
-Compare what the same model actually costs you on **opencode Go** vs **Command Code**
+Compare what the same model actually costs you on **OpenCode Go** vs **CommandCode**
 (GOAT / Pro / Max), using one fixed per-request workload.
 
 Both providers sell the same shape of thing: a monthly subscription that grants a pool of
@@ -11,8 +11,8 @@ each request really costs you.
 ## Usage
 
 ```sh
-mpc                                   # oc-go Go vs Command Code GOAT, default workload
-mpc --cc-plan pro                     # compare against Command Code Pro
+mpc                                   # oc-go Go vs CommandCode GOAT, default workload
+mpc --cc-plan pro                     # compare against CommandCode Pro
 mpc --cc-plan go                      # ...or the $1 Go plan
 mpc --detail                          # add raw token rates + allowances
 mpc --model 'kimi|glm' --metric req   # filter, sort by requests/month
@@ -35,7 +35,7 @@ mpc --help
 
 | Flag | Default | Meaning |
 | --- | --- | --- |
-| `--cc-plan <id>` | `goat` | Command Code plan: `go`, `goat`, `pro`, `max10`, `max20` |
+| `--cc-plan <id>` | `goat` | CommandCode plan: `go`, `goat`, `pro`, `max10`, `max20` |
 | `--in <n>` | `800` | fixed input tokens per request |
 | `--cache <n>` | `50000` | fixed cache-read tokens per request |
 | `--out <n>` | `200` | fixed output tokens per request |
@@ -64,7 +64,7 @@ mpc --help
 
 | Source | Provides |
 | --- | --- |
-| `cmduse plans --json` | Command Code plan price, credits, 5h/weekly windows |
+| `cmduse plans --json` | CommandCode plan price, credits, 5h/weekly windows |
 | `commandcode.ai/docs/plans/{goat,pro,max}` | per-model credits + token rates |
 | `opencode.ai/docs/go/` | oc-go per-model monthly limit + token rates |
 | `opencode.ai/zen/go/v1/models` | oc-go live model list (`--check` drift) |
@@ -87,7 +87,7 @@ mpc --help
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set.
 
-Rolling-window columns scale the monthly figure by each plan's own window ratio (opencode Go fixes 5h = 20%, weekly = 50%; Command Code derives it from the plan's 5h/weekly dollar caps — 20%/50% on GOAT and Pro, 30%/60% on the Max plans).
+Rolling-window columns scale the monthly figure by each plan's own window ratio (OpenCode Go fixes 5h = 20%, weekly = 50%; CommandCode derives it from the plan's 5h/weekly dollar caps — 20%/50% on GOAT and Pro, 30%/60% on the Max plans).
 
 `--json` reports the raw `costPerRequest`, `payPerRequest`, `requestsPerMonth`, `requestsPerFiveHour`, `requestsPerWeek`, `multiplier` and `index` per model-provider, plus a `tally` object.
 
@@ -125,14 +125,14 @@ VAL = 100 * (0.35*ability + 0.10*tps + 0.25*volume + 0.15*cache + 0.15*output)
 
 `--bench-weight` and `--tps-weight` set the ability and speed shares; the remaining weight
 splits volume/cache/output 50/25/25. Ability and `tps` come from the same source, so `--bench cc`
-reads both Command Code's `Intelligence` and `Tok/s` columns.
+reads both CommandCode's `Intelligence` and `Tok/s` columns.
 Speed variants (`…Fast`, `…HighSpeed`, `…UltraSpeed`, `…FlashX`) inherit their base model's
 ability — same weights — but not its throughput. Unscored models show `ability —` and `VAL —` and
 are excluded from the ability normalisation range.
 
 | `--bench` | source | coverage |
 | --- | --- | --- |
-| `cc` (default) | Command Code's `Intelligence` column | every matched model |
+| `cc` (default) | CommandCode's `Intelligence` column | every matched model |
 | `aa` | Artificial Analysis API (paginated) | full; needs `AA_API_KEY` |
 | `aa-web` | Artificial Analysis models page scrape | partial (only the models AA embeds) |
 | `file:<path>` / `url:<url>` | your JSON, `{ "model": score }` or `[{ model, score }]` | whatever you supply |
@@ -151,12 +151,12 @@ present on only one side still appear; the other column shows `—`.
 
 ## Notes and limits
 
-- Command Code plans are read from their docs pages: `goat`, `pro` and the Max plans list
+- CommandCode plans are read from their docs pages: `goat`, `pro` and the Max plans list
   explicit per-model credits; the **Go** ($1) plan publishes only a rate list, so every model
   draws on the plan's whole $10 credit pool.
-- Models Command Code lists with rates but no explicit credits row (the "older models also
+- Models CommandCode lists with rates but no explicit credits row (the "older models also
   available" set) use the documented standard allowance ($20 on GOAT, $30 on Pro).
-- opencode Go has no shared credit pool; each model carries its own monthly limit, so the
+- OpenCode Go has no shared credit pool; each model carries its own monthly limit, so the
   plan's "credits" figure is the sum of those limits (an upper bound, not a pool).
 - `$/1K` and `req/$` are plan-relative: they divide by the plan's own price, so a cheaper
   subscription can post a lower per-request cost while buying fewer requests. Compare

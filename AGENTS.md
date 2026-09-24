@@ -5,7 +5,7 @@ architecture, gotchas and contributor rules here.
 
 ## What this is
 
-A `bun`/TypeScript CLI comparing model pricing across **opencode Go** and **Command Code**
+A `bun`/TypeScript CLI comparing model pricing across **OpenCode Go** and **CommandCode**
 (GOAT / Pro / Max / Go). Both providers sell a monthly subscription granting usage credits
 with per-model allowances priced at API token rates, so `mpc` normalises both onto one table
 per model: cost per request, requests per month and per rolling window, and a blended score.
@@ -71,15 +71,15 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
 - **Biome forbids control chars in regex literals** (`noControlCharactersInRegex`). Never
   write `/\u0001/`. Use `str.split(BOUNDARY)` — not a regex.
 - **Header cells carry sort arrows**: `Input ↕`. `headerIndex` strips non-alphanumerics
-  before matching, and input/output match on prefix (`/^input/i`) because Command Code's
+  before matching, and input/output match on prefix (`/^input/i`) because CommandCode's
   grid writes `Input/M`.
 - **Deal strikethrough**: `~~$30~~$67` — the last `$` in the cell is the current value.
 - **Model name cells append badges** (`Grok 4.7` + `-40%` + `Ends September 27, 2026`). Take
   the first `BOUNDARY` segment as the name or the key gets polluted.
-- **opencode Go rows duplicate models**: off-peak vs peak, and `≤ 256K` vs `> 256K` tiers.
+- **OpenCode Go rows duplicate models**: off-peak vs peak, and `≤ 256K` vs `> 256K` tiers.
   `variantScore` picks the base tier and off-peak by default; `--peak` flips the preference.
   Dedup is by canonical key.
-- **Command Code layouts differ per plan.** GOAT/Pro/Max publish `<table>`s with explicit
+- **CommandCode layouts differ per plan.** GOAT/Pro/Max publish `<table>`s with explicit
   per-model credits (Pro has three tables; Max has two credit columns). The **Go ($1) plan
   has no table at all** — its catalog is a `role="row"` div grid parsed by `parseRoleRows`,
   and every model is assigned the plan's whole credit pool via `defaultAllowance`.
@@ -104,8 +104,8 @@ distinct keys.
 - `payPerRequest = planPrice * costPerRequest / allowance` — plan-relative. A cheaper
   subscription can post a lower per-request cost while buying fewer requests, so `$/1K` is an
   effective rate and `req/mo` is the volume signal.
-- Rolling windows scale the monthly figure by the plan's own ratio: opencode Go fixed
-  20%/50%; Command Code derives it from the plan's 5h/weekly dollar caps (20%/50% on GOAT and
+- Rolling windows scale the monthly figure by the plan's own ratio: OpenCode Go fixed
+  20%/50%; CommandCode derives it from the plan's 5h/weekly dollar caps (20%/50% on GOAT and
   Pro, 30%/60% on Max and Go).
 - `index` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
   every model-provider entry; price terms inverted.
@@ -116,7 +116,7 @@ distinct keys.
 ## Ability scores
 
 - `sources/bench.ts` resolves benchmark scores; `--bench` picks the scheme. Default `cc` scrapes
-  Command Code's `Intelligence` column from a fixed reference page (GOAT, since plan pages vary and
+  CommandCode's `Intelligence` column from a fixed reference page (GOAT, since plan pages vary and
   the Go grid has no Intelligence). Unscored models are filled from the keyless AA page scrape.
 - `sources/artificialAnalysis.ts` parses the `{label, intelligenceIndex, detailsUrl}` dataset
   embedded in AA flight JSON. That page only embeds its chart top-N, so `aa-web` is **partial**;
@@ -152,11 +152,11 @@ distinct keys.
   are never removed. `tps` has drop priority 4.
 - `req/$` is exactly `1000 / $/1K`; kept because it reads more directly, but it is not independent
   information. `$/1K` is the plan-relative figure.
-- Colours follow cmduse: bold headings, dim secondary, cyan opencode, magenta Command Code, green
+- Colours follow cmduse: bold headings, dim secondary, cyan OpenCode, magenta CommandCode, green
   winner/best, IDX green-yellow-red. Auto-off when stdout is not a TTY or `NO_COLOR` is set.
 
 ## Sources and drift
 
 Live, per run — no cache. `mpc --check` reports parse counts, unmatched model keys, and the
-opencode Go live model id count. If a docs page changes shape, the parsers throw with the
+OpenCode Go live model id count. If a docs page changes shape, the parsers throw with the
 URL; fix the parser, don't silently fall back.

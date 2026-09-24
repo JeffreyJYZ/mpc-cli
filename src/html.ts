@@ -64,7 +64,7 @@ export async function parseTables(html: string): Promise<Table[]> {
 }
 
 /**
- * Parse `role="row"` div grids (Command Code's model catalog on some plan
+ * Parse `role="row"` div grids (CommandCode's model catalog on some plan
  * pages) into the same Table shape as parseTables.
  */
 export async function parseRoleRows(html: string): Promise<Table[]> {
@@ -127,7 +127,7 @@ interface CatalogOptions {
 	creditHeader?: RegExp;
 	/** Allowance to assume for rate-only tables (no allowance column). */
 	defaultAllowance?: number;
-	/** opencode Go only: prefer peak-rate rows over off-peak. */
+	/** OpenCode Go only: prefer peak-rate rows over off-peak. */
 	peak?: boolean;
 }
 
@@ -229,7 +229,7 @@ export function extractCatalog(
 
 /**
  * Pull one numeric column out of any tables that carry it, keyed by model.
- * Used for benchmark columns like Command Code's "Intelligence".
+ * Used for benchmark columns like CommandCode's "Intelligence".
  */
 export function extractNumericColumn(
 	tables: Table[],
