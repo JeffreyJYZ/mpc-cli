@@ -11,12 +11,12 @@ architecture, gotchas and contributor rules here.
 | sibling | mpc's dependency on it |
 | --- | --- |
 | `cmduse` (Rust CLI, `cli/`) | shelled out for `plans --json` (plan price/windows), `-1 --json` (account totals, coverage), `model --json --since <ISO>` (windowed per-model local usage) |
-| `@jeffreyjyz/opencode-command-code` (`opencode/`) | the opencode provider plugin appends per-request usage to `~/.cache/mpc/usage.jsonl`, which `--usage` reads |
+| `@jeffreyjyz/opencode-command-code` (`opencode/`) | consumes `mpc --json` for its session sidebar (allowance, rates, Intelligence, Tok/s per model) |
 
-Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and the usage
-log line (`ts, provider, model, input, cacheRead, cacheWrite, output, costUsd`). A change on either
-side updates the other in the same effort. `CMDUSE_BIN` points every cmduse call at a dev build
-(`cmdusedev`).
+Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and
+`mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps}}`, which the plugin's sidebar
+reads. A change on either side updates the other in the same effort. `CMDUSE_BIN` points every
+cmduse call at a dev build (`cmdusedev`).
 
 ## What this is
 
