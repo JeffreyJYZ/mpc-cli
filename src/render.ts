@@ -508,7 +508,7 @@ function printTable(
 					renderSegment(
 						seg,
 						seg.columns.map((c) => c.header),
-						true,
+						false,
 					),
 				),
 			)
