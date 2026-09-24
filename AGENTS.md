@@ -109,6 +109,9 @@ distinct keys.
   Pro, 30%/60% on Max and Go).
 - `index` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
   every model-provider entry; price terms inverted.
+- Skewed terms use `logMinmax` (log10 then min-max): volume, tps, cache price, output price. Without
+  it a single outlier (e.g. a 1000 tps model, or a $0.002 cache) squashes everyone else toward one
+  end. Ability stays linear. Non-positive values clamp to `1e-6`.
 
 ## Ability scores
 

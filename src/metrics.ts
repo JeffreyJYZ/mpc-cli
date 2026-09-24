@@ -56,6 +56,15 @@ function minmax(values: number[]): number[] {
 }
 
 /**
+ * Min-max over log10 values. Throughput and token prices span orders of
+ * magnitude, so a single outlier would otherwise squash everyone else toward
+ * one end of the scale. Non-positive values clamp to a floor.
+ */
+function logMinmax(values: number[]): number[] {
+	return minmax(values.map((v) => Math.log10(Math.max(v, 1e-6))));
+}
+
+/**
  * Blended 0-100 value score across every entry: 60% request volume (log-scaled),
  * 20% cache-read price, 20% output price — lower prices score higher.
  */
@@ -64,8 +73,8 @@ function assignIndex(metrics: EntryMetrics[]): void {
 	const volume = minmax(
 		priced.map((m) => Math.log10(Math.max(m.requestsPerMonth, 1))),
 	);
-	const cache = minmax(priced.map((m) => m.pricing.cacheRead));
-	const output = minmax(priced.map((m) => m.pricing.output));
+	const cache = logMinmax(priced.map((m) => m.pricing.cacheRead));
+	const output = logMinmax(priced.map((m) => m.pricing.output));
 
 	priced.forEach((m, i) => {
 		const nVolume = volume[i] ?? 0.5;
@@ -155,13 +164,13 @@ function assignValueIndex(
 	const scored = metrics.filter((m) => m.ability !== null);
 	const ability = minmax(scored.map((m) => m.ability ?? 0));
 	const speeded = metrics.filter((m) => m.tps !== null);
-	const speed = minmax(speeded.map((m) => m.tps ?? 0));
+	const speed = logMinmax(speeded.map((m) => m.tps ?? 1));
 	const priced = metrics.filter((m) => Number.isFinite(m.requestsPerMonth));
 	const volume = minmax(
 		priced.map((m) => Math.log10(Math.max(m.requestsPerMonth, 1))),
 	);
-	const cache = minmax(priced.map((m) => m.pricing.cacheRead));
-	const output = minmax(priced.map((m) => m.pricing.output));
+	const cache = logMinmax(priced.map((m) => m.pricing.cacheRead));
+	const output = logMinmax(priced.map((m) => m.pricing.output));
 
 	const volumeByIndex = new Map<EntryMetrics, number>();
 	priced.forEach((m, i) => volumeByIndex.set(m, volume[i] ?? 0.5));
