@@ -1,4 +1,6 @@
 #!/usr/bin/env bun
+import { loadUsage } from "../data/usage.ts";
+import { renderUsage } from "../view/layout/usage.ts";
 import {
 	COLUMN_IDS,
 	DEFAULT_COLUMNS,
@@ -13,6 +15,7 @@ import {
 	tally,
 } from "../view/render.ts";
 import { describeConfig, resolveBag } from "./config.ts";
+import { project } from "./engine/project.ts";
 import { runCheck } from "./flow/check.ts";
 import { collect } from "./flow/collect.ts";
 import { matches, sortRows } from "./flow/sort.ts";
@@ -65,6 +68,28 @@ export async function run(argv: string[]): Promise<number> {
 		await collect(options);
 	if (options.check) {
 		return runCheck(options, ocEntries, ccEntries, rows, ability);
+	}
+
+	if (options.usage) {
+		const usage = await loadUsage(options.usageFile);
+		const projection = project(
+			usage.entries,
+			{ "oc-go": ocEntries, cc: ccEntries },
+			{ "oc-go": ocPlanInfo, cc: ccPlanInfo },
+			{ months: options.usageMonths },
+		);
+		if (options.format === "json" || options.json) {
+			console.log(
+				JSON.stringify({ source: usage.label, ...projection }, null, 2),
+			);
+			return 0;
+		}
+		renderUsage(projection, {
+			label: usage.label,
+			months: options.usageMonths,
+			plans: { "oc-go": ocPlanInfo, cc: ccPlanInfo },
+		});
+		return 0;
 	}
 
 	const result = sortRows(

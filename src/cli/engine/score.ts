@@ -1,6 +1,6 @@
 import type { EntryMetrics } from "../../types.ts";
 import type { ScaleMode } from "../options.ts";
-import { logMinmax, minmax } from "./scale.ts";
+import { logMinmax, minmax } from "./cost.ts";
 
 /** Everything the scorer can be told to do differently. */
 export interface ScoreConfig {

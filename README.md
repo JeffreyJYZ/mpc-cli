@@ -34,6 +34,30 @@ bun link
 mpc --help
 ```
 
+## Your real usage (`--usage`)
+
+Project what you actually ran onto both plans. Reads local CommandCode logs
+(`cmduse model --json`, offline) unless `--usage-file <path>` is given:
+
+```sh
+mpc --usage
+mpc --usage --usage-file ./opencode-usage.json   # a foreign or hand-made mix
+mpc --usage --usage-months 2                     # logs cover two months
+mpc --usage --json                               # full projection
+```
+
+```
+MODEL          your req    your $    CC $/req  CC $/mo    OC $/req  OC $/mo  cheaper
+GLM-5.2             142  $15.7237     $0.0158  $2.2462     $0.0185  $2.6206  CC
+GLM-5.3 Flash        29   $0.7203  $0.0062091  $0.1801  $0.0041394    $0.12  OC
+totals  CC $2.4761/mo · OpenCode $2.7686/mo · cheaper CommandCode by $0.2925 (12%)
+```
+
+Usage is per-model **totals**, so `your $` is the list value of the tokens, `CC $/mo` is what that
+subscription would cost you, and models that exceed a plan's allowance are flagged `over cap`.
+Unknown models are listed, never dropped. Accepts the cmduse shape, `{"entries": [...]}`, or a bare
+array of `{ model, requests, tokensIn, cacheRead, tokensOut }`.
+
 ## Config file
 
 Every flag persists. `mpc` reads `~/.config/mpc/config.json` (or `$XDG_CONFIG_HOME/mpc/config.json`),

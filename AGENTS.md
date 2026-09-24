@@ -49,6 +49,14 @@ bun link                       # exposes the `mpc` binary
 
 Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun test` all clean.
 
+## Usage projection
+
+- `--usage` reads local CommandCode logs via `cmduse model --json` (offline) or `--usage-file`.
+  cmduse reports **per-model totals**, not per-request — `engine/project.ts` divides by `requests`
+  only for the per-request figures.
+- `--usage-months` scales the period to a month; the header says which. Unmatched models are
+  listed in the report, never silently dropped. `--format json` dumps the whole projection.
+
 ## Config and plugins
 
 - **Scope boundary:** extensibility is config only (flags, config file, config-layering plugins).

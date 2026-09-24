@@ -39,6 +39,9 @@ export interface Options {
 	colorMode: ColorMode;
 	check: boolean;
 	printConfig: boolean;
+	usage: boolean;
+	usageFile?: string;
+	usageMonths: number;
 	plugins: string[];
 }
 

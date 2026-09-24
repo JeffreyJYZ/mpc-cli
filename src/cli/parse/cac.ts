@@ -57,7 +57,16 @@ export function parseFlags(argv: string[]): Bag {
 		)
 		.option("--no-config", "ignore the config file")
 		.option("--plugin <paths>", "extra config plugins, comma-separated")
-		.option("--print-config", "print the effective settings and exit");
+		.option("--print-config", "print the effective settings and exit")
+		.option(
+			"--usage",
+			"project your real usage from cmduse onto both plans",
+		)
+		.option("--usage-file <path>", "read usage from a JSON file instead")
+		.option(
+			"--usage-months <n>",
+			"treat the logged usage as covering N months",
+		);
 	cli.help();
 	cli.version(pkg.version);
 	const parsed = cli.parse(["node", "mpc", ...argv], { run: false });

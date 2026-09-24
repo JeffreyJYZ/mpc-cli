@@ -137,6 +137,11 @@ export function toOptions(bag: Bag): Options {
 		colorMode: colorMode(bag.color),
 		check: bag.check === true,
 		printConfig: bag.printConfig === true,
+		usage: bag.usage === true,
+		usageFile:
+			bag.usageFile === undefined ? undefined : String(bag.usageFile),
+		usageMonths:
+			bag.usageMonths === undefined ? 1 : Number(bag.usageMonths),
 		plugins: words(bag, "plugins"),
 	};
 }
