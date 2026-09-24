@@ -13,25 +13,28 @@ per model: cost per request, requests per month and per rolling window, and a bl
 ## Layout
 
 ```
-src/index.ts                 entry: run() + top-level error handling
-src/cli.ts                   flag parsing, orchestration, --check
+src/index.ts                 entry
 src/types.ts                 shared types + BOUNDARY
-src/html.ts                  HTML scrapers: parseTables, parseRoleRows, parseMoney, extractCatalog
-src/sources/commandcode.ts   cmduse plans --json + commandcode.ai/docs/plans/*
-src/sources/opencodeGo.ts    opencode.ai/docs/go + /zen/go/v1/models
-src/sources/bench.ts         ability scores: cc / aa / aa-web / file / url + cache
-src/sources/artificialAnalysis.ts  AA models page flight-JSON + API parser
-src/normalize.ts             cross-provider model key
-src/model-aliases.ts         branding aliases (Tencent Hy3 -> hy3, ...)
-src/metrics.ts               cost/request, req windows, multiplier, 0-100 index
-src/render.ts                column registry, table + JSON output, tally
-test/*.test.ts               unit tests, inline fixtures, no network
+src/keys.ts                  canonical model key + branding aliases
+src/cli/run.ts               run(): orchestration
+src/cli/options.ts           Options, DEFAULTS, validators, COLUMN_HELP
+src/cli/parse/               cac.ts (declarations), map.ts (bag -> Options), validate.ts
+src/cli/flow/                collect.ts, sort.ts, check.ts
+src/cli/engine/              cost.ts, rows.ts, index.ts; score/ (index, ability, scale)
+src/data/sources/            opencode.ts + cc/ (plans, cmduse, catalog) + aa/ (web, api, parse)
+src/data/bench/              index.ts (loadAbility), resolve.ts, cc.ts, load/ (types, store)
+src/data/scrape/             index.ts, tables.ts, roleRows.ts; catalog/ (catalog, numeric, variant)
+src/view/render.ts           renderText / renderJson + frame constants
+src/view/schema.ts           view types + the column registry
+src/view/columns/            oc.ts, cc.ts, meta.ts
+src/view/layout/             segments.ts, fit.ts, table.ts
+src/view/text/               index.ts (colour + re-exports), format.ts, styles.ts
+src/view/footer.ts           tally + legend + footer
+test/cli, test/data, test/unit/{core,view}
 ```
 
-Data flow: `loadOcGoCatalog` + `loadCcCatalog` → `buildRows` (scoring across both) →
-filter/sort → `renderText`/`renderJson`.
-
-No runtime dependencies. Scraping uses Bun's built-in `fetch` + `HTMLRewriter`.
+Data flow: `loadOcGoCatalog` + `loadCcCatalog` -> `buildRows` (scoring across both) ->
+filter/sort -> `renderText`/`renderJson`.
 
 ## Commands
 
@@ -70,10 +73,12 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
   - Free models: `costPerRequest === 0` ⇒ `requestsPerMonth = Infinity`, `index = 100`.
   - One shared index scale across both providers (`buildRows` scores the concatenated list).
 - Keep README user-facing; agent/design notes go here.
-- **Hard rule: no source or test file may exceed 100 lines.** Split by responsibility
-  (see `src/utils/*`, `src/html/*`, `src/cli/*`, `src/sources/bench/*`) and re-export from the
-  original module so importers do not change. `wc -l $(rg --files -g '*.ts' src test)` must show
-  nothing over 100.
+- **Two hard rules, both must hold:**
+  1. **No source or test file may exceed 100 lines.**
+  2. **No directory may hold more than 3 files or more than 3 subdirectories.** Group by
+     responsibility and nest instead of flattening.
+  Check with `wc -l $(rg --files -g '*.ts' src test)` (max 100) and a per-dir count of
+  `*.ts` files plus `*/` subdirs (max 3 each). Import from concrete modules, not deep barrels.
 
 ## Scraping lessons (the messy part)
 
