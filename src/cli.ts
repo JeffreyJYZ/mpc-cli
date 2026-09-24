@@ -301,24 +301,29 @@ function sortRows(
 }
 
 async function collect(options: Options) {
-	const [ocEntries, ccEntries, ccPlanInfo, ability] = await Promise.all([
+	const [ocEntries, ccEntries, ccPlanInfo] = await Promise.all([
 		loadOcGoCatalog(options.peak),
 		loadCcCatalog(options.ccPlan),
 		loadCcPlan(options.ccPlan),
-		options.noAbility
-			? Promise.resolve({
-					intelligence: new Map<string, number>(),
-					tps: new Map<string, number>(),
-					label: "",
-					note: undefined,
-				})
-			: loadAbility({
-					source: options.bench,
-					key: options.benchKey,
-					fallback: !options.noFallback,
-					refresh: options.refresh,
-				}),
 	]);
+	// Ability is loaded after the catalogs so fills can be limited to our rows.
+	const keys = new Set(
+		[...ocEntries, ...ccEntries].map((entry) => entry.key),
+	);
+	const ability = options.noAbility
+		? {
+				intelligence: new Map<string, number>(),
+				tps: new Map<string, number>(),
+				label: "",
+				note: undefined,
+			}
+		: await loadAbility({
+				source: options.bench,
+				key: options.benchKey,
+				keys,
+				fallback: !options.noFallback,
+				refresh: options.refresh,
+			});
 	const ocPlanInfo = ocGoPlan(ocEntries);
 	const rows = buildRows(
 		ocEntries,

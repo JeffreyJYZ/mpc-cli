@@ -23,6 +23,8 @@ export interface AbilityResult extends BenchData {
 export interface AbilityOptions {
 	source: string;
 	key?: string;
+	/** Only these model keys matter; fills outside the catalog are ignored. */
+	keys?: Set<string>;
 	/** Fill models the primary source misses from the other sources. */
 	fallback?: boolean;
 	refresh?: boolean;
@@ -214,15 +216,27 @@ async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 	}
 }
 
-function merge(into: Map<string, number>, from: Map<string, number>): number {
+function merge(
+	into: Map<string, number>,
+	from: Map<string, number>,
+	keys?: Set<string>,
+): number {
 	let added = 0;
 	for (const [key, score] of from) {
+		if (keys && !keys.has(key)) continue;
 		if (!into.has(key)) {
 			into.set(key, score);
 			added++;
 		}
 	}
 	return added;
+}
+
+function prune(map: Map<string, number>, keys?: Set<string>): void {
+	if (!keys) return;
+	for (const key of [...map.keys()]) {
+		if (!keys.has(key)) map.delete(key);
+	}
 }
 
 /**
@@ -262,19 +276,27 @@ export async function loadAbility(
 	if (primary.scheme !== "cc") {
 		const cc = await loadCc();
 		const added =
-			merge(primary.data.intelligence, cc.intelligence) +
-			merge(primary.data.tps, cc.tps);
-		if (added > 0) fills.push(`${added} from Command Code`);
+			merge(primary.data.intelligence, cc.intelligence, opts.keys) +
+			merge(primary.data.tps, cc.tps, opts.keys);
+		if (added > 0) fills.push(`${added} models from Command Code`);
 	}
 	if (primary.scheme !== "aa-web" && primary.scheme !== "aa") {
 		const fallback = await loadAaFallback(opts);
 		const added =
-			merge(primary.data.intelligence, fallback.data.intelligence) +
-			merge(primary.data.tps, fallback.data.tps);
+			merge(
+				primary.data.intelligence,
+				fallback.data.intelligence,
+				opts.keys,
+			) + merge(primary.data.tps, fallback.data.tps, opts.keys);
 		if (added > 0) {
-			fills.push(`${added} from Artificial Analysis (${fallback.how})`);
+			fills.push(
+				`${added} values from Artificial Analysis (${fallback.how})`,
+			);
 		}
 	}
+
+	prune(primary.data.intelligence, opts.keys);
+	prune(primary.data.tps, opts.keys);
 
 	return {
 		...primary.data,
