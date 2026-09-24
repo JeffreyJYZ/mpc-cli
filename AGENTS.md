@@ -74,9 +74,10 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
   cmduse binary (dev builds).
 - The account API has no per-model dimension (Studio's surface is the same endpoint), which is why
   the opencode store — and, secondarily, the provider plugin's log — are the per-model sources.
-- There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals). Local logs
-  are partial by nature, so the report always prints a coverage line against `cmduse -1` totals and
-  warns when coverage < 90%. `--usage-file` is the escape hatch for a complete mix.
+- There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals), so the
+  report prints a coverage line against `cmduse -1` totals and warns when coverage < 90%. Coverage
+  below 100% means some traffic came from a harness that stores nothing locally (or another
+  machine); `--usage-file` covers that.
 - cmduse reports **per-model totals**, not per-request — `engine/project.ts` divides by `requests`
   only for the per-request figures.
 - `--usage-months` scales the period to a month; the header says which. Unmatched models are
