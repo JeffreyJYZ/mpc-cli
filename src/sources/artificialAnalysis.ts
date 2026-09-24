@@ -128,15 +128,16 @@ export function parseAaApi(body: unknown): {
 		if (keys.length === 0) continue;
 
 		const iq = findNumber(record, /intelligence_index/i);
-		if (iq !== null) {
+		if (iq !== null && iq > 0) {
 			for (const k of keys) {
 				if (!intelligence.has(k) || iq > (intelligence.get(k) ?? 0)) {
 					intelligence.set(k, iq);
 				}
 			}
 		}
+		// 0 means "not benchmarked", not "zero tokens per second".
 		const speed = findNumber(record, /tokens_per_second|(^|_)tps($|_)/i);
-		if (speed !== null) {
+		if (speed !== null && speed > 0) {
 			for (const k of keys) {
 				if (!tps.has(k) || speed > (tps.get(k) ?? 0)) tps.set(k, speed);
 			}
