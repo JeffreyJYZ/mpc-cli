@@ -53,7 +53,7 @@ Sources, merged when more than one is present:
 | source | covers |
 | --- | --- |
 | **opencode's message store** (`~/.local/share/opencode/opencode.db`, `--usage-db`, `OPENCODE_DB`) | every request opencode ran, for every provider — complete and backfilled |
-| provider usage log (`$XDG_CACHE_HOME/mpc/usage.jsonl`, `--usage-log`, `MPC_USAGE_LOG`) | the Command Code provider plugin's own traffic; used only when the DB is absent |
+| external per-request log (`--usage-log`, `MPC_USAGE_LOG`, default `$XDG_CACHE_HOME/mpc/usage.jsonl`) | any harness that writes one JSON line per request; consulted only when the DB is absent |
 | `cmduse model --json --since <ISO>` (cmduse 0.6.x+) | CommandCode CLI sessions on this machine |
 | session-log scan (`~/.commandcode/projects`) | fallback when cmduse lacks the window |
 | `--usage-file` | anything else you have |

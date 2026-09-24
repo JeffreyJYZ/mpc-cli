@@ -68,12 +68,12 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 - `--usage` merges sources. Primary is **opencode's own store** (`data/opencodeDb.ts`, read-only via
   `bun:sqlite`): `message.data` for assistant rows carries `cost`, `tokens{input,output,cache}`,
-  `modelID`, `providerID`, so it is complete and backfilled for every provider opencode ran. The
-  provider plugin's log is only a fallback for when the DB is missing; `cmduse model --json --since`
-  (cmduse 0.6.x+) and `data/logs.ts` cover CommandCode CLI sessions. `CMDUSE_BIN` overrides the
-  cmduse binary (dev builds).
+  `modelID`, `providerID`, so it is complete and backfilled for every provider opencode ran. An
+  external JSONL log (`--usage-log`, `MPC_USAGE_LOG`) is the fallback when the DB is missing;
+  `cmduse model --json --since` (cmduse 0.6.x+) and `data/logs.ts` cover CommandCode CLI sessions.
+  `CMDUSE_BIN` overrides the cmduse binary (dev builds).
 - The account API has no per-model dimension (Studio's surface is the same endpoint), which is why
-  the opencode store — and, secondarily, the provider plugin's log — are the per-model sources.
+  opencode's own store is the per-model source.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals), so the
   report prints a coverage line against `cmduse -1` totals and warns when coverage < 90%. Coverage
   below 100% means some traffic came from a harness that stores nothing locally (or another
