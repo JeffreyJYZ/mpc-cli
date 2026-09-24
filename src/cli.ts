@@ -101,7 +101,7 @@ const COLUMN_HELP = `Available columns (--columns a,b,c):
   cc-*             the same set for the CommandCode plan
   ability          benchmark score for the model
   win              side with the lower per-request cost
-  cost             0-100 cost/value score, no ability (alias: idx)
+  cost             0-100 cost/value score, no ability
   val              0-100 ability-aware value score
 
 Presets: default = model + allow/reqmo/per1k/reqdollar for both sides + win + cost + val

@@ -280,13 +280,7 @@ const COLUMNS: Record<string, Column> = {
 	},
 };
 
-/** Old ids kept working: --columns idx still selects the cost column. */
-const COLUMN_ALIASES: Record<string, string> = { idx: "cost" };
-
-export const COLUMN_IDS = [
-	...Object.keys(COLUMNS),
-	...Object.keys(COLUMN_ALIASES),
-];
+export const COLUMN_IDS = Object.keys(COLUMNS);
 
 export const DEFAULT_COLUMNS = [
 	"model",
@@ -327,8 +321,7 @@ export const DETAIL_COLUMNS = [
 ];
 
 export function columns(ids: string[]): Column[] {
-	return ids.map((rawId) => {
-		const id = COLUMN_ALIASES[rawId] ?? rawId;
+	return ids.map((id) => {
 		const column = COLUMNS[id];
 		if (!column) throw new Error(`unknown column "${id}"`);
 		return column;

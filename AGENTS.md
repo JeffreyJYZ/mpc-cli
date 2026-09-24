@@ -107,7 +107,7 @@ distinct keys.
 - Rolling windows scale the monthly figure by the plan's own ratio: OpenCode Go fixed
   20%/50%; CommandCode derives it from the plan's 5h/weekly dollar caps (20%/50% on GOAT and
   Pro, 30%/60% on Max and Go).
-- `COST` (column id `cost`, alias `idx`) = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
+- `COST` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
   every model-provider entry; price terms inverted.
 - Skewed terms use `logMinmax` (log10 then min-max): volume, tps, cache price, output price. Without
   it a single outlier (e.g. a 1000 tps model, or a $0.002 cache) squashes everyone else toward one

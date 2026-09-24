@@ -69,7 +69,7 @@ describe("fitColumns", () => {
 			"cc-allow",
 			"cc-per1k",
 			"win",
-			"idx",
+			"cost",
 		];
 		const before = tableWidth(rows, wide);
 		const fit = fitColumns(rows, wide, 40);
@@ -82,14 +82,14 @@ describe("fitColumns", () => {
 
 	test("never drops columns without a drop priority", () => {
 		const rows = [row("a", 1, 2)];
-		const ids = ["model", "oc-allow", "cc-allow", "win", "idx"];
+		const ids = ["model", "oc-allow", "cc-allow", "win", "cost"];
 		const fit = fitColumns(rows, ids, 5);
 		expect(fit.ids).toEqual(ids);
 	});
 
 	test("keeps everything when it already fits", () => {
 		const rows = [row("a", 1, 2)];
-		const ids = ["model", "win", "idx"];
+		const ids = ["model", "win", "cost"];
 		const fit = fitColumns(rows, ids, 10_000);
 		expect(fit.ids).toEqual(ids);
 		expect(fit.dropped).toEqual([]);

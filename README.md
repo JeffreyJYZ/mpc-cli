@@ -82,7 +82,7 @@ mpc --help
 | `ability` | benchmark score for the model |
 | `tps` | output tokens per second |
 | `WIN` | side with the lower per-request cost |
-| `COST` | 0-100 cost/value score (no ability); alias `idx` |
+| `COST` | 0-100 cost/value score (no ability) |
 | `VAL` | 0-100 ability-aware value score |
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set.
