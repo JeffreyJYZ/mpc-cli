@@ -81,7 +81,7 @@ mpc --help
 | `req/$` | requests one dollar of subscription buys |
 | `ability` | benchmark score for the model |
 | `tps` | output tokens per second |
-| `WIN` | side with the lower per-request cost |
+| `WIN` | cheaper side (`OC`/`CC`), `tie`, or `CC*`/`OC*` when only one provider has the model |
 | `COST` | 0-100 cost index, **lower is better** (no ability) |
 | `VAL` | 0-100 ability-aware value score |
 
