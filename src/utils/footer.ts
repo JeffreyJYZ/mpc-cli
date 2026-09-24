@@ -1,31 +1,8 @@
 import type { CompareRow, PlanInfo } from "../types.ts";
 import { paint, planTitle, providerName } from "./funcs.ts";
-import type { ReportMeta, Row, Tally } from "./types.ts";
-
-export function tally(rows: Row[]): Tally {
-	const result: Tally = {
-		headToHead: 0,
-		ocWins: 0,
-		ccWins: 0,
-		ties: 0,
-		ocOnly: 0,
-		ccOnly: 0,
-	};
-	for (const row of rows) {
-		if (row.oc && row.cc) {
-			result.headToHead++;
-			if (row.oc.payPerRequest === row.cc.payPerRequest) result.ties++;
-			else if (row.oc.payPerRequest < row.cc.payPerRequest)
-				result.ocWins++;
-			else result.ccWins++;
-		} else if (row.oc) {
-			result.ocOnly++;
-		} else if (row.cc) {
-			result.ccOnly++;
-		}
-	}
-	return result;
-}
+import { LEGEND } from "./legend.ts";
+import { tally } from "./tally.ts";
+import type { ReportMeta } from "./types.ts";
 
 function planBlock(plan: PlanInfo): { title: string; rest: string } {
 	if (plan.provider === "oc-go") {
@@ -54,25 +31,6 @@ function windowPercents(plan: PlanInfo): string {
 	}
 	return "—";
 }
-
-const LEGEND = [
-	["rates", "token price per 1M tokens, in/out/cache"],
-	["allow", "monthly credits this plan gives the model"],
-	["5h wk mo", "requests the rolling 5-hour / weekly / monthly window buys"],
-	["$/1K", "your cost per 1,000 requests, at the plan's price"],
-	["req/$", "requests one dollar of subscription buys"],
-	[
-		"WIN",
-		"cheaper side: OC / CC / tie · 'x only' = only that provider has it",
-	],
-	["ability", "benchmark score for the model (source above)"],
-	["tps", "output tokens per second (source above)"],
-	["COST", "0-100 cost index, lower is better (no ability)"],
-	[
-		"VAL",
-		"0-100 ability-aware value: ability + speed + volume + cache + output",
-	],
-];
 
 export function footer(rows: CompareRow[], meta: ReportMeta): void {
 	const dim = (text: string): string => paint("2", text);

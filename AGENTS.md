@@ -59,6 +59,10 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
   - Free models: `costPerRequest === 0` ⇒ `requestsPerMonth = Infinity`, `index = 100`.
   - One shared index scale across both providers (`buildRows` scores the concatenated list).
 - Keep README user-facing; agent/design notes go here.
+- **Hard rule: no source or test file may exceed 100 lines.** Split by responsibility
+  (see `src/utils/*`, `src/html/*`, `src/cli/*`, `src/sources/bench/*`) and re-export from the
+  original module so importers do not change. `wc -l $(rg --files -g '*.ts' src test)` must show
+  nothing over 100.
 
 ## Scraping lessons (the messy part)
 

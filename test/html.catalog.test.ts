@@ -1,38 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-	extractCatalog,
-	parseMoney,
-	parseRoleRows,
-	parseTables,
-} from "../src/html.ts";
-import { BOUNDARY } from "../src/types.ts";
-
-describe("parseMoney", () => {
-	test("plain price", () => {
-		expect(parseMoney("$0.15")).toBe(0.15);
-	});
-	test("high-precision price", () => {
-		expect(parseMoney("$0.08334")).toBe(0.08334);
-	});
-	test("free", () => {
-		expect(parseMoney("Free")).toBe(0);
-	});
-	test("dash is null", () => {
-		expect(parseMoney("—")).toBeNull();
-	});
-	test("strikethrough picks the current price", () => {
-		expect(
-			parseMoney(`$2.00${BOUNDARY}$1.20${BOUNDARY}+1${BOUNDARY}`),
-		).toBe(1.2);
-	});
-	test("trailing multiplier note is not merged", () => {
-		expect(
-			parseMoney(
-				`$15${BOUNDARY} $60${BOUNDARY}4x · Ends Sep 27${BOUNDARY}`,
-			),
-		).toBe(60);
-	});
-});
+import { extractCatalog, parseTables } from "../src/html.ts";
 
 const FIXTURE = `
 <table>
@@ -107,30 +74,5 @@ describe("opencode Go peak/off-peak selection", () => {
 			peak: true,
 		});
 		expect(entry?.pricing.input).toBe(0.3);
-	});
-});
-
-describe("parseRoleRows (div grid model lists)", () => {
-	const GRID_FIXTURE = `
-		<div role="row"><div>Model</div><div>Context</div><div>Input<span>/M</span></div><div>Output<span>/M</span></div><div>Cache Read</div><div>Cache Write</div><div>Caps</div></div>
-		<div role="row"><div>Kimi K3</div><div>1M</div><div>$3.00</div><div>$15.00</div><div>$0.30</div><div>—</div><div>+1</div></div>
-		<div role="row"><div>Laguna S 2.1</div><div>256K</div><div>Free</div><div>Free</div><div>Free</div><div>—</div><div></div></div>
-	`;
-
-	test("reads header and rows, applying a flat allowance", async () => {
-		const tables = await parseRoleRows(GRID_FIXTURE);
-		expect(tables).toHaveLength(1);
-		const entries = extractCatalog(tables, {
-			provider: "cc",
-			plan: "Go",
-			defaultAllowance: 10,
-		});
-		const byKey = new Map(entries.map((e) => [e.key, e]));
-		expect(byKey.get("kimik3")?.allowance).toBe(10);
-		expect(byKey.get("kimik3")?.pricing.input).toBe(3);
-		expect(byKey.get("kimik3")?.pricing.cacheWrite).toBeNull();
-		// Free model rates come through as zero, not the flat allowance.
-		expect(byKey.get("lagunas21")?.pricing.input).toBe(0);
-		expect(byKey.get("lagunas21")?.allowance).toBe(10);
 	});
 });

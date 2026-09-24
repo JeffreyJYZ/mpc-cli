@@ -1,19 +1,20 @@
 import type { CompareRow } from "./types.ts";
-import { footer, tally } from "./utils/footer.ts";
+import { footer } from "./utils/footer.ts";
 import { paint, planTitle, setColor } from "./utils/funcs.ts";
 import { printTable } from "./utils/table.ts";
+import { tally } from "./utils/tally.ts";
 import type { ReportMeta } from "./utils/types.ts";
 
 export { COLUMN_IDS, columns } from "./utils/columns.ts";
 export { DEFAULT_COLUMNS, DETAIL_COLUMNS } from "./utils/consts.ts";
-export { tally } from "./utils/footer.ts";
+export { fitColumns, tableWidth } from "./utils/fit.ts";
 export {
 	fmtUsd,
 	planTitle,
 	providerName,
 	shortProviderName,
 } from "./utils/funcs.ts";
-export { fitColumns, tableWidth } from "./utils/table.ts";
+export { tally } from "./utils/tally.ts";
 export { setColor };
 
 export function renderText(
