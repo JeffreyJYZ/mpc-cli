@@ -107,7 +107,7 @@ distinct keys.
 - Rolling windows scale the monthly figure by the plan's own ratio: OpenCode Go fixed
   20%/50%; CommandCode derives it from the plan's 5h/weekly dollar caps (20%/50% on GOAT and
   Pro, 30%/60% on Max and Go).
-- `index` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
+- `COST` (column id `cost`, alias `idx`) = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
   every model-provider entry; price terms inverted.
 - Skewed terms use `logMinmax` (log10 then min-max): volume, tps, cache price, output price. Without
   it a single outlier (e.g. a 1000 tps model, or a $0.002 cache) squashes everyone else toward one
@@ -150,7 +150,7 @@ distinct keys.
   `--fit` = `DETAIL_COLUMNS` trimmed to width; `--columns` = exact and bypasses everything.
 - `fitColumns` drops optional columns, symmetric across providers, when the table exceeds the
   terminal width (`process.stdout.columns`, `--width`, else 120). `drop` priority on a `Column`:
-  1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` (model, ability, win, IDX, VAL)
+  1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` (model, ability, win, COST, VAL)
   are never removed. `tps` has drop priority 4.
 - `req/$` is exactly `1000 / $/1K`; kept because it reads more directly, but it is not independent
   information. `$/1K` is the plan-relative figure.

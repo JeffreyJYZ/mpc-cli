@@ -253,8 +253,8 @@ const COLUMNS: Record<string, Column> = {
 			return side === "tie" ? "2" : "32";
 		},
 	},
-	idx: {
-		header: "IDX",
+	cost: {
+		header: "COST",
 		value: (r) => bestIndex(r).toString(),
 		right: true,
 		style: idxStyle,
@@ -280,7 +280,13 @@ const COLUMNS: Record<string, Column> = {
 	},
 };
 
-export const COLUMN_IDS = Object.keys(COLUMNS);
+/** Old ids kept working: --columns idx still selects the cost column. */
+const COLUMN_ALIASES: Record<string, string> = { idx: "cost" };
+
+export const COLUMN_IDS = [
+	...Object.keys(COLUMNS),
+	...Object.keys(COLUMN_ALIASES),
+];
 
 export const DEFAULT_COLUMNS = [
 	"model",
@@ -293,7 +299,7 @@ export const DEFAULT_COLUMNS = [
 	"cc-per1k",
 	"cc-reqdollar",
 	"win",
-	"idx",
+	"cost",
 	"val",
 ];
 
@@ -316,12 +322,13 @@ export const DETAIL_COLUMNS = [
 	"ability",
 	"tps",
 	"win",
-	"idx",
+	"cost",
 	"val",
 ];
 
 export function columns(ids: string[]): Column[] {
-	return ids.map((id) => {
+	return ids.map((rawId) => {
+		const id = COLUMN_ALIASES[rawId] ?? rawId;
 		const column = COLUMNS[id];
 		if (!column) throw new Error(`unknown column "${id}"`);
 		return column;
@@ -672,7 +679,7 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 		`${dim("          ")}${dim("tps    output tokens per second (source above)")}`,
 	);
 	console.log(
-		`${dim("          ")}${dim("IDX    0-100 blended value: 60% request volume, 20% cache price, 20% output price")}`,
+		`${dim("          ")}${dim("COST   0-100 cost/value, no ability: 60% request volume, 20% cache price, 20% output price")}`,
 	);
 	console.log(
 		`${dim("          ")}${dim("VAL    0-100 ability-aware value: ability + speed + volume + cache + output")}`,

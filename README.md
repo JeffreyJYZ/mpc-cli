@@ -82,7 +82,7 @@ mpc --help
 | `ability` | benchmark score for the model |
 | `tps` | output tokens per second |
 | `WIN` | side with the lower per-request cost |
-| `IDX` | 0-100 blended cost/value score |
+| `COST` | 0-100 cost/value score (no ability); alias `idx` |
 | `VAL` | 0-100 ability-aware value score |
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set.
@@ -119,7 +119,7 @@ min-max normalised and inverted (cheaper scores higher). Free models get `∞` r
 `VAL` reuses the `IDX` recipe with a benchmark term:
 
 ```
-IDX = 100 * (0.60*volume + 0.20*cache + 0.20*output)
+COST = 100 * (0.60*volume + 0.20*cache + 0.20*output)
 VAL = 100 * (0.35*ability + 0.10*tps + 0.25*volume + 0.15*cache + 0.15*output)
 ```
 
