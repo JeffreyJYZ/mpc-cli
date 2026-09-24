@@ -64,14 +64,24 @@ describe("loadUsage", () => {
 
 	test("prefers `cmduse model --json` when it answers", async () => {
 		process.env[BIN] = fakeCmduse(CMDUSE);
-		const usage = await loadUsage(undefined, "all");
+		const usage = await loadUsage(
+			undefined,
+			"all",
+			"/nonexistent/usage.jsonl",
+			"/nonexistent/opencode.db",
+		);
 		expect(usage.label).toBe("cmduse model --json");
 		expect(usage.entries[0]?.key).toBe("glm52");
 	});
 
 	test("falls back to scanning session logs on a bad binary", async () => {
 		process.env[BIN] = "/nonexistent/cmdusedev";
-		const usage = await loadUsage(undefined, "all");
+		const usage = await loadUsage(
+			undefined,
+			"all",
+			"/nonexistent/usage.jsonl",
+			"/nonexistent/opencode.db",
+		);
 		expect(usage.label).toBe("local session logs");
 	});
 });

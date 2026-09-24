@@ -52,13 +52,15 @@ Sources, merged when more than one is present:
 
 | source | covers |
 | --- | --- |
-| provider usage log (`$XDG_CACHE_HOME/mpc/usage.jsonl`, `--usage-log`, `MPC_USAGE_LOG`) | every request the opencode Command Code provider serves — the complete per-model mix |
+| **opencode's message store** (`~/.local/share/opencode/opencode.db`, `--usage-db`, `OPENCODE_DB`) | every request opencode ran, for every provider — complete and backfilled |
+| provider usage log (`$XDG_CACHE_HOME/mpc/usage.jsonl`, `--usage-log`, `MPC_USAGE_LOG`) | the Command Code provider plugin's own traffic; used only when the DB is absent |
 | `cmduse model --json --since <ISO>` (cmduse 0.6.x+) | CommandCode CLI sessions on this machine |
 | session-log scan (`~/.commandcode/projects`) | fallback when cmduse lacks the window |
 | `--usage-file` | anything else you have |
 
-The provider plugin writes the usage log; set `CMDUSE_BIN` to test against a dev cmduse
-(`cmdusedev`) instead of the installed one.
+The DB is read-only via `bun:sqlite`; assistant messages carry `cost`, `tokens` and
+`modelID`/`providerID`, so no plugin is required for the opencode side. Set `CMDUSE_BIN` to test
+against a dev cmduse (`cmdusedev`).
 
 **Scope caveat.** Only *local* sources exist — the account API exposes totals, not per-model
 usage, and Studio's API surface is the same endpoint. The report prints a coverage line

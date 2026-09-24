@@ -50,6 +50,7 @@ const KNOWN = new Set([
 	"usage",
 	"usageFile",
 	"usageLog",
+	"usageDb",
 	"usageMonths",
 	"usageWindow",
 	"plugins",

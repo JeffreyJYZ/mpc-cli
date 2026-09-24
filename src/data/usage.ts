@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { normalizeKey } from "../keys.ts";
 import { runCmduse } from "./cmduse.ts";
 import { scanLogs } from "./logs.ts";
+import { defaultOpencodeDb, readOpencodeDb } from "./opencodeDb.ts";
 
 export interface UsageEntry {
 	key: string;
@@ -225,6 +226,7 @@ export async function loadUsage(
 	source: string | undefined,
 	window: UsageWindow = "period",
 	logPath?: string,
+	dbPath?: string,
 ): Promise<UsageReportInput> {
 	if (source) {
 		const file = Bun.file(source);
@@ -240,14 +242,27 @@ export async function loadUsage(
 	const since = sinceFor(window, account);
 	const fromCmduse = await cmduseModel(since);
 	const sessions = fromCmduse ?? scanLogs(since);
-	const fromLog = readUsageLog(logPath ?? defaultUsageLog(), since);
+
+	// opencode's own store is complete and backfilled for every provider it
+	// ran, so it supersedes the provider plugin's log (a subset of it).
+	const db = readOpencodeDb(dbPath ?? defaultOpencodeDb(), since);
+	const log = db ? null : readUsageLog(logPath ?? defaultUsageLog(), since);
 
 	const sources: string[] = [];
-	if (fromLog) sources.push("provider usage log");
+	if (db) {
+		sources.push(
+			`opencode db (${db.providers.length} providers, ${db.records} records)`,
+		);
+	}
+	if (log) sources.push("provider usage log");
 	if (sessions.length > 0) {
 		sources.push(fromCmduse ? "cmduse model --json" : "local session logs");
 	}
-	const entries = fromLog ? mergeUsage(fromLog, sessions) : sessions;
+
+	const entries = mergeUsage(
+		mergeUsage(db?.entries ?? [], log ?? []),
+		sessions,
+	);
 	return {
 		entries,
 		label: sources.join(" + ") || "no usage found",

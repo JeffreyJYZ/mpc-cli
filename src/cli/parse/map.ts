@@ -149,6 +149,7 @@ export function toOptions(bag: Bag): Options {
 		usageFile:
 			bag.usageFile === undefined ? undefined : String(bag.usageFile),
 		usageLog: bag.usageLog === undefined ? undefined : String(bag.usageLog),
+		usageDb: bag.usageDb === undefined ? undefined : String(bag.usageDb),
 		usageMonths:
 			bag.usageMonths === undefined ? 1 : Number(bag.usageMonths),
 		usageWindow: usageWindow(bag.usageWindow),

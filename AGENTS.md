@@ -66,9 +66,12 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 ## Usage projection
 
-- `--usage` merges sources: the provider plugin's per-request log (`~/.cache/mpc/usage.jsonl`,
-  `--usage-log`, `MPC_USAGE_LOG`) with `cmduse model --json --since` (cmduse 0.6.x+); `data/logs.ts`
-  scans session JSONL as the fallback. `CMDUSE_BIN` overrides the cmduse binary (dev builds).
+- `--usage` merges sources. Primary is **opencode's own store** (`data/opencodeDb.ts`, read-only via
+  `bun:sqlite`): `message.data` for assistant rows carries `cost`, `tokens{input,output,cache}`,
+  `modelID`, `providerID`, so it is complete and backfilled for every provider opencode ran. The
+  provider plugin's log is only a fallback for when the DB is missing; `cmduse model --json --since`
+  (cmduse 0.6.x+) and `data/logs.ts` cover CommandCode CLI sessions. `CMDUSE_BIN` overrides the
+  cmduse binary (dev builds).
 - The plugin (`~/dev/plugins/command-code-zed`) writes that log from
   `message.updated` events — the only complete per-model source, since neither the account API nor
   Studio exposes a model dimension.

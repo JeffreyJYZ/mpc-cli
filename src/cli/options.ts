@@ -42,6 +42,7 @@ export interface Options {
 	usage: boolean;
 	usageFile?: string;
 	usageLog?: string;
+	usageDb?: string;
 	usageMonths: number;
 	usageWindow: "period" | "all" | `${number}d`;
 	plugins: string[];
