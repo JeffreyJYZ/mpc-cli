@@ -107,8 +107,9 @@ distinct keys.
 - Rolling windows scale the monthly figure by the plan's own ratio: OpenCode Go fixed
   20%/50%; CommandCode derives it from the plan's 5h/weekly dollar caps (20%/50% on GOAT and
   Pro, 30%/60% on Max and Go).
-- `COST` = `100 * (0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
-  every model-provider entry; price terms inverted.
+- `COST` = inverted value score: `100 - 100*(0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
+  every model-provider entry. Lower is better, so its colour thresholds and default sort are the
+  opposite of VAL.
 - Skewed terms use `logMinmax` (log10 then min-max): volume, tps, cache price, output price. Without
   it a single outlier (e.g. a 1000 tps model, or a $0.002 cache) squashes everyone else toward one
   end. Ability stays linear. Non-positive values clamp to `1e-6`.
@@ -145,7 +146,8 @@ distinct keys.
   and the grouped table. Group banner = provider (`planTitle`), so column headers stay unprefixed.
 - Provider names: `providerName` (OpenCode/CommandCode, used in banners and the footer) and
   `shortProviderName` (OC/CC, used in the WIN column). Use these helpers, not literals.
-- Default sort is `val`; rows with `valueIndex === null` always sort last, either direction.
+- Default sort is `val` (desc). `--metric cost|perreq` ascend, `val|req` descend, `--asc` flips;
+  rows with no VAL always sort last. `cost` sorts by the COST index, `perreq` by `$/req`.
 - Modes: default = `DEFAULT_COLUMNS` (untrimmed); `--detail` = `DETAIL_COLUMNS` untrimmed;
   `--fit` = `DETAIL_COLUMNS` trimmed to width; `--columns` = exact and bypasses everything.
 - `fitColumns` drops optional columns, symmetric across providers, when the table exceeds the

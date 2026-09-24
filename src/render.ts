@@ -150,10 +150,11 @@ function freeStyle(pick: (row: CompareRow) => EntryMetrics | undefined) {
 	return (row: CompareRow) => (pick(row)?.free ? "32" : undefined);
 }
 
-function idxStyle(row: CompareRow): string | undefined {
-	const score = bestIndex(row);
-	if (score >= 70) return "32";
-	if (score >= 40) return "33";
+/** COST is inverted (0 = cheapest/best), so colour the other way round. */
+function costStyle(row: CompareRow): string | undefined {
+	const cost = 100 - bestIndex(row);
+	if (cost <= 30) return "32";
+	if (cost <= 60) return "33";
 	return "31";
 }
 
@@ -255,9 +256,9 @@ const COLUMNS: Record<string, Column> = {
 	},
 	cost: {
 		header: "COST",
-		value: (r) => bestIndex(r).toString(),
+		value: (r) => (100 - bestIndex(r)).toString(),
 		right: true,
-		style: idxStyle,
+		style: costStyle,
 	},
 	ability: {
 		header: "ability",
@@ -672,7 +673,7 @@ function footer(rows: CompareRow[], meta: ReportMeta): void {
 		`${dim("          ")}${dim("tps    output tokens per second (source above)")}`,
 	);
 	console.log(
-		`${dim("          ")}${dim("COST   0-100 cost/value, no ability: 60% request volume, 20% cache price, 20% output price")}`,
+		`${dim("          ")}${dim("COST   0-100 cost index, lower is better: 60% request volume, 20% cache price, 20% output price")}`,
 	);
 	console.log(
 		`${dim("          ")}${dim("VAL    0-100 ability-aware value: ability + speed + volume + cache + output")}`,

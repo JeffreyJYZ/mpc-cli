@@ -19,7 +19,7 @@ import {
 } from "./sources/opencodeGo.ts";
 import type { CatalogEntry, CompareRow, Workload } from "./types.ts";
 
-type Metric = "val" | "index" | "req" | "cost" | "name";
+type Metric = "val" | "cost" | "perreq" | "req" | "name";
 
 interface Options {
 	ccPlan: string;
@@ -62,8 +62,9 @@ Options:
   --in <n>         fixed input tokens per request (default ${DEFAULTS.input})
   --cache <n>      fixed cache-read tokens per request (default ${DEFAULTS.cacheRead})
   --out <n>        fixed output tokens per request (default ${DEFAULTS.output})
-  --metric <name>  sort by: val | index | req | cost | name (default val)
-                   rows with no VAL always sort last
+  --metric <name>  sort by: val | cost | perreq | req | name (default val)
+                   cost ascends (0 is best), perreq ascends ($/req), val/req descend;
+                   --asc flips; rows with no VAL always sort last
   --model <re>     only rows whose name matches (regex, falls back to substring)
   --only <scope>   both = models on both providers, all = union (default all)
   --fit            show the widest column set that fits the terminal
@@ -165,7 +166,7 @@ export function parseArgs(argv: string[]): Options {
 			case "--metric": {
 				const value = next();
 				if (
-					!["val", "index", "req", "cost", "name"].includes(
+					!["val", "cost", "perreq", "req", "name"].includes(
 						value ?? "",
 					)
 				) {
@@ -283,39 +284,57 @@ function sortRows(
 	metric: Metric,
 	asc: boolean,
 ): CompareRow[] {
-	const dir = asc ? 1 : -1;
-	// Rows without a score always sit at the bottom, either direction.
-	const nullable = (r: CompareRow): number | null =>
-		Math.max(r.oc?.valueIndex ?? -1, r.cc?.valueIndex ?? -1) >= 0
-			? Math.max(r.oc?.valueIndex ?? -1, r.cc?.valueIndex ?? -1)
-			: null;
-	const by = {
-		val: (r: CompareRow) => nullable(r) ?? Number.NEGATIVE_INFINITY,
-		name: (r: CompareRow) => -r.name.localeCompare(r.name),
-		index: (r: CompareRow) =>
-			Math.max(r.oc?.index ?? -1, r.cc?.index ?? -1),
-		req: (r: CompareRow) =>
-			Math.max(
-				r.oc?.requestsPerMonth ?? -1,
-				r.cc?.requestsPerMonth ?? -1,
-			),
-		cost: (r: CompareRow) => {
-			const values = [r.oc?.payPerRequest, r.cc?.payPerRequest].filter(
-				(v): v is number => v !== undefined,
-			);
-			return values.length
-				? -Math.min(...values)
-				: Number.NEGATIVE_INFINITY;
-		},
+	const maxValue = (r: CompareRow): number | null => {
+		const values = [r.oc?.valueIndex, r.cc?.valueIndex].filter(
+			(value): value is number => typeof value === "number",
+		);
+		return values.length === 0 ? null : Math.max(...values);
 	};
-	if (metric === "val") {
-		const scored = rows.filter((r) => nullable(r) !== null);
-		const unscored = rows.filter((r) => nullable(r) === null);
-		return [...scored]
-			.sort((a, b) => ((nullable(a) ?? 0) - (nullable(b) ?? 0)) * dir)
-			.concat(unscored);
+	const maxIndex = (r: CompareRow): number =>
+		Math.max(r.oc?.index ?? -1, r.cc?.index ?? -1);
+	const maxRequests = (r: CompareRow): number =>
+		Math.max(r.oc?.requestsPerMonth ?? -1, r.cc?.requestsPerMonth ?? -1);
+	const minPay = (r: CompareRow): number => {
+		const values = [r.oc?.payPerRequest, r.cc?.payPerRequest].filter(
+			(value): value is number => value !== undefined,
+		);
+		return values.length === 0
+			? Number.POSITIVE_INFINITY
+			: Math.min(...values);
+	};
+
+	// Ascending means "lower is better" (cost, $/req); --asc flips the default.
+	switch (metric) {
+		case "name": {
+			const sorted = [...rows].sort((a, b) =>
+				a.name.localeCompare(b.name),
+			);
+			return asc ? sorted : sorted.reverse();
+		}
+		case "val": {
+			const scored = rows
+				.filter((r) => maxValue(r) !== null)
+				.sort(
+					(a, b) =>
+						((maxValue(a) ?? 0) - (maxValue(b) ?? 0)) *
+						(asc ? 1 : -1),
+				);
+			const unscored = rows.filter((r) => maxValue(r) === null);
+			return [...scored, ...unscored];
+		}
+		case "cost":
+			return [...rows].sort(
+				(a, b) => (maxIndex(a) - maxIndex(b)) * (asc ? -1 : 1),
+			);
+		case "perreq":
+			return [...rows].sort(
+				(a, b) => (minPay(a) - minPay(b)) * (asc ? -1 : 1),
+			);
+		case "req":
+			return [...rows].sort(
+				(a, b) => (maxRequests(a) - maxRequests(b)) * (asc ? 1 : -1),
+			);
 	}
-	return [...rows].sort((a, b) => (by[metric](a) - by[metric](b)) * dir);
 }
 
 async function collect(options: Options) {

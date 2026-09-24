@@ -39,7 +39,7 @@ mpc --help
 | `--in <n>` | `800` | fixed input tokens per request |
 | `--cache <n>` | `50000` | fixed cache-read tokens per request |
 | `--out <n>` | `200` | fixed output tokens per request |
-| `--metric <name>` | `val` | sort by `val`, `index`, `req`, `cost` or `name`; rows with no `VAL` always sort last |
+| `--metric <name>` | `val` | sort by `val`, `cost`, `perreq`, `req` or `name`; `cost` and `perreq` ascend (lower better), `val`/`req` descend, `--asc` flips; rows with no `VAL` always sort last |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
 | `--only <scope>` | `all` | `all` = union of both catalogs, `both` = only shared models |
 | `--width <n>` | terminal | force table width; otherwise auto-detect and drop optional columns (`rates`, `req/$`, `5h`/`wk`) to fit |
@@ -82,7 +82,7 @@ mpc --help
 | `ability` | benchmark score for the model |
 | `tps` | output tokens per second |
 | `WIN` | side with the lower per-request cost |
-| `COST` | 0-100 cost/value score (no ability) |
+| `COST` | 0-100 cost index, **lower is better** (no ability) |
 | `VAL` | 0-100 ability-aware value score |
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set.
@@ -119,7 +119,7 @@ min-max normalised and inverted (cheaper scores higher). Free models get `∞` r
 `VAL` reuses the `COST` recipe with a benchmark term:
 
 ```
-COST = 100 * (0.60*volume + 0.20*cache + 0.20*output)
+COST = 100 - 100·(0.60*volume + 0.20*cache + 0.20*output)   # inverted: 0 is best
 VAL = 100 * (0.35*ability + 0.10*tps + 0.25*volume + 0.15*cache + 0.15*output)
 ```
 
