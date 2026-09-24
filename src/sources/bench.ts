@@ -226,9 +226,29 @@ function merge(into: Map<string, number>, from: Map<string, number>): number {
 }
 
 /**
+ * Artificial Analysis as a gap filler: the full API when a key is available,
+ * otherwise the keyless page scrape (partial).
+ */
+async function loadAaFallback(
+	opts: AbilityOptions,
+): Promise<{ data: BenchData; how: string }> {
+	const key = opts.key ?? process.env.AA_API_KEY;
+	if (key) {
+		try {
+			return { data: await loadAaApi(key), how: "AA API" };
+		} catch {
+			// fall through to the scrape
+		}
+	}
+	const data = emptyData();
+	data.intelligence = await loadAaWebCached(Boolean(opts.refresh));
+	return { data, how: "AA web scrape" };
+}
+
+/**
  * Load benchmark scores. The chosen source leads; unless --no-fallback, any
- * model it misses is filled from the other sources (Command Code, then the
- * keyless Artificial Analysis scrape) so a model scored anywhere shows a value.
+ * model it misses is filled from the other sources (Command Code, then
+ * Artificial Analysis) so a model scored anywhere shows a value.
  */
 export async function loadAbility(
 	opts: AbilityOptions,
@@ -247,11 +267,13 @@ export async function loadAbility(
 		if (added > 0) fills.push(`${added} from Command Code`);
 	}
 	if (primary.scheme !== "aa-web" && primary.scheme !== "aa") {
-		const added = merge(
-			primary.data.intelligence,
-			await loadAaWebCached(Boolean(opts.refresh)),
-		);
-		if (added > 0) fills.push(`${added} from Artificial Analysis`);
+		const fallback = await loadAaFallback(opts);
+		const added =
+			merge(primary.data.intelligence, fallback.data.intelligence) +
+			merge(primary.data.tps, fallback.data.tps);
+		if (added > 0) {
+			fills.push(`${added} from Artificial Analysis (${fallback.how})`);
+		}
 	}
 
 	return {

@@ -45,7 +45,8 @@ function pricingTriple(m: EntryMetrics | undefined): string {
 }
 
 function winner(row: CompareRow): string {
-	if (!row.oc || !row.cc) return row.oc ? "opencode" : "Command Code";
+	// One-sided rows are not wins; the tally counts them separately.
+	if (!row.oc || !row.cc) return "only";
 	const side = cheaperSide(row);
 	if (side === "tie") return "tie";
 	return side === "oc" ? "opencode" : "Command Code";
@@ -242,8 +243,8 @@ const COLUMNS: Record<string, Column> = {
 		value: winner,
 		style: (r) => {
 			const side = cheaperSide(r);
-			if (side === "tie") return "2";
-			return side === "none" ? undefined : "32";
+			if (side === "none") return "2";
+			return side === "tie" ? "2" : "32";
 		},
 	},
 	idx: {
