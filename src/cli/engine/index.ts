@@ -5,9 +5,9 @@ import type {
 	ProviderId,
 	Workload,
 } from "../../types.ts";
+import { lookupAbility } from "./ability.ts";
 import { costPerRequest, windowRatios } from "./cost.ts";
-import { lookupAbility } from "./score/ability.ts";
-import { assignIndex, assignValueIndex } from "./score/index.ts";
+import { assignIndex, assignValueIndex } from "./score.ts";
 
 export function buildMetrics(
 	entries: CatalogEntry[],
@@ -63,7 +63,7 @@ function _indexByKey(
 	return byKey;
 }
 
+export { lookupAbility } from "./ability.ts";
 export { costPerRequest, windowRatios } from "./cost.ts";
 export { buildRows } from "./rows.ts";
-export { lookupAbility } from "./score/ability.ts";
-export { assignIndex, assignValueIndex } from "./score/index.ts";
+export { assignIndex, assignValueIndex } from "./score.ts";

@@ -1,13 +1,13 @@
 import { loadCc } from "./cc.ts";
-import type { AbilityOptions, AbilityResult } from "./load/types.ts";
 import { loadAaFallback, resolvePrimary } from "./resolve.ts";
+import type { AbilityOptions, AbilityResult } from "./types.ts";
 
 export type {
 	AbilityOptions,
 	AbilityResult,
 	AbilitySource,
 	BenchData,
-} from "./load/types.ts";
+} from "./types.ts";
 
 function merge(
 	into: Map<string, number>,

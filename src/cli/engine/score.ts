@@ -1,4 +1,4 @@
-import type { EntryMetrics } from "../../../types.ts";
+import type { EntryMetrics } from "../../types.ts";
 import { logMinmax, minmax } from "./scale.ts";
 
 /**

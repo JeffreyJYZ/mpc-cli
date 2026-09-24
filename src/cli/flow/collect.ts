@@ -1,5 +1,6 @@
 import { loadAbility } from "../../data/bench/index.ts";
-import { loadCcCatalog, loadCcPlan } from "../../data/sources/cc.ts";
+import { loadCcCatalog } from "../../data/sources/cc/catalog.ts";
+import { loadCcPlan } from "../../data/sources/cc/plans.ts";
 import { loadOcGoCatalog, ocGoPlan } from "../../data/sources/opencode.ts";
 import { buildRows } from "../engine/index.ts";
 import type { Options } from "../options.ts";

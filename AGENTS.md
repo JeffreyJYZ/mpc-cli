@@ -20,9 +20,9 @@ src/cli/run.ts               run(): orchestration
 src/cli/options.ts           Options, DEFAULTS, validators, COLUMN_HELP
 src/cli/parse/               cac.ts (declarations), map.ts (bag -> Options), validate.ts
 src/cli/flow/                collect.ts, sort.ts, check.ts
-src/cli/engine/              cost.ts, rows.ts, index.ts; score/ (index, ability, scale)
+src/cli/engine/              cost.ts, rows.ts, score.ts, ability.ts, scale.ts, index.ts
 src/data/sources/            opencode.ts + cc/ (plans, cmduse, catalog) + aa/ (web, api, parse)
-src/data/bench/              index.ts (loadAbility), resolve.ts, cc.ts, load/ (types, store)
+src/data/bench/              index.ts (loadAbility), resolve.ts, cc.ts, store.ts, types.ts
 src/data/scrape/             index.ts, tables.ts, roleRows.ts; catalog/ (catalog, numeric, variant)
 src/view/render.ts           renderText / renderJson + frame constants
 src/view/schema.ts           view types + the column registry
@@ -73,12 +73,13 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
   - Free models: `costPerRequest === 0` ⇒ `requestsPerMonth = Infinity`, `index = 100`.
   - One shared index scale across both providers (`buildRows` scores the concatenated list).
 - Keep README user-facing; agent/design notes go here.
-- **Two hard rules, both must hold:**
-  1. **No source or test file may exceed 100 lines.**
-  2. **No directory may hold more than 3 files or more than 3 subdirectories.** Group by
-     responsibility and nest instead of flattening.
-  Check with `wc -l $(rg --files -g '*.ts' src test)` (max 100) and a per-dir count of
-  `*.ts` files plus `*/` subdirs (max 3 each). Import from concrete modules, not deep barrels.
+- **Size limits (pragmatic, not a game):**
+  1. Aim for ~100 lines per file, hard cap **150**. Split when a file has two reasons to change,
+     never just to hit a number.
+  2. A directory holds at most **6 entries** (files + subdirectories). Group by responsibility.
+  Check: `wc -l $(rg --files -g '*.ts' src test)` and a per-dir entry count.
+- **No re-export-only barrels.** Import concrete modules. A module that holds real code and also
+  re-exports a few names for convenience is fine.
 
 ## Scraping lessons (the messy part)
 

@@ -3,7 +3,7 @@ import {
 	fetchText,
 	parseTables,
 } from "../scrape/index.ts";
-import { type BenchData, emptyData } from "./load/types.ts";
+import { type BenchData, emptyData } from "./types.ts";
 
 // CommandCode only publishes Intelligence and Tok/s on the GOAT/Pro catalogs.
 const PAGES = [

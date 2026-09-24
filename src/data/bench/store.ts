@@ -1,5 +1,5 @@
-import { normalizeKey } from "../../../keys.ts";
-import { fetchText } from "../../scrape/index.ts";
+import { normalizeKey } from "../../keys.ts";
+import { fetchText } from "../scrape/index.ts";
 
 function parseJsonScores(text: string): Map<string, number> {
 	const body = JSON.parse(text) as unknown;
@@ -38,7 +38,7 @@ export async function loadUrl(url: string): Promise<Map<string, number>> {
 import { mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
-import { loadAaWeb } from "../../sources/aa.ts";
+import { loadAaWeb } from "../sources/aa/web.ts";
 
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 

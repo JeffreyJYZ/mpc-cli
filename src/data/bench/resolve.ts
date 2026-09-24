@@ -1,12 +1,12 @@
-import { loadAaApi } from "../sources/aa.ts";
+import { loadAaApi } from "../sources/aa/api.ts";
 import { loadCc } from "./cc.ts";
-import { loadAaWebCached, loadFile, loadUrl } from "./load/store.ts";
+import { loadAaWebCached, loadFile, loadUrl } from "./store.ts";
 import {
 	type AbilityOptions,
 	type BenchData,
 	emptyData,
 	type Resolved,
-} from "./load/types.ts";
+} from "./types.ts";
 
 export async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 	const [scheme, arg] = opts.source.includes(":")
@@ -97,4 +97,4 @@ export type {
 	AbilityResult,
 	AbilitySource,
 	BenchData,
-} from "./load/types.ts";
+} from "./types.ts";
