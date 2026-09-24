@@ -17,5 +17,8 @@
 		"@biomejs/biome": "^2.5.13",
 		"@types/bun": "latest",
 		"typescript": "^5.9.0"
+	},
+	"dependencies": {
+		"cac": "^7.0.0"
 	}
 }

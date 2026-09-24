@@ -46,10 +46,21 @@ bun link                       # exposes the `mpc` binary
 
 Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun test` all clean.
 
+## CLI parsing
+
+- Flags are declared once in `src/cli/parser.ts` and parsed with `cac`; it owns `--help` and
+  `--version`. `src/cli/map.ts` reduces the parsed bag to `Options`; `src/cli/validate.ts`
+  whitelists keys (unknown flags throw) and checks ranges.
+- `--no-color` / `--no-fallback` / `--no-ability` are cac negations: the code reads
+  `color === false`, `fallback === false`, `ability === false`.
+- `parseArgs(argv) -> Options` is the only entry point; `--columns help` still prints
+  `COLUMN_HELP` from `src/cli/help.ts`. `-h`/`-v` exit inside cac, so tests must not pass them.
+
 ## Rules
 
 - **Biome** is the only formatter/linter (`biome check --write`). No Prettier/ESLint. If
   Biome supports the file type, use it.
+- `cac` is the only runtime dependency; keep it that way unless there is a strong reason.
 - `biome.json` `$schema` must match the installed Biome version, or biome prints a migrate
   notice. Bump it when upgrading.
 - **Bun** over npm. **Tabs, width 4.** TypeScript, not JS.

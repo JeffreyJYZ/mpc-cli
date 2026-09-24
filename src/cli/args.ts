@@ -45,4 +45,4 @@ export function parseOnly(value: string | undefined): "both" | "all" {
 	return value;
 }
 
-export { parseArgs } from "./parse.ts";
+export { parseArgs } from "./parser.ts";

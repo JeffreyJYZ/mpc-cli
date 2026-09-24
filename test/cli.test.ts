@@ -12,6 +12,7 @@ describe("parseArgs", () => {
 		});
 		expect(o.metric).toBe("val");
 		expect(o.only).toBe("all");
+		expect(o.noColor).toBe(false);
 	});
 
 	test("workload overrides, space and equals forms", () => {
@@ -19,7 +20,7 @@ describe("parseArgs", () => {
 		expect(o.workload).toEqual({ input: 1200, cacheRead: 0, output: 500 });
 	});
 
-	test("plan, metric and flags", () => {
+	test("plan, metric and boolean flags", () => {
 		const o = parseArgs([
 			"--cc-plan",
 			"pro",
@@ -34,9 +35,34 @@ describe("parseArgs", () => {
 		expect(o.json).toBe(true);
 	});
 
-	test("rejects unknown flags and bad numbers", () => {
+	test("--no-* flags map to the negated option", () => {
+		const o = parseArgs(["--no-color", "--no-fallback", "--no-ability"]);
+		expect(o.noColor).toBe(true);
+		expect(o.noFallback).toBe(true);
+		expect(o.noAbility).toBe(true);
+	});
+
+	test("columns split and pass help through", () => {
+		expect(parseArgs(["--columns", "model, cost ,val"]).columns).toEqual([
+			"model",
+			"cost",
+			"val",
+		]);
+		expect(parseArgs(["--columns", "help"]).columns).toEqual(["help"]);
+	});
+
+	test("weights parse as shares", () => {
+		const o = parseArgs(["--bench-weight", "0.6", "--tps-weight", "0"]);
+		expect(o.benchWeight).toBe(0.6);
+		expect(o.tpsWeight).toBe(0);
+	});
+
+	test("rejects unknown flags and bad values", () => {
 		expect(() => parseArgs(["--nope"])).toThrow();
 		expect(() => parseArgs(["--in", "-5"])).toThrow();
+		expect(() => parseArgs(["--in", "1.5"])).toThrow();
+		expect(() => parseArgs(["--width", "abc"])).toThrow();
+		expect(() => parseArgs(["--bench-weight", "2"])).toThrow();
 		expect(() => parseArgs(["--metric", "wat"])).toThrow();
 		expect(() => parseArgs(["--only", "some"])).toThrow();
 	});

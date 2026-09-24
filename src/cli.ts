@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
-import { parseArgs } from "./cli/args.ts";
 import { runCheck } from "./cli/check.ts";
 import { collect } from "./cli/collect.ts";
-import { COLUMN_HELP, USAGE } from "./cli/help.ts";
+import { COLUMN_HELP } from "./cli/help.ts";
+import { parseArgs } from "./cli/parser.ts";
 import { matches, sortRows } from "./cli/sort.ts";
 import {
 	COLUMN_IDS,
@@ -15,14 +15,10 @@ import {
 } from "./render.ts";
 
 export type { Metric, Options } from "./cli/args.ts";
-export { parseArgs } from "./cli/args.ts";
+export { parseArgs } from "./cli/parser.ts";
 
 export async function run(argv: string[]): Promise<number> {
 	const options = parseArgs(argv);
-	if (options.help) {
-		console.log(USAGE);
-		return 0;
-	}
 	if (options.columns?.includes("help")) {
 		console.log(COLUMN_HELP);
 		return 0;

@@ -24,6 +24,9 @@ mpc --json                            # machine-readable output
 mpc --check                           # validate live sources and report drift
 ```
 
+Flags are parsed with [cac](https://github.com/cacjs/cac); `--help` and `--version` come from it.
+Unknown flags and out-of-range values are rejected.
+
 Run it directly with Bun (`bun run src/index.ts ...`) or link the binary:
 
 ```sh
@@ -53,6 +56,8 @@ mpc --help
 | `--no-fallback` | off | with `--bench cc`, skip the Artificial Analysis fill |
 | `--refresh` | off | ignore the `aa-web` cache |
 | `--no-ability` | off | hide `ability` and `VAL` |
+| `-h, --help` | — | generated help (cac) |
+| `-v, --version` | — | print version |
 | `--peak` | off | use peak-rate rows instead of off-peak (DeepSeek) |
 | `--asc` | off | sort ascending |
 | `--detail` | off | preset: adds token rates and 5h/week columns |
