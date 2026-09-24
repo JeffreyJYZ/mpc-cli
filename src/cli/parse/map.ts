@@ -68,6 +68,14 @@ function presets(bag: Bag): Record<string, string[]> {
 	return out;
 }
 
+function usageWindow(value: unknown): "period" | "all" | `${number}d` {
+	if (value === "all") return "all";
+	if (typeof value === "string" && /^\d+d$/.test(value)) {
+		return value as `${number}d`;
+	}
+	return "period";
+}
+
 function colorMode(value: unknown): ColorMode {
 	if (value === false || value === "never") return "never";
 	if (value === "always") return "always";
@@ -142,6 +150,7 @@ export function toOptions(bag: Bag): Options {
 			bag.usageFile === undefined ? undefined : String(bag.usageFile),
 		usageMonths:
 			bag.usageMonths === undefined ? 1 : Number(bag.usageMonths),
+		usageWindow: usageWindow(bag.usageWindow),
 		plugins: words(bag, "plugins"),
 	};
 }

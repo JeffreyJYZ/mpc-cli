@@ -51,8 +51,13 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 ## Usage projection
 
-- `--usage` reads local CommandCode logs via `cmduse model --json` (offline) or `--usage-file`.
-  cmduse reports **per-model totals**, not per-request — `engine/project.ts` divides by `requests`
+- `--usage` scans `~/.commandcode/projects/**/*.jsonl` itself (`data/logs.ts`), because
+  `cmduse model --json` is local-only and undocumented-scope. Assistant records carry
+  `usage{tokens,costUsd}` + `timestamp` + `model`, so a billing-period window is possible.
+- There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals). Local logs
+  are partial by nature, so the report always prints a coverage line against `cmduse -1` totals and
+  warns when coverage < 90%. `--usage-file` is the escape hatch for a complete mix.
+- cmduse reports **per-model totals**, not per-request — `engine/project.ts` divides by `requests`
   only for the per-request figures.
 - `--usage-months` scales the period to a month; the header says which. Unmatched models are
   listed in the report, never silently dropped. `--format json` dumps the whole projection.

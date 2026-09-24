@@ -36,15 +36,24 @@ mpc --help
 
 ## Your real usage (`--usage`)
 
-Project what you actually ran onto both plans. Reads local CommandCode logs
-(`cmduse model --json`, offline) unless `--usage-file <path>` is given:
+Project what you actually ran onto both plans, from the local CommandCode session logs
+(offline). `--usage-window` picks the range — `period` (the billing cycle, default), `all`, or
+`<n>d`:
 
 ```sh
 mpc --usage
-mpc --usage --usage-file ./opencode-usage.json   # a foreign or hand-made mix
-mpc --usage --usage-months 2                     # logs cover two months
+mpc --usage --usage-window all
+mpc --usage --usage-file ./usage.json            # your own mix (see caveat below)
+mpc --usage --usage-months 2                     # scale a partial window to a month
 mpc --usage --json                               # full projection
 ```
+
+**Scope caveat.** `--usage` reads **local session logs only**. They contain the usage from this
+machine's CommandCode CLI sessions and may cover only part of your account period (other
+machines, other harnesses and the Provider API are not included). The report prints a coverage
+line — `local logs N of M account requests (x%)` — and warns when it is partial. Only
+account-wide *totals* are available from the CLI; there is no per-model account endpoint. For a
+complete mix, export per-model rows and pass `--usage-file`.
 
 ```
 MODEL          your req    your $    CC $/req  CC $/mo    OC $/req  OC $/mo  cheaper

@@ -71,7 +71,7 @@ export async function run(argv: string[]): Promise<number> {
 	}
 
 	if (options.usage) {
-		const usage = await loadUsage(options.usageFile);
+		const usage = await loadUsage(options.usageFile, options.usageWindow);
 		const projection = project(
 			usage.entries,
 			{ "oc-go": ocEntries, cc: ccEntries },
@@ -86,6 +86,8 @@ export async function run(argv: string[]): Promise<number> {
 		}
 		renderUsage(projection, {
 			label: usage.label,
+			window: usage.window,
+			account: usage.account,
 			months: options.usageMonths,
 			plans: { "oc-go": ocPlanInfo, cc: ccPlanInfo },
 		});

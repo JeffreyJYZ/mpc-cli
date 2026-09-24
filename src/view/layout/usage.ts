@@ -4,6 +4,8 @@ import { fmtCount, fmtUsd, paint, planTitle } from "../text/index.ts";
 
 export interface UsageMeta {
 	label: string;
+	window: string;
+	account?: { requests: number; cost: number };
 	months: number;
 	plans: Record<ProviderId, PlanInfo>;
 }
@@ -58,14 +60,30 @@ const HEADERS = [
 
 export function renderUsage(report: UsageProjection, meta: UsageMeta): void {
 	const dim = (text: string): string => paint("2", text);
-	const width = meta.months === 1 ? "period" : `${meta.months} months`;
+	const scale = meta.months === 1 ? "" : ` · scaled to ${meta.months} months`;
 	console.log(
 		paint(
 			"1",
-			`USAGE  your logged mix · ${width} · list value ${fmtUsd(report.ccListCost)}${meta.months === 1 ? "" : " (monthly)"}`,
+			`USAGE  your logged mix · ${meta.window}${scale} · list value ${fmtUsd(report.ccListCost)}${meta.months === 1 ? "" : "/mo"}`,
 		),
 	);
 	console.log(dim(`source  ${meta.label}`));
+	const local = report.rows.reduce((sum, row) => sum + row.requests, 0);
+	if (meta.account && meta.account.requests > 0) {
+		const pct = (local / meta.account.requests) * 100;
+		console.log(
+			dim(
+				`cover   local logs ${fmtCount(local)} of ${fmtCount(meta.account.requests)} account requests (${pct.toFixed(0)}%)`,
+			),
+		);
+		if (pct < 90) {
+			console.log(
+				dim(
+					"        partial: other machines/harnesses are not in local logs — use --usage-file to supply them",
+				),
+			);
+		}
+	}
 
 	const rows = report.rows.map(cells);
 	const widths = HEADERS.map((h, i) =>
