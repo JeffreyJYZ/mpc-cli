@@ -46,16 +46,21 @@ function pricingTriple(m: EntryMetrics | undefined): string {
 
 function winner(row: CompareRow): string {
 	// One-sided rows are not wins; name the side that carries the model.
-	if (!row.oc) return `${providerName("cc")} only`;
-	if (!row.cc) return `${providerName("oc-go")} only`;
+	if (!row.oc) return `${shortProviderName("cc")} only`;
+	if (!row.cc) return `${shortProviderName("oc-go")} only`;
 	const side = cheaperSide(row);
 	if (side === "tie") return "tie";
-	return side === "oc" ? "OpenCode" : "CommandCode";
+	return shortProviderName(side === "oc" ? "oc-go" : "cc");
 }
 
 /** Provider display name. */
 export function providerName(provider: ProviderId): string {
 	return provider === "oc-go" ? "OpenCode" : "CommandCode";
+}
+
+/** Short provider tag, for the WIN column. */
+export function shortProviderName(provider: ProviderId): string {
+	return provider === "oc-go" ? "OC" : "CC";
 }
 
 /** e.g. "OpenCode Go", "CommandCode GOAT". */

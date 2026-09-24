@@ -143,6 +143,8 @@ distinct keys.
 
 - `render.ts` owns the column registry (`COLUMNS`), presets (`DEFAULT_COLUMNS`, `DETAIL_COLUMNS`)
   and the grouped table. Group banner = provider (`planTitle`), so column headers stay unprefixed.
+- Provider names: `providerName` (OpenCode/CommandCode, used in banners and the footer) and
+  `shortProviderName` (OC/CC, used in the WIN column). Use these helpers, not literals.
 - Default sort is `val`; rows with `valueIndex === null` always sort last, either direction.
 - Modes: default = `DEFAULT_COLUMNS` (untrimmed); `--detail` = `DETAIL_COLUMNS` untrimmed;
   `--fit` = `DETAIL_COLUMNS` trimmed to width; `--columns` = exact and bypasses everything.
