@@ -49,6 +49,7 @@ const KNOWN = new Set([
 	"printConfig",
 	"usage",
 	"usageFile",
+	"usageLog",
 	"usageMonths",
 	"usageWindow",
 	"plugins",

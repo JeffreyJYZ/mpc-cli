@@ -51,9 +51,12 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 ## Usage projection
 
-- `--usage` prefers `cmduse model --json --since <ISO>` (cmduse 0.6.x+ windows the local scan);
-  `data/logs.ts` is the fallback for an older/absent cmduse. `CMDUSE_BIN` overrides the binary for
-  every cmduse call (plans, summary, model) so a dev build (`cmdusedev`) can be tested.
+- `--usage` merges sources: the provider plugin's per-request log (`~/.cache/mpc/usage.jsonl`,
+  `--usage-log`, `MPC_USAGE_LOG`) with `cmduse model --json --since` (cmduse 0.6.x+); `data/logs.ts`
+  scans session JSONL as the fallback. `CMDUSE_BIN` overrides the cmduse binary (dev builds).
+- The plugin (`~/dev/plugins/command-code-zed`) writes that log from
+  `message.updated` events — the only complete per-model source, since neither the account API nor
+  Studio exposes a model dimension.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals). Local logs
   are partial by nature, so the report always prints a coverage line against `cmduse -1` totals and
   warns when coverage < 90%. `--usage-file` is the escape hatch for a complete mix.

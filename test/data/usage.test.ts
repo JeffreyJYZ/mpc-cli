@@ -2,7 +2,12 @@ import { afterEach, describe, expect, test } from "bun:test";
 import { chmodSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadUsage, parseUsage } from "../../src/data/usage.ts";
+import {
+	loadUsage,
+	mergeUsage,
+	parseUsage,
+	readUsageLog,
+} from "../../src/data/usage.ts";
 
 const CMDUSE = JSON.stringify({
 	models: {
@@ -68,5 +73,47 @@ describe("loadUsage", () => {
 		process.env[BIN] = "/nonexistent/cmdusedev";
 		const usage = await loadUsage(undefined, "all");
 		expect(usage.label).toBe("local session logs");
+	});
+});
+
+describe("readUsageLog", () => {
+	const line = (ts: string, model: string, extra = "") =>
+		`{"ts":"${ts}","model":"${model}","input":100,"cacheRead":1000,"cacheWrite":0,"output":10,"costUsd":0.5${extra}}`;
+
+	test("aggregates per model and honours the window", () => {
+		const dir = mkdtempSync(join(tmpdir(), "mpc-log-"));
+		const path = join(dir, "usage.jsonl");
+		writeFileSync(
+			path,
+			[
+				line("2026-09-20T10:00:00Z", "deepseek/deepseek-v4.1-flash"),
+				line("2026-09-21T10:00:00Z", "deepseek/deepseek-v4.1-flash"),
+				line("2026-08-01T10:00:00Z", "z-ai/glm-5.3-flash"),
+			].join("\n"),
+		);
+		const recent = readUsageLog(path, new Date("2026-09-01T00:00:00Z"));
+		expect(recent).toHaveLength(1);
+		expect(recent?.[0]?.key).toBe("deepseekv41flash");
+		expect(recent?.[0]?.requests).toBe(2);
+		expect(recent?.[0]?.costUsd).toBeCloseTo(1, 6);
+		expect(readUsageLog(path, undefined)).toHaveLength(2);
+	});
+
+	test("missing file is null, not an error", () => {
+		expect(readUsageLog("/nonexistent/usage.jsonl")).toBeNull();
+	});
+});
+
+describe("mergeUsage", () => {
+	test("sums the same model across sources", () => {
+		const a = parseUsage(CMDUSE);
+		const b = parseUsage(
+			JSON.stringify([
+				{ model: "zai-org/GLM-5.2", requests: 8, tokensIn: 100 },
+			]),
+		);
+		const [row] = mergeUsage(a, b);
+		expect(row?.requests).toBe(150);
+		expect(row?.tokensIn).toBe(9637836);
 	});
 });

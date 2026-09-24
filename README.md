@@ -48,16 +48,22 @@ mpc --usage --usage-months 2                     # scale a partial window to a m
 mpc --usage --json                               # full projection
 ```
 
-`--usage` prefers `cmduse model --json --since <ISO>` when the installed cmduse supports the
-window (0.6.x+), and falls back to scanning the session logs itself otherwise. Set `CMDUSE_BIN`
-to point at a dev build (e.g. `cmdusedev`) instead of the installed `cmduse`.
+Sources, merged when more than one is present:
 
-**Scope caveat.** `--usage` reads **local session logs only**. They contain the usage from this
-machine's CommandCode CLI sessions and may cover only part of your account period (other
-machines, other harnesses and the Provider API are not included). The report prints a coverage
-line — `local logs N of M account requests (x%)` — and warns when it is partial. Only
-account-wide *totals* are available from the CLI; there is no per-model account endpoint. For a
-complete mix, export per-model rows and pass `--usage-file`.
+| source | covers |
+| --- | --- |
+| provider usage log (`$XDG_CACHE_HOME/mpc/usage.jsonl`, `--usage-log`, `MPC_USAGE_LOG`) | every request the opencode Command Code provider serves — the complete per-model mix |
+| `cmduse model --json --since <ISO>` (cmduse 0.6.x+) | CommandCode CLI sessions on this machine |
+| session-log scan (`~/.commandcode/projects`) | fallback when cmduse lacks the window |
+| `--usage-file` | anything else you have |
+
+The provider plugin writes the usage log; set `CMDUSE_BIN` to test against a dev cmduse
+(`cmdusedev`) instead of the installed one.
+
+**Scope caveat.** Only *local* sources exist — the account API exposes totals, not per-model
+usage, and Studio's API surface is the same endpoint. The report prints a coverage line
+(`local usage N of M account requests (x%)`) and warns below 90%, so a partial mix is visible
+rather than silently wrong.
 
 ```
 MODEL          your req    your $    CC $/req  CC $/mo    OC $/req  OC $/mo  cheaper

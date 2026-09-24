@@ -73,13 +73,13 @@ export function renderUsage(report: UsageProjection, meta: UsageMeta): void {
 		const pct = (local / meta.account.requests) * 100;
 		console.log(
 			dim(
-				`cover   local logs ${fmtCount(local)} of ${fmtCount(meta.account.requests)} account requests (${pct.toFixed(0)}%)`,
+				`cover   local usage ${fmtCount(local)} of ${fmtCount(meta.account.requests)} account requests (${pct.toFixed(0)}%)`,
 			),
 		);
 		if (pct < 90) {
 			console.log(
 				dim(
-					"        partial: other machines/harnesses are not in local logs — use --usage-file to supply them",
+					"        partial: other machines/harnesses are missing — point --usage-log at the provider log, or use --usage-file",
 				),
 			);
 		}

@@ -41,6 +41,7 @@ export interface Options {
 	printConfig: boolean;
 	usage: boolean;
 	usageFile?: string;
+	usageLog?: string;
 	usageMonths: number;
 	usageWindow: "period" | "all" | `${number}d`;
 	plugins: string[];

@@ -64,6 +64,10 @@ export function parseFlags(argv: string[]): Bag {
 		)
 		.option("--usage-file <path>", "read usage from a JSON file instead")
 		.option(
+			"--usage-log <path>",
+			"provider usage log (default ~/.cache/mpc/usage.jsonl)",
+		)
+		.option(
 			"--usage-months <n>",
 			"treat the logged usage as covering N months",
 		);

@@ -71,7 +71,11 @@ export async function run(argv: string[]): Promise<number> {
 	}
 
 	if (options.usage) {
-		const usage = await loadUsage(options.usageFile, options.usageWindow);
+		const usage = await loadUsage(
+			options.usageFile,
+			options.usageWindow,
+			options.usageLog,
+		);
 		const projection = project(
 			usage.entries,
 			{ "oc-go": ocEntries, cc: ccEntries },
