@@ -64,13 +64,14 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 ## CLI parsing
 
-- Flags are declared once in `src/cli/parser.ts` and parsed with `cac`; it owns `--help` and
-  `--version`. `src/cli/map.ts` reduces the parsed bag to `Options`; `src/cli/validate.ts`
+- Flags are declared once in `src/cli/parse/cac.ts` and parsed with `cac`; it owns `--help` and
+  `--version`. `src/cli/parse/map.ts` reduces the parsed bag to `Options`; `src/cli/parse/validate.ts`
   whitelists keys (unknown flags throw) and checks ranges.
 - `--no-color` / `--no-fallback` / `--no-ability` are cac negations: the code reads
   `color === false`, `fallback === false`, `ability === false`.
-- `parseArgs(argv) -> Options` is the only entry point; `--columns help` still prints
-  `COLUMN_HELP` from `src/cli/help.ts`. `-h`/`-v` exit inside cac, so tests must not pass them.
+- `resolveBag(argv)` is the real entry point (async, applies config + plugins); `parseArgs(argv)`
+  is CLI-only and sync, for tests. `--columns help` still prints
+  `COLUMN_HELP` from `src/cli/options.ts`. `-h`/`-v` exit inside cac, so tests must not pass them.
 
 ## Rules
 

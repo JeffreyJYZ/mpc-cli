@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
-import type { Bag } from "./parse/validate.ts";
+import type { Bag } from "./validate.ts";
 
 /** A plugin's default export may be an object or a (possibly async) factory. */
 type PluginFactory = (ctx: PluginContext) => Bag | Promise<Bag>;

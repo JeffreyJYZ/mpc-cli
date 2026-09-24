@@ -1,8 +1,8 @@
 import { readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
+import { loadPlugins } from "./parse/plugins.ts";
 import type { Bag } from "./parse/validate.ts";
-import { loadPlugins } from "./plugins.ts";
 
 /** Default config location, XDG-aware. */
 export function configPath(): string {
