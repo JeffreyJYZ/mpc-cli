@@ -129,6 +129,8 @@ interface Column {
 	style?: (row: CompareRow) => string | undefined;
 	/** Lower values are dropped first when the table is too wide. */
 	drop?: number;
+	/** When false the cell is not padded to the column width. */
+	pad?: boolean;
 }
 
 /** Which side is cheaper per request on this row. */
@@ -248,7 +250,8 @@ const COLUMNS: Record<string, Column> = {
 	win: {
 		header: "WIN",
 		value: winner,
-		right: true,
+		// Left aligned, but not padded out: the value ends on its own last char.
+		pad: false,
 		style: (r) => {
 			const side = cheaperSide(r);
 			if (side === "none") return "2";
