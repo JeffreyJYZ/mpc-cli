@@ -137,7 +137,8 @@ are excluded from the ability normalisation range.
 | `aa-web` | Artificial Analysis models page scrape | partial (only the models AA embeds) |
 | `file:<path>` / `url:<url>` | your JSON, `{ "model": score }` or `[{ model, score }]` | whatever you supply |
 
-Default is `cc`; models it does not score are filled from the `aa-web` scrape
+Default is `cc`; models it does not score are filled from Artificial Analysis —
+the full API when `AA_API_KEY` is set, otherwise the keyless `aa-web` scrape
 (`--no-fallback` to disable). The `aa-web` result is cached under
 `$XDG_CACHE_HOME/mpc/` (or `~/.cache/mpc/`) for 7 days; `--refresh` busts it.
 
