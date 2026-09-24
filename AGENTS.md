@@ -51,6 +51,10 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 
 ## Config and plugins
 
+- **Scope boundary:** extensibility is config only (flags, config file, config-layering plugins).
+  Registering new providers or plans is explicitly out of scope — the tool compares OpenCode Go
+  against CommandCode's real plans, nothing hypothetical.
+
 - Precedence: defaults < plugins (listed order) < user config < CLI. `resolveBag(argv)` in
   `cli/config.ts` merges them; `parseFlags` (raw CLI) and `parseArgs` (CLI-only Options) stay
   sync so tests never touch the filesystem.
