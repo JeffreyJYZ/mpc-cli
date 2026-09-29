@@ -136,6 +136,10 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 - Contracts to preserve:
   - `buildMetrics` invariant: `payPerRequest * requestsPerMonth === plan.price`.
   - Free models: `costPerRequest === 0` ⇒ `requestsPerMonth = Infinity`, `index = 100`.
+    JSON has no `Infinity`, so `renderJson` (a plain `JSON.stringify` of `rows`) emits
+    `requestsPerMonth: null` — and `requestsPerFiveHour`/`requestsPerWeek` with it. **`null`
+    means unbounded, not unknown.** A consumer that treats it as missing data (or compares it
+    numerically) is wrong; `sortProjections` in reqshape guards it explicitly for this reason.
   - One shared index scale across both providers (`buildRows` scores the concatenated list).
 - Keep README user-facing; agent/design notes go here.
 - **Size limits (pragmatic, not a game):**
