@@ -82,13 +82,15 @@ describe("parseTables + extractCatalog", () => {
 				allowance: 20,
 			},
 		];
+		const [first] = priced;
+		if (!first) throw new Error("fixture: priced entry missing");
 		const rateOnly: CatalogEntry[] = [
 			{
-				...priced[0]!,
+				...first,
 				deal: { badge: "-40%", ends: "Ends September 27, 2026" },
 			},
 			{
-				...priced[0]!,
+				...first,
 				key: "pixelcanary",
 				name: "Pixel Canary",
 				deal: { badge: "Free" },

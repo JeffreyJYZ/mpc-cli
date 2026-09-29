@@ -40,7 +40,8 @@ src/data/sources/            opencode.ts + cc/ (plans, cmduse, catalog) + aa/ (w
 src/data/bench/              index.ts (loadAbility), resolve.ts, cc.ts, store.ts, types.ts
 src/data/scrape/             index.ts, tables.ts, roleRows.ts; catalog/ (catalog, numeric, variant)
 src/data/usage/              index.ts (loadUsage), parse.ts (UsageEntry), log.ts (JSONL + merge),
-                             logs.ts (session scan), opencodeDb.ts (opencode store)
+                             logs.ts (session scan), opencodeDb.ts (opencode store, both
+                             layouts), opencodeV2.ts (session_message reader)
 src/view/render.ts           renderText / renderJson + frame constants
 src/view/schema.ts           view types + the column registry
 src/view/columns/            oc.ts, cc.ts, meta.ts
@@ -69,11 +70,16 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 ## Usage projection
 
 - `--usage` merges sources. Primary is **opencode's own store** (`data/usage/opencodeDb.ts`, read-only via
-  `bun:sqlite`): `message.data` for assistant rows carries `cost`, `tokens{input,output,cache}`,
-  `modelID`, `providerID`, so it is complete and backfilled for every provider opencode ran. An
-  external JSONL log (`--usage-log`, `MPC_USAGE_LOG`) is the fallback when the DB is missing;
-  `cmduse model --json --since` (cmduse 0.6.x+) and `data/usage/logs.ts` cover CommandCode CLI sessions.
-  `CMDUSE_BIN` overrides the cmduse binary (dev builds).
+  `bun:sqlite`), read through two layouts. v2 (`data/usage/opencodeV2.ts`) appends to
+  `session_message` and stopped writing `message` at the migration, so the legacy query reads
+  nothing on an upgraded install; a *completed* assistant turn there carries `model{id,providerID}`,
+  `cost` and `tokens`, while an in-flight one carries only the model and is skipped until it
+  finishes. The legacy `message` layout (`message.data` flat: `modelID`, `providerID`, `cost`,
+  `tokens{input,output,cache}`) stays as the fallback. Either way it is complete and backfilled for
+  every provider opencode ran. An external JSONL log (`--usage-log`, `MPC_USAGE_LOG`) is the
+  fallback when the DB is missing; `cmduse model --json --since` (cmduse 0.6.x+) and
+  `data/usage/logs.ts` cover CommandCode CLI sessions. `CMDUSE_BIN` overrides the cmduse binary
+  (dev builds).
 - The account API has no per-model dimension (Studio's surface is the same endpoint), which is why
   opencode's own store is the per-model source.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals), so the
