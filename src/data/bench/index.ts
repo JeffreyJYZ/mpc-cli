@@ -39,9 +39,13 @@ export async function loadAbility(
 	opts: AbilityOptions,
 ): Promise<AbilityResult> {
 	const primary = await resolvePrimary(opts);
-	// CommandCode and Artificial Analysis publish the same index, so when CC
-	// leads there is nothing worth a second round-trip.
-	if (!opts.fallback || primary.scheme === "cc") {
+	// CommandCode and Artificial Analysis publish the same intelligence index, so
+	// a CC primary normally needs no second round-trip. That premise only covered
+	// the index though: CC's plan pages dropped their `Tok/s` column (Sep 2026),
+	// so a CC primary with no speed values has to ask AA after all — otherwise
+	// every model reports speed null and the consumers drop the row.
+	const needsSpeed = primary.data.tps.size === 0;
+	if (!opts.fallback || (primary.scheme === "cc" && !needsSpeed)) {
 		return { ...primary.data, label: primary.label };
 	}
 
