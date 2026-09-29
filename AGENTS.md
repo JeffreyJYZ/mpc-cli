@@ -34,7 +34,7 @@ src/keys.ts                  canonical model key + branding aliases
 src/cli/run.ts               run(): orchestration
 src/cli/options.ts           Options, DEFAULTS, validators, COLUMN_HELP
 src/cli/parse/               cac.ts (declarations), map.ts (bag -> Options), fields.ts, validate.ts
-src/cli/flow/                collect.ts, sort.ts, check.ts
+src/cli/flow/                collect.ts, sort.ts, check.ts, columns.ts
 src/cli/engine/              cost.ts, rows.ts, score.ts, ability.ts, scale.ts, index.ts
 src/data/sources/            opencode.ts + cc/ (plans, cmduse, catalog) + aa/ (web, api, parse)
 src/data/bench/              index.ts (loadAbility), resolve.ts, cc.ts, store.ts, types.ts
@@ -239,14 +239,21 @@ distinct keys.
 
 ## Rendering
 
-- `render.ts` owns the column registry (`COLUMNS`), presets (`DEFAULT_COLUMNS`, `DETAIL_COLUMNS`)
-  and the grouped table. Group banner = provider (`planTitle`), so column headers stay unprefixed.
+- `render.ts` owns the column registry (`COLUMNS`), the tiers (`MINIMAL_COLUMNS`, `MEDIUM_COLUMNS`,
+  `DETAIL_COLUMNS`) and the grouped table. Group banner = provider (`planTitle`), so column headers
+  stay unprefixed.
 - Provider names: `providerName` (OpenCode/CommandCode, used in banners and the footer) and
   `shortProviderName` (OC/CC, used in the WIN column). Use these helpers, not literals.
 - Default sort is `val` (desc). `--metric cost|perreq` ascend, `val|req` descend, `--asc` flips;
   rows with no VAL always sort last. `cost` sorts by the COST index, `perreq` by `$/req`.
-- Modes: default = `DEFAULT_COLUMNS` (untrimmed); `--detail` = `DETAIL_COLUMNS` untrimmed;
-  `--fit` = `DETAIL_COLUMNS` trimmed to width; `--columns` = exact and bypasses everything.
+- Column selection is `cli/flow/columns.ts`: `--columns` (exact) > `--preset` (config) >
+  the tier flags > the default. **The default tier is `DETAIL_COLUMNS` trimmed to width** —
+  the old untrimmed 12-column `DEFAULT_COLUMNS` is now `--medium`, and `--minimal` is the
+  5-column answer (model + req/mo both sides + win + val). `--detail` is the same content as
+  the default, untrimmed, so the default and `--detail` differ only by trimming.
+- Trimming is on by default (`fit: true`), which is what `--fit` used to be: `trimsToWidth`
+  is false only for `--detail`, an exact `--columns` list, or `--no-fit`. Two tier flags at
+  once throws rather than silently picking one.
 - `fitColumns` drops optional columns, symmetric across providers, when the table exceeds the
   terminal width (`process.stdout.columns`, `--width`, else 120). `drop` priority on a `Column`:
   1 = `rates`, 2 = `req/$`, 3 = `5h`/`wk`. Columns without `drop` (model, ability, win, COST, VAL)

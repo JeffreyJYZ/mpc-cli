@@ -57,6 +57,16 @@ describe("parseArgs", () => {
 		expect(o.tpsWeight).toBe(0);
 	});
 
+	test("column presets and the trimming default", () => {
+		const base = parseArgs([]);
+		expect(base.fit).toBe(true);
+		expect(base.minimal).toBe(false);
+		expect(base.medium).toBe(false);
+		expect(parseArgs(["--minimal"]).minimal).toBe(true);
+		expect(parseArgs(["--medium"]).medium).toBe(true);
+		expect(parseArgs(["--no-fit"]).fit).toBe(false);
+	});
+
 	test("rejects unknown flags and bad values", () => {
 		expect(() => parseArgs(["--nope"])).toThrow();
 		expect(() => parseArgs(["--in", "-5"])).toThrow();

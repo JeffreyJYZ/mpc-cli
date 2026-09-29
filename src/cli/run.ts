@@ -3,8 +3,6 @@ import { loadUsage } from "~/data/usage/index.ts";
 import { renderUsage } from "~/view/layout/usage.ts";
 import {
 	COLUMN_IDS,
-	DEFAULT_COLUMNS,
-	DETAIL_COLUMNS,
 	fitColumns,
 	renderCsv,
 	renderJson,
@@ -18,28 +16,13 @@ import { describeConfig, resolveBag } from "./config.ts";
 import { project } from "./engine/project.ts";
 import { runCheck } from "./flow/check.ts";
 import { collect } from "./flow/collect.ts";
+import { resolveColumns, trimsToWidth } from "./flow/columns.ts";
 import { matches, sortRows } from "./flow/sort.ts";
 import { COLUMN_HELP } from "./options.ts";
-import { type Bag, toOptions } from "./parse/map.ts";
+import { toOptions } from "./parse/map.ts";
 
 export type { Metric, Options } from "./options.ts";
 export { parseArgs } from "./parse/cac.ts";
-
-function columnIds(bag: Bag, options: ReturnType<typeof toOptions>): string[] {
-	const presets = (bag.presets ?? {}) as Record<string, unknown>;
-	const named = options.preset ? presets[options.preset] : undefined;
-	if (options.columns) return options.columns;
-	if (named) {
-		return Array.isArray(named)
-			? named.map(String)
-			: String(named)
-					.split(",")
-					.map((id) => id.trim())
-					.filter(Boolean);
-	}
-	if (options.preset) throw new Error(`unknown preset "${options.preset}"`);
-	return options.detail || options.fit ? DETAIL_COLUMNS : DEFAULT_COLUMNS;
-}
 
 export async function run(argv: string[]): Promise<number> {
 	const bag = await resolveBag(argv);
@@ -56,7 +39,7 @@ export async function run(argv: string[]): Promise<number> {
 	setColorMode(options.colorMode);
 	setThresholds(options.costThresholds, options.valThresholds);
 
-	const requested = columnIds(bag, options);
+	const requested = resolveColumns(options);
 	const unknown = requested.filter((id) => !COLUMN_IDS.includes(id));
 	if (unknown.length > 0) {
 		throw new Error(
@@ -133,10 +116,9 @@ export async function run(argv: string[]): Promise<number> {
 	}
 
 	const limit = options.width ?? process.stdout.columns ?? 120;
-	const fitted =
-		options.fit && !options.columns
-			? fitColumns(result, requested, limit)
-			: { ids: requested, dropped: [] as string[] };
+	const fitted = trimsToWidth(options)
+		? fitColumns(result, requested, limit)
+		: { ids: requested, dropped: [] as string[] };
 	renderText(result, meta, fitted.ids, fitted.dropped);
 	console.log(
 		`\n${result.length} models · OpenCode Go vs CommandCode ${ccPlanInfo.label} · ${ocEntries.length} OpenCode / ${ccEntries.length} CommandCode entries`,

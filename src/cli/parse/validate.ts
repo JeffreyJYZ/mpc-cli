@@ -41,6 +41,8 @@ const KNOWN = new Set([
 	"asc",
 	"json",
 	"detail",
+	"minimal",
+	"medium",
 	"width",
 	"columns",
 	"color",

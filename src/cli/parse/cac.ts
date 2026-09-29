@@ -16,7 +16,18 @@ export function parseFlags(argv: string[]): Bag {
 		.option("--metric <name>", "val | cost | perreq | req | name")
 		.option("--model <re>", "only rows whose name matches")
 		.option("--only <scope>", "both | all")
-		.option("--fit", "widest column set that fits the terminal")
+		.option(
+			"--minimal",
+			"fewest columns: model + req/mo each side + win + val",
+		)
+		.option(
+			"--medium",
+			"allowance and the rate views per side + win + cost + val",
+		)
+		.option(
+			"--no-fit",
+			"keep the preset's full width, do not trim to the terminal",
+		)
 		.option("--detail", "every column, untrimmed")
 		.option("--width <n>", "force table width")
 		.option(

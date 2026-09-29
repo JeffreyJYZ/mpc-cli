@@ -15,6 +15,8 @@ export interface Options {
 	preset?: string;
 	presets: Record<string, string[]>;
 	detail: boolean;
+	minimal: boolean;
+	medium: boolean;
 	width?: number;
 	fit: boolean;
 	bench: string;
@@ -97,6 +99,8 @@ export const COLUMN_HELP = `Available columns (--columns a,b,c):
   cost             0-100 cost index, lower is better
   val              0-100 ability-aware value score
 
-Presets: default = model + allow/reqmo/per1k/reqdollar for both sides + win + cost + val
-         --detail = every column, untrimmed
-         --fit = every column, trimmed to the terminal width`;
+Presets: default   = every column, trimmed to the terminal width (--no-fit keeps them all)
+         --minimal = model + req/mo both sides + win + val
+         --medium  = allowance and the rate views per side + win + cost + val
+         --detail  = every column, untrimmed (for copy/paste or agents)
+         --columns = an exact list; bypasses presets and trimming`;

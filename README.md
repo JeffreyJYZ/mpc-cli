@@ -14,11 +14,11 @@ each request really costs you.
 mpc                                   # oc-go Go vs CommandCode GOAT, default workload
 mpc --cc-plan pro                     # compare against CommandCode Pro
 mpc --cc-plan go                      # ...or the $1 Go plan
-mpc --detail                          # add raw token rates + allowances
+mpc --minimal                         # model + req/mo both sides + win + val
+mpc --medium                          # allowances + the rate views per side
+mpc --detail                          # every column, untrimmed (for copy/paste or agents)
 mpc --model 'kimi|glm' --metric req   # filter, sort by requests/month
 mpc --in 2000 --cache 80000 --out 400 # override the fixed workload
-mpc --fit                             # widest column set that fits the terminal
-mpc --detail                          # every column, untrimmed (for copy/paste or agents)
 mpc --bench aa-web                    # ability scores from Artificial Analysis
 mpc --json                            # machine-readable output
 mpc --check                           # validate live sources and report drift
@@ -123,9 +123,11 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--metric <name>` | `val` | sort by `val`, `cost`, `perreq`, `req` or `name`; `cost` and `perreq` ascend (lower better), `val`/`req` descend, `--asc` flips; rows with no `VAL` always sort last |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
 | `--only <scope>` | `all` | `all` = union of both catalogs, `both` = only shared models |
-| `--width <n>` | terminal | force table width; otherwise auto-detect and drop optional columns (`rates`, `req/$`, `5h`/`wk`) to fit |
-| `--fit` | off | show the widest column set that fits the terminal |
-| `--columns <ids>` | preset | comma-separated columns to show, in order (overrides presets); `--columns help` lists ids |
+| `--width <n>` | terminal | force table width; by default the table trims to the terminal and drops optional columns (`rates`, `req/$`, `5h`/`wk`) until it fits |
+| `--minimal` | off | fewest columns: model + req/mo both sides + win + val |
+| `--medium` | off | preset: allowance and the rate views per side + win + cost + val |
+| `--no-fit` | off | keep the preset's full width instead of trimming to the terminal |
+| `--columns <ids>` | preset | comma-separated columns to show, in order (overrides presets and trimming); `--columns help` lists ids |
 | `--bench <src>` | `cc` | ability scores: `cc`, `aa`, `aa-web`, `file:<path>`, `url:<url>` |
 | `--bench-weight <n>` | `0.35` | ability share of `VAL`, 0-1 |
 | `--tps-weight <n>` | `0.10` | output-speed share of `VAL`, 0-1 |
@@ -152,7 +154,7 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `-v, --version` | — | print version |
 | `--peak` | off | use peak-rate rows instead of off-peak (DeepSeek) |
 | `--asc` | off | sort ascending |
-| `--detail` | off | preset: adds token rates and 5h/week columns |
+| `--detail` | off | every column, untrimmed; the default is every column trimmed to the terminal width |
 | `--json` | off | emit JSON instead of a table |
 | `--no-color` | off | disable ANSI colour |
 | `--check` | off | validate sources, list unmatched models, exit |
@@ -182,7 +184,7 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `COST` | 0-100 cost index, **lower is better** (no ability) |
 | `VAL` | 0-100 ability-aware value score |
 
-`--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set.
+`--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set. Without it, plain `mpc` shows every column that fits the terminal, `--minimal` and `--medium` narrow the set, and `--detail` prints all of them untrimmed.
 
 Rolling-window columns scale the monthly figure by each plan's own window ratio (OpenCode Go fixes 5h = 20%, weekly = 50%; CommandCode derives it from the plan's 5h/weekly dollar caps — 20%/50% on GOAT and Pro, 30%/60% on the Max plans).
 

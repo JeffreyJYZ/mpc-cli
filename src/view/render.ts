@@ -57,8 +57,11 @@ export const GAP = "  ";
 export const BAR = " │ ";
 export const BAR_RULE = "─┼─";
 
-/** Columns shown by default: what everyone needs. */
-export const DEFAULT_COLUMNS = [
+/** Fewest columns that still answer "which model, how many requests, who wins". */
+export const MINIMAL_COLUMNS = ["model", "oc-reqmo", "cc-reqmo", "win", "val"];
+
+/** The everyday middle set: allowance plus the three rate views per side. */
+export const MEDIUM_COLUMNS = [
 	"model",
 	"oc-allow",
 	"oc-reqmo",
@@ -73,7 +76,7 @@ export const DEFAULT_COLUMNS = [
 	"val",
 ];
 
-/** Every column, for --detail and --fit. */
+/** Every column: the width-trimmed default, and `--detail` untrimmed. */
 export const DETAIL_COLUMNS = [
 	"model",
 	"oc-rates",
