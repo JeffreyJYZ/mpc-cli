@@ -1,5 +1,5 @@
-import type { EntryMetrics } from "../../types.ts";
-import type { ScaleMode } from "../options.ts";
+import type { ScaleMode } from "~/cli/options.ts";
+import type { EntryMetrics } from "~/types.ts";
 import { logMinmax, minmax } from "./cost.ts";
 
 /** Everything the scorer can be told to do differently. */
@@ -110,17 +110,32 @@ export function assignValueIndex(
 	const byAbility = of(scored, ability);
 	const bySpeed = of(speeded, speed);
 
+	// Unpriced models have unlimited requests, so they sit at the top of the
+	// scale and stay out of the range below.
+	const composites = new Map<EntryMetrics, number>();
 	for (const m of scored) {
 		if (!Number.isFinite(m.requestsPerMonth)) {
 			m.valueIndex = 100;
 			continue;
 		}
-		m.valueIndex = Math.round(
+		composites.set(
+			m,
 			100 * (wAbility ?? 0) * (byAbility.get(m) ?? 0.5) +
 				100 * (wTps ?? 0) * (bySpeed.get(m) ?? 0.5) +
 				100 * (wVolume ?? 0) * (byVolume.get(m) ?? 0.5) +
 				100 * (wCache ?? 0) * (1 - (byCache.get(m) ?? 0.5)) +
 				100 * (wOutput ?? 0) * (1 - (byOutput.get(m) ?? 0.5)),
 		);
+	}
+	// The weighted sum alone tops out in the sixties: no entry leads every term
+	// (the volume winner has no ability, the speed winner is mid-pack on volume),
+	// so the raw number reads as "everything is mediocre". Rescale across entries
+	// — the way COST does — so the best reads 100 and the spread is legible.
+	const values = [...composites.values()];
+	const low = values.length > 0 ? Math.min(...values) : 0;
+	const high = values.length > 0 ? Math.max(...values) : 0;
+	for (const [m, value] of composites) {
+		m.valueIndex =
+			high > low ? Math.round((100 * (value - low)) / (high - low)) : 100;
 	}
 }
