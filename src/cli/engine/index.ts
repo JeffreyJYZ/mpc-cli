@@ -45,6 +45,7 @@ export function buildMetrics(
 			multiplier: plan.price > 0 ? entry.allowance / plan.price : 0,
 			ability: lookupAbility(ability, entry.key, config.inheritSuffixes),
 			tps: tps.get(entry.key) ?? null,
+			deal: entry.deal,
 			index: 0,
 			valueIndex: null,
 			free,

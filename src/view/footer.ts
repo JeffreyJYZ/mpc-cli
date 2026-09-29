@@ -87,6 +87,10 @@ export const LEGEND: [string, string][] = [
 	["$/1K", "your cost per 1,000 requests, at the plan's price"],
 	["req/$", "requests one dollar of subscription buys"],
 	[
+		"DEAL",
+		"active CommandCode promotion: -98%, Free, 2x usage (expiry line is in --json)",
+	],
+	[
 		"WIN",
 		"cheaper side: OC / CC / tie · 'x only' = only that provider has it",
 	],

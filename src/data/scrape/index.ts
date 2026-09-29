@@ -1,4 +1,5 @@
 export { extractCatalog } from "./catalog/catalog.ts";
+export { dealIn } from "./catalog/deal.ts";
 export { extractNumericColumn } from "./catalog/numeric.ts";
 export { parseRoleRows } from "./roleRows.ts";
 export type { Table } from "./tables.ts";

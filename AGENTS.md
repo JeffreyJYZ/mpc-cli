@@ -14,7 +14,7 @@ architecture, gotchas and contributor rules here.
 | `@jeffreyjyz/opencode-command-code` (`opencode/`) | consumes `mpc --json` for its session sidebar (allowance, rates, Intelligence, Tok/s per model) |
 
 Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and
-`mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps}}`, which the plugin's sidebar
+`mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps,deal},oc:{...}}`, which the plugin's sidebar
 reads. A change on either side updates the other in the same effort. `CMDUSE_BIN` points every
 cmduse call at a dev build (`cmdusedev`).
 
@@ -154,6 +154,13 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
   before matching, and input/output match on prefix (`/^input/i`) because CommandCode's
   grid writes `Input/M`.
 - **Deal strikethrough**: `~~$30~~$67` — the last `$` in the cell is the current value.
+- **Deal badges are later text nodes of the name cell**: the cell reads
+  `Grok 4.7` · `-40%` · `Ends September 27, 2026`, joined by `BOUNDARY`, and `nameCell`
+  keeps only the first node — so `dealIn` reads the rest for the DEAL column. Paid models
+  are priced from the *credits* tables, which carry no badges, so `fillDeals` lends them the
+  badge from the rate-only pass; without it every paid deal vanishes while the free ones
+  survive. Expiry needs no logic: the docs drop the badge and revert the price themselves
+  (Grok 4.7 went back to its full rate when the -40% lapsed).
 - **Model name cells append badges** (`Grok 4.7` + `-40%` + `Ends September 27, 2026`). Take
   the first `BOUNDARY` segment as the name or the key gets polluted.
 - **OpenCode Go rows duplicate models**: off-peak vs peak, and `≤ 256K` vs `> 256K` tiers.

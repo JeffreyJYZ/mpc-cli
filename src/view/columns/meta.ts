@@ -23,6 +23,14 @@ export const META_COLUMNS: Record<string, Column> = {
 		style: (r) => f.enabledStyle(r.oc?.tps ?? r.cc?.tps ?? null),
 		drop: 4,
 	},
+	deal: {
+		header: "DEAL",
+		// The badge alone: the expiry line would blow the column out, and it
+		// rides along in --json for the sidebar, which has room for it.
+		value: (r) => r.cc?.deal?.badge ?? "—",
+		style: (r) => (r.cc?.deal ? "32" : "2"),
+		drop: 3,
+	},
 	val: {
 		header: "VAL",
 		value: f.bestValue,

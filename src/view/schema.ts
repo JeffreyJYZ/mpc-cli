@@ -77,6 +77,7 @@ export const COLUMN_IDS = [
 	"cost",
 	"ability",
 	"tps",
+	"deal",
 	"val",
 ];
 

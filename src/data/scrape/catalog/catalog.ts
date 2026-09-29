@@ -7,6 +7,7 @@ import {
 } from "~/data/scrape/tables.ts";
 import { displayName, normalizeKey } from "~/keys.ts";
 import type { CatalogEntry, ModelPricing, ProviderId } from "~/types.ts";
+import { dealIn } from "./deal.ts";
 import { variantScore } from "./variant.ts";
 
 interface CatalogOptions {
@@ -68,6 +69,7 @@ export function extractCatalog(
 
 		for (const cells of table.slice(1)) {
 			const rawName = nameCell(cells[0] ?? "");
+			const deal = dealIn(cells[0] ?? "");
 			if (!rawName) continue;
 			const allowance = creditHeader
 				? parseMoney(cells[creditCol] ?? "")
@@ -88,6 +90,7 @@ export function extractCatalog(
 					name: displayName(rawName),
 					pricing: pricingOf(cells, cols),
 					allowance,
+					...(deal ? { deal } : {}),
 				},
 			});
 		}

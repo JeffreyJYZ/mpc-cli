@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test";
-import { extractCatalog, parseTables } from "~/data/scrape/index.ts";
+import { dealIn, extractCatalog, parseTables } from "~/data/scrape/index.ts";
+import { fillDeals } from "~/data/sources/cc/catalog.ts";
+import type { CatalogEntry } from "~/types.ts";
 
 const FIXTURE = `
 <table>
@@ -43,6 +45,59 @@ describe("parseTables + extractCatalog", () => {
 		expect(byKey.get("glm51")?.pricing.input).toBe(1.4);
 		// Deal badge text must not leak into the key.
 		expect(byKey.get("grok47")?.pricing.input).toBe(1.2);
+		// ...and the badge itself is kept, so the table can show why it is cheap.
+		expect(byKey.get("grok47")?.deal).toEqual({ badge: "-40%" });
+		expect(byKey.get("glm51")?.deal).toBeUndefined();
+	});
+
+	test("reads the badge and its expiry out of the name cell", () => {
+		expect(
+			dealIn("Grok 4.7\u0001-40%\u0001Ends September 27, 2026"),
+		).toEqual({
+			badge: "-40%",
+			ends: "Ends September 27, 2026",
+		});
+		expect(dealIn("Pixel Canary\u0001Free")).toEqual({ badge: "Free" });
+		expect(dealIn("MiniMax M3\u00012x usage")).toEqual({
+			badge: "2x usage",
+		});
+		// The name itself is never a badge, however suggestive.
+		expect(dealIn("Some Free Model")).toBeUndefined();
+		expect(dealIn("LongCat 2.0\u0001+1")).toBeUndefined();
+	});
+
+	test("a credits-table entry takes the deal published in the other table", () => {
+		const priced: CatalogEntry[] = [
+			{
+				provider: "cc",
+				plan: "GOAT",
+				key: "grok47",
+				name: "Grok 4.7",
+				pricing: {
+					input: 1.2,
+					output: 3.6,
+					cacheRead: 0.3,
+					cacheWrite: null,
+				},
+				allowance: 20,
+			},
+		];
+		const rateOnly: CatalogEntry[] = [
+			{
+				...priced[0]!,
+				deal: { badge: "-40%", ends: "Ends September 27, 2026" },
+			},
+			{
+				...priced[0]!,
+				key: "pixelcanary",
+				name: "Pixel Canary",
+				deal: { badge: "Free" },
+			},
+		];
+		fillDeals(priced, rateOnly);
+		expect(priced[0]?.deal?.badge).toBe("-40%");
+		expect(priced).toHaveLength(2);
+		expect(priced[1]?.name).toBe("Pixel Canary");
 	});
 });
 

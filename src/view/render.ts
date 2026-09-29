@@ -92,6 +92,7 @@ export const DETAIL_COLUMNS = [
 	"cc-reqdollar",
 	"ability",
 	"tps",
+	"deal",
 	"win",
 	"cost",
 	"val",

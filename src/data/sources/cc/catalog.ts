@@ -42,20 +42,37 @@ export async function loadCcCatalog(planId: string): Promise<CatalogEntry[]> {
 			`no model tables parsed from ${url} — docs layout may have changed`,
 		);
 	}
-	// Fill models the page lists with rates but no per-model credits row.
 	if (def.standardAllowance !== undefined) {
-		const extra = extractCatalog(tables, {
-			provider: "cc",
-			plan: def.label,
-			defaultAllowance: def.standardAllowance,
-		});
-		const seen = new Set(entries.map((e) => e.key));
-		for (const entry of extra) {
-			if (!seen.has(entry.key)) {
-				seen.add(entry.key);
-				entries.push(entry);
-			}
-		}
+		fillDeals(
+			entries,
+			extractCatalog(tables, {
+				provider: "cc",
+				plan: def.label,
+				defaultAllowance: def.standardAllowance,
+			}),
+		);
 	}
 	return entries;
+}
+
+/**
+ * Fold the rate-only pass into the priced one: it adds models the credits
+ * tables omit entirely (the free ones), and lends its promotion badges to
+ * entries that came from a credits table — those carry no badges, so without
+ * this a paid model silently loses the deal published beside its name.
+ */
+export function fillDeals(
+	entries: CatalogEntry[],
+	rateOnly: CatalogEntry[],
+): void {
+	const byKey = new Map(entries.map((entry) => [entry.key, entry]));
+	for (const entry of rateOnly) {
+		const existing = byKey.get(entry.key);
+		if (!existing) {
+			byKey.set(entry.key, entry);
+			entries.push(entry);
+			continue;
+		}
+		if (!existing.deal && entry.deal) existing.deal = entry.deal;
+	}
 }

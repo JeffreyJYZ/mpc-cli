@@ -25,6 +25,15 @@ export interface CatalogEntry {
 	pricing: ModelPricing;
 	/** Monthly credits ($) this plan devotes to this model. */
 	allowance: number;
+	/** Promotion CommandCode attaches to the row, when one is running. */
+	deal?: Deal;
+}
+
+/** A promotion chip on a model row: "-40%", "Free", "2x usage". */
+export interface Deal {
+	badge: string;
+	/** The expiry line the page prints beside it, verbatim. */
+	ends?: string;
 }
 
 export interface PlanInfo {
@@ -68,6 +77,8 @@ export interface EntryMetrics {
 	ability: number | null;
 	/** Output tokens per second, or null when unknown. */
 	tps: number | null;
+	/** Promotion this entry's provider is running on the model, if any. */
+	deal?: Deal;
 	/** 0-100 blended value score, higher is better. */
 	index: number;
 	/** 0-100 ability-aware value score, null when the model is unscored. */
