@@ -6,7 +6,7 @@ import {
 	parseMetric,
 	parseOnly,
 	type ScaleMode,
-} from "../options.ts";
+} from "~/cli/options.ts";
 import {
 	colorMode,
 	numbers,
@@ -71,7 +71,13 @@ export function toOptions(bag: Bag): Options {
 		idxWeights: numbers(bag, "idxWeights"),
 		valWeights: numbers(bag, "valWeights"),
 		scale: String(pick(bag, "scale")) as ScaleMode,
-		inheritSuffixes: words(bag, "inheritSuffixes"),
+		// Absent means "use the built-in suffixes"; an empty list means "inherit
+		// nothing", which is why this must stay undefined rather than become []:
+		// the lookups read an empty array as a deliberate opt-out.
+		inheritSuffixes: (() => {
+			const suffixes = words(bag, "inheritSuffixes");
+			return suffixes.length > 0 ? suffixes : undefined;
+		})(),
 		window:
 			window && window.length === 2
 				? [window[0] ?? 0, window[1] ?? 0]
