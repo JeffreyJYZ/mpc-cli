@@ -1,8 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import {
-	costPerRequest,
-	lookupAbility,
-} from "../../../src/cli/engine/index.ts";
+import { costPerRequest, lookupAbility } from "~/cli/engine/index.ts";
 
 describe("costPerRequest", () => {
 	test("sums input, cache and output at per-million rates", () => {

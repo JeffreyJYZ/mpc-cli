@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
-import { parseMoney } from "../../src/data/scrape/index.ts";
-import { BOUNDARY } from "../../src/types.ts";
+import { parseMoney } from "~/data/scrape/index.ts";
+import { BOUNDARY } from "~/types.ts";
 
 describe("parseMoney", () => {
 	test("plain price", () => {

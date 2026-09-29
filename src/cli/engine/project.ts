@@ -1,5 +1,5 @@
-import type { UsageEntry } from "../../data/usage/index.ts";
-import type { CatalogEntry, PlanInfo, ProviderId } from "../../types.ts";
+import type { UsageEntry } from "~/data/usage/index.ts";
+import type { CatalogEntry, PlanInfo, ProviderId } from "~/types.ts";
 
 const PER_MILLION = 1_000_000;
 

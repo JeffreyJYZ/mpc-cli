@@ -5,7 +5,7 @@ import type {
 	PlanInfo,
 	ProviderId,
 	Workload,
-} from "../../types.ts";
+} from "~/types.ts";
 import { buildMetrics } from "./index.ts";
 import { DEFAULT_SCORE, type ScoreConfig } from "./score.ts";
 

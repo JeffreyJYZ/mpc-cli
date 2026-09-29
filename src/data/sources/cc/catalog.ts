@@ -1,10 +1,10 @@
-import type { CatalogEntry } from "../../../types.ts";
 import {
 	extractCatalog,
 	fetchText,
 	parseRoleRows,
 	parseTables,
-} from "../../scrape/index.ts";
+} from "~/data/scrape/index.ts";
+import type { CatalogEntry } from "~/types.ts";
 import { CC_PLANS } from "./plans.ts";
 
 /** Per-model token rates + monthly credit allowance for a CommandCode plan. */

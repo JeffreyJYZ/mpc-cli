@@ -1,4 +1,4 @@
-import type { CompareRow, PlanInfo } from "../types.ts";
+import type { CompareRow, PlanInfo } from "~/types.ts";
 import { tally } from "./layout/segments.ts";
 import type { ReportMeta } from "./schema.ts";
 import { paint, planTitle, providerName } from "./text/index.ts";

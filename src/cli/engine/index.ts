@@ -4,7 +4,7 @@ import type {
 	PlanInfo,
 	ProviderId,
 	Workload,
-} from "../../types.ts";
+} from "~/types.ts";
 import { lookupAbility } from "./ability.ts";
 import { costPerRequest, windowRatios } from "./cost.ts";
 import {

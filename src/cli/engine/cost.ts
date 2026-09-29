@@ -1,4 +1,4 @@
-import type { ModelPricing, PlanInfo, Workload } from "../../types.ts";
+import type { ModelPricing, PlanInfo, Workload } from "~/types.ts";
 
 const PER_MILLION = 1_000_000;
 

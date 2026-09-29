@@ -121,6 +121,11 @@ Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun tes
 - `biome.json` `$schema` must match the installed Biome version, or biome prints a migrate
   notice. Bump it when upgrading.
 - **Bun** over npm. **Tabs, width 4.** TypeScript, not JS.
+- **Imports: `~/` for anything outside the file's own directory, `./` for siblings.**
+  The alias is a single `"~/*": ["./src/*"]` entry in `tsconfig.json` `paths`, with no
+  `baseUrl` — TypeScript resolves `paths` relative to the tsconfig, and `baseUrl` is
+  deprecated. Bun honours it at runtime and in tests, so `mpc` and `bun test` need no
+  build step. Targets outside `src/` (test fixtures, `package.json`) stay relative.
 - Tests must not hit the network — extend the inline fixtures in `test/html.test.ts`.
 - Contracts to preserve:
   - `buildMetrics` invariant: `payPerRequest * requestsPerMonth === plan.price`.

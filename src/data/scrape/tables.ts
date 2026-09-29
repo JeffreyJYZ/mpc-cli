@@ -1,4 +1,4 @@
-import { BOUNDARY } from "../../types.ts";
+import { BOUNDARY } from "~/types.ts";
 
 export type Table = string[][];
 

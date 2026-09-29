@@ -1,5 +1,5 @@
-import type { CatalogEntry, PlanInfo } from "../../types.ts";
-import { extractCatalog, fetchText, parseTables } from "../scrape/index.ts";
+import { extractCatalog, fetchText, parseTables } from "~/data/scrape/index.ts";
+import type { CatalogEntry, PlanInfo } from "~/types.ts";
 
 const DOC_URL = "https://opencode.ai/docs/go/";
 const MODELS_URL = "https://opencode.ai/zen/go/v1/models";

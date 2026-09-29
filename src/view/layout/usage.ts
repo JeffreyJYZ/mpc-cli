@@ -1,6 +1,6 @@
-import type { UsageProjection, UsageRow } from "../../cli/engine/project.ts";
-import type { PlanInfo, ProviderId } from "../../types.ts";
-import { fmtCount, fmtUsd, paint, planTitle } from "../text/index.ts";
+import type { UsageProjection, UsageRow } from "~/cli/engine/project.ts";
+import type { PlanInfo, ProviderId } from "~/types.ts";
+import { fmtCount, fmtUsd, paint, planTitle } from "~/view/text/index.ts";
 
 export interface UsageMeta {
 	label: string;

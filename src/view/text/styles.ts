@@ -1,5 +1,5 @@
-import type { EntryMetrics } from "../../types.ts";
-import type { Row } from "../schema.ts";
+import type { EntryMetrics } from "~/types.ts";
+import type { Row } from "~/view/schema.ts";
 import { fmtRate, shortProviderName } from "./format.ts";
 
 /** Which side is cheaper per request on this row. */

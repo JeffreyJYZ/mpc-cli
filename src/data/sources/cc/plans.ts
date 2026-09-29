@@ -1,4 +1,4 @@
-import type { PlanInfo } from "../../../types.ts";
+import type { PlanInfo } from "~/types.ts";
 import { cmdusePlans, money } from "./cmduse.ts";
 
 interface CcPlanDef {

@@ -1,5 +1,5 @@
-import { normalizeKey } from "../../../keys.ts";
-import { fetchText } from "../../scrape/index.ts";
+import { fetchText } from "~/data/scrape/index.ts";
+import { normalizeKey } from "~/keys.ts";
 
 const MODELS_URL = "https://artificialanalysis.ai/models";
 

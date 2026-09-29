@@ -1,6 +1,6 @@
 import { cac } from "cac";
+import type { Options } from "~/cli/options.ts";
 import pkg from "../../../package.json" with { type: "json" };
-import type { Options } from "../options.ts";
 import { type Bag, toOptions } from "./map.ts";
 
 /** Raw CLI bag: exactly what the user typed, no config, no defaults. */

@@ -1,12 +1,12 @@
-import { displayName, normalizeKey } from "../../../keys.ts";
-import type { CatalogEntry, ModelPricing, ProviderId } from "../../../types.ts";
 import {
 	cellText,
 	headerIndex,
 	nameCell,
 	parseMoney,
 	type Table,
-} from "../tables.ts";
+} from "~/data/scrape/tables.ts";
+import { displayName, normalizeKey } from "~/keys.ts";
+import type { CatalogEntry, ModelPricing, ProviderId } from "~/types.ts";
 import { variantScore } from "./variant.ts";
 
 interface CatalogOptions {

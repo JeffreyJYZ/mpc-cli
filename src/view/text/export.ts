@@ -1,5 +1,5 @@
-import type { PlanInfo } from "../../types.ts";
-import type { Row, Tally } from "../schema.ts";
+import type { PlanInfo } from "~/types.ts";
+import type { Row, Tally } from "~/view/schema.ts";
 import { fmtAbility, fmtCount, fmtTps, planTitle } from "./format.ts";
 
 const CSV_HEADER = [

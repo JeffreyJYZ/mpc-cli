@@ -1,7 +1,7 @@
-import { BAR, BAR_RULE } from "../render.ts";
-import type { Column, GroupKey, GroupLabel, Row } from "../schema.ts";
-import { columns } from "../schema.ts";
-import { paint } from "../text/index.ts";
+import { BAR, BAR_RULE } from "~/view/render.ts";
+import type { Column, GroupKey, GroupLabel, Row } from "~/view/schema.ts";
+import { columns } from "~/view/schema.ts";
+import { paint } from "~/view/text/index.ts";
 import { buildSegments, renderSegment } from "./segments.ts";
 
 function measure(

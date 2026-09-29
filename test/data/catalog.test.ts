@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { extractCatalog, parseTables } from "../../src/data/scrape/index.ts";
+import { extractCatalog, parseTables } from "~/data/scrape/index.ts";
 
 const FIXTURE = `
 <table>

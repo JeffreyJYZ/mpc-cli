@@ -1,5 +1,5 @@
-import { normalizeKey } from "../../keys.ts";
-import { runCmduse } from "../cmduse.ts";
+import { runCmduse } from "~/data/cmduse.ts";
+import { normalizeKey } from "~/keys.ts";
 
 export interface UsageEntry {
 	key: string;

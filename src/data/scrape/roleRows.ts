@@ -1,4 +1,4 @@
-import { BOUNDARY } from "../../types.ts";
+import { BOUNDARY } from "~/types.ts";
 import type { Table } from "./tables.ts";
 
 /**

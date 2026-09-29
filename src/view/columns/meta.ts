@@ -1,5 +1,5 @@
-import type { Column } from "../schema.ts";
-import * as f from "../text/index.ts";
+import type { Column } from "~/view/schema.ts";
+import * as f from "~/view/text/index.ts";
 
 export const META_COLUMNS: Record<string, Column> = {
 	model: { header: "MODEL", value: (r) => r.name, style: () => "1" },

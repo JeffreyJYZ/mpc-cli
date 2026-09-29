@@ -2,7 +2,7 @@ import {
 	extractNumericColumn,
 	fetchText,
 	parseTables,
-} from "../scrape/index.ts";
+} from "~/data/scrape/index.ts";
 import { type BenchData, emptyData } from "./types.ts";
 
 // CommandCode only publishes Intelligence and Tok/s on the GOAT/Pro catalogs.

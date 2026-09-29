@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseArgs } from "../../src/cli/run.ts";
+import { parseArgs } from "~/cli/run.ts";
 
 describe("parseArgs", () => {
 	test("defaults", () => {

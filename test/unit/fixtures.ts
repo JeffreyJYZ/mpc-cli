@@ -1,4 +1,4 @@
-import type { CatalogEntry, PlanInfo, Workload } from "../../src/types.ts";
+import type { CatalogEntry, PlanInfo, Workload } from "~/types.ts";
 
 export const workload: Workload = {
 	input: 1_000,
@@ -38,7 +38,7 @@ export function entry(overrides: Partial<CatalogEntry>): CatalogEntry {
 	};
 }
 
-import type { CompareRow, EntryMetrics } from "../../src/types.ts";
+import type { CompareRow, EntryMetrics } from "~/types.ts";
 
 export function metric(payPerRequest: number): EntryMetrics {
 	return {

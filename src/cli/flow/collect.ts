@@ -1,10 +1,10 @@
-import { loadAbility } from "../../data/bench/index.ts";
-import { loadCcCatalog } from "../../data/sources/cc/catalog.ts";
-import { loadCcPlan } from "../../data/sources/cc/plans.ts";
-import { loadOcGoCatalog, ocGoPlan } from "../../data/sources/opencode.ts";
-import { buildRows } from "../engine/index.ts";
-import type { ScoreConfig } from "../engine/score.ts";
-import type { Options } from "../options.ts";
+import { buildRows } from "~/cli/engine/index.ts";
+import type { ScoreConfig } from "~/cli/engine/score.ts";
+import type { Options } from "~/cli/options.ts";
+import { loadAbility } from "~/data/bench/index.ts";
+import { loadCcCatalog } from "~/data/sources/cc/catalog.ts";
+import { loadCcPlan } from "~/data/sources/cc/plans.ts";
+import { loadOcGoCatalog, ocGoPlan } from "~/data/sources/opencode.ts";
 
 function scoreConfig(options: Options): ScoreConfig {
 	return {
