@@ -130,7 +130,7 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--bench-weight <n>` | `0.35` | ability share of `VAL`, 0-1 |
 | `--tps-weight <n>` | `0.10` | output-speed share of `VAL`, 0-1 |
 | `--bench-name <label>` | source | footer label for the ability source |
-| `--bench-key <key>` | `AA_API_KEY` | Artificial Analysis API key |
+| `--aa-key <key>` | `AA_API_KEY` | Artificial Analysis API key |
 | `--no-fallback` | off | with `--bench cc`, skip the Artificial Analysis fill |
 | `--refresh` | off | ignore the `aa-web` cache |
 | `--no-ability` | off | hide `ability` and `VAL` |

@@ -36,7 +36,7 @@ export async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 			const key = opts.key ?? process.env.AA_API_KEY;
 			if (!key) {
 				throw new Error(
-					"--bench aa needs a key: set AA_API_KEY or pass --bench-key",
+					"--bench aa needs a key: set AA_API_KEY or pass --aa-key",
 				);
 			}
 			const data = await loadAaApi(key);

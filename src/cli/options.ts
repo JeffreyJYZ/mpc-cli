@@ -28,7 +28,7 @@ export interface Options {
 	costThresholds: [number, number];
 	valThresholds: [number, number];
 	benchName?: string;
-	benchKey?: string;
+	aaKey?: string;
 	noFallback: boolean;
 	refresh: boolean;
 	noAbility: boolean;

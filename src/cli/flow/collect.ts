@@ -37,7 +37,7 @@ export async function collect(options: Options) {
 			}
 		: await loadAbility({
 				source: options.bench,
-				key: options.benchKey,
+				key: options.aaKey,
 				keys,
 				fallback: !options.noFallback,
 				refresh: options.refresh,

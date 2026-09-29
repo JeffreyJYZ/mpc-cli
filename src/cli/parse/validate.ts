@@ -33,7 +33,7 @@ const KNOWN = new Set([
 	"benchWeight",
 	"tpsWeight",
 	"benchName",
-	"benchKey",
+	"aaKey",
 	"fallback",
 	"refresh",
 	"ability",

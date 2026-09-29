@@ -80,7 +80,7 @@ export function toOptions(bag: Bag): Options {
 		valThresholds: pair(pick(bag, "valThresholds"), "val-thresholds"),
 		benchName:
 			bag.benchName === undefined ? undefined : String(bag.benchName),
-		benchKey: bag.benchKey === undefined ? undefined : String(bag.benchKey),
+		aaKey: bag.aaKey === undefined ? undefined : String(bag.aaKey),
 		noFallback: bag.fallback === false,
 		refresh: bag.refresh === true,
 		noAbility: bag.ability === false,

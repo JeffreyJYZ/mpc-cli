@@ -38,10 +38,7 @@ export function parseFlags(argv: string[]): Bag {
 		.option("--cost-thresholds <p>", "green,yellow COST cut-offs")
 		.option("--val-thresholds <p>", "yellow,green VAL cut-offs")
 		.option("--bench-name <label>", "footer label for the source")
-		.option(
-			"--bench-key <key>",
-			"Artificial Analysis key (else AA_API_KEY)",
-		)
+		.option("--aa-key <key>", "Artificial Analysis key (else AA_API_KEY)")
 		.option("--no-fallback", "do not fill misses from other sources")
 		.option("--refresh", "ignore the aa-web cache")
 		.option("--no-ability", "hide ability and VAL")
