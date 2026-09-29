@@ -1,5 +1,6 @@
 import { loadCc } from "./cc.ts";
 import { loadAaFallback, resolvePrimary } from "./resolve.ts";
+import { fillFromCache, readAbilityCache, writeAbilityCache } from "./store.ts";
 import type { AbilityOptions, AbilityResult } from "./types.ts";
 
 export type {
@@ -33,11 +34,42 @@ function prune(map: Map<string, number>, keys?: Set<string>): void {
 /**
  * Load benchmark scores. The chosen source leads; unless --no-fallback, any
  * model it misses is filled from the other sources so a model scored anywhere
- * shows a value.
+ * shows a value. The whole result is cached: a source that is down — or a page
+ * that silently dropped a column — falls back to the last good run rather than
+ * blanking a column.
  */
 export async function loadAbility(
 	opts: AbilityOptions,
 ): Promise<AbilityResult> {
+	let live: AbilityResult;
+	try {
+		live = await loadLiveAbility(opts);
+	} catch (error) {
+		// Refresh must not strand the caller: an outage still has the cache.
+		const cached = await readAbilityCache(false);
+		if (!cached) throw error;
+		return {
+			...cached,
+			label: "cached (benchmark sources unavailable)",
+			note:
+				error instanceof Error
+					? error.message.slice(0, 120)
+					: undefined,
+		};
+	}
+	const cached = await readAbilityCache(Boolean(opts.refresh));
+	const filled = cached ? fillFromCache(live, cached) : 0;
+	await writeAbilityCache(live);
+	if (filled === 0) return live;
+	return {
+		...live,
+		note: [live.note, `${filled} values from the last cached run`]
+			.filter(Boolean)
+			.join(", "),
+	};
+}
+
+async function loadLiveAbility(opts: AbilityOptions): Promise<AbilityResult> {
 	const primary = await resolvePrimary(opts);
 	// CommandCode and Artificial Analysis publish the same intelligence index, so
 	// a CC primary normally needs no second round-trip. That premise only covered
