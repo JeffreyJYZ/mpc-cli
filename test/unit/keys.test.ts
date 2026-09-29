@@ -27,6 +27,12 @@ describe("normalizeKey", () => {
 		expect(normalizeKey("DeepSeek V4 Flash Vision (exp)")).toBe(
 			"deepseekv4flashvisionexp",
 		);
+		// Alibaba's release name for the model CommandCode sells as "Qwen 3.8
+		// Flash", so the AA index lands on the row that is listed here.
+		expect(normalizeKey("Qwen3.8-Flash-Next")).toBe("qwen38flash");
+		expect(normalizeKey("qwen3-8-flash-next")).toBe(
+			normalizeKey("Qwen 3.8 Flash"),
+		);
 	});
 	test("keeps speed variants distinct", () => {
 		expect(normalizeKey("GLM-5.2 Fast")).not.toBe(normalizeKey("GLM-5.2"));

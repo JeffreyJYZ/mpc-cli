@@ -39,4 +39,10 @@ const ALIASES: Record<string, string> = {
 	tencenthy4preview: "hy4preview",
 	// CommandCode writes "(exp)"; OpenCode Go writes "-exp".
 	deepseekv4flashvision: "deepseekv4flashvisionexp",
+	// Alibaba's "Qwen3.8-Flash-Next" is the release name of the model
+	// CommandCode lists as "Qwen 3.8 Flash": same creator, same $0.47 output
+	// price and release window, CommandCode has no "Next" row, and Artificial
+	// Analysis has no plain "Flash" one. Without this the row has no ability or
+	// speed at all, since neither index scores it under the marketing name.
+	qwen38flashnext: "qwen38flash",
 };
