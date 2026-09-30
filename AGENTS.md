@@ -5,14 +5,14 @@ architecture, gotchas and contributor rules here.
 
 ## Sibling repos (same owner)
 
-`mpc` is downstream of a second repo, `~/dev/plugins/command-code-zed` — same author, local-only
+`mpc` is downstream of a second repo, `~/dev/cmdcode-tools/cmduse` — same author, local-only
 (never push/publish without explicit go):
 
 | sibling | mpc's dependency on it |
 | --- | --- |
 | `cmduse` (Rust CLI, `cli/`) | shelled out for `plans --json` (plan price/windows), `-1 --json` (account totals, coverage), `model --json --since <ISO>` (windowed per-model local usage) |
 | `@jeffreyjyz/opencode-command-code` (`opencode/`) | consumes `mpc --json` for its session sidebar (allowance, rates, Intelligence, Tok/s per model) |
-| `reqshape` (`~/dev/clis/reqshape`) | `--shape measured` runs `reqshape --format json` and reads `sides.{oc,cc}.profile` as one workload per side (`REQSHAPE_BIN` overrides the binary) |
+| `reqshape` (`~/dev/cmdcode-tools/reqshape`) | `--shape measured` runs `reqshape --format json` and reads `sides.{oc,cc}.profile` as one workload per side (`REQSHAPE_BIN` overrides the binary) |
 
 Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and
 `mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps,deal},oc:{...}}`, which the plugin's sidebar
