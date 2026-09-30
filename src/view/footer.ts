@@ -1,7 +1,30 @@
-import type { CompareRow, PlanInfo } from "~/types.ts";
+import type { CompareRow, PlanInfo, Workload } from "~/types.ts";
 import { tally } from "./layout/segments.ts";
 import type { ReportMeta } from "./schema.ts";
-import { paint, planTitle, providerName } from "./text/index.ts";
+import {
+	paint,
+	planTitle,
+	providerName,
+	shortProviderName,
+} from "./text/index.ts";
+
+/** One side's per-request token vector; fields with no measured signal stay out. */
+function shapeText(workload: Workload): string {
+	const parts = [
+		`${workload.input.toLocaleString("en-US")} input`,
+		`${workload.cacheRead.toLocaleString("en-US")} cache-read`,
+		`${workload.output.toLocaleString("en-US")} output`,
+	];
+	if (workload.reasoning > 0) {
+		parts.push(`${workload.reasoning.toLocaleString("en-US")} reasoning`);
+	}
+	if (workload.cacheWrite > 0) {
+		parts.push(
+			`${workload.cacheWrite.toLocaleString("en-US")} cache-write`,
+		);
+	}
+	return parts.join(" · ");
+}
 
 function planBlock(plan: PlanInfo): { title: string; rest: string } {
 	if (plan.provider === "oc-go") {
@@ -42,10 +65,21 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 	const line = (label: string, text: string): void =>
 		console.log(`${dim(label.padEnd(10))}${dim(text)}`);
 
+	// With a measured shape the two sides are priced on different traffic, so
+	// saying one workload would be a lie; print one line per side then.
+	const ocWorkload = meta.workloads["oc-go"];
+	const ccWorkload = meta.workloads.cc;
+	const perSide = JSON.stringify(ocWorkload) !== JSON.stringify(ccWorkload);
 	line(
 		"workload",
-		`${meta.workload.input.toLocaleString("en-US")} input · ${meta.workload.cacheRead.toLocaleString("en-US")} cache-read · ${meta.workload.output.toLocaleString("en-US")} output tokens per request`,
+		`${perSide ? `${shortProviderName("oc-go")} ` : ""}${shapeText(ocWorkload)} tokens per request`,
 	);
+	if (perSide) {
+		line(
+			"",
+			`${shortProviderName("cc")} ${shapeText(ccWorkload)} tokens per request`,
+		);
+	}
 	console.log(
 		`${dim("plans     ")}${paint("1;36", (ocBlock?.title ?? "").padEnd(planWidth))}  ${dim(ocBlock?.rest ?? "")}`,
 	);

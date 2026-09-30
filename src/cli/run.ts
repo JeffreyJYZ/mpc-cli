@@ -47,8 +47,15 @@ export async function run(argv: string[]): Promise<number> {
 		);
 	}
 
-	const { ocEntries, ccEntries, ocPlanInfo, ccPlanInfo, rows, ability } =
-		await collect(options);
+	const {
+		ocEntries,
+		ccEntries,
+		ocPlanInfo,
+		ccPlanInfo,
+		rows,
+		ability,
+		workloads,
+	} = await collect(options);
 	if (options.check) {
 		return runCheck(options, ocEntries, ccEntries, rows, ability);
 	}
@@ -94,7 +101,7 @@ export async function run(argv: string[]): Promise<number> {
 	const meta = {
 		ocPlan: ocPlanInfo,
 		ccPlan: ccPlanInfo,
-		workload: options.workload,
+		workloads,
 		abilityLabel: options.noAbility
 			? undefined
 			: (options.benchName ?? ability.label),

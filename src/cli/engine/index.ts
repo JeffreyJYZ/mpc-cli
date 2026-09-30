@@ -17,7 +17,7 @@ import {
 export function buildMetrics(
 	entries: CatalogEntry[],
 	plans: Map<ProviderId, PlanInfo>,
-	workload: Workload,
+	workloads: Record<ProviderId, Workload>,
 	ability: Map<string, number> = new Map(),
 	tps: Map<string, number> = new Map(),
 	config: ScoreConfig = DEFAULT_SCORE,
@@ -26,6 +26,7 @@ export function buildMetrics(
 		const plan = plans.get(entry.provider);
 		if (!plan)
 			throw new Error(`no plan loaded for provider ${entry.provider}`);
+		const workload = workloads[entry.provider];
 		const cost = costPerRequest(entry.pricing, workload);
 		const free = cost === 0;
 		const requestsPerMonth = free

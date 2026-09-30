@@ -43,7 +43,7 @@ export function renderText(
 export function renderJson(rows: CompareRow[], meta: ReportMeta): string {
 	return JSON.stringify(
 		{
-			workload: meta.workload,
+			workloads: meta.workloads,
 			plans: { "oc-go": meta.ocPlan, cc: meta.ccPlan },
 			tally: tally(rows),
 			rows,

@@ -19,6 +19,7 @@ mpc --medium                          # allowances + the rate views per side
 mpc --detail                          # every column, untrimmed (for copy/paste or agents)
 mpc --model 'kimi|glm' --metric req   # filter, sort by requests/month
 mpc --in 2000 --cache 80000 --out 400 # override the fixed workload
+mpc --shape measured                  # price each side on its own measured shape
 mpc --bench aa-web                    # ability scores from Artificial Analysis
 mpc --json                            # machine-readable output
 mpc --check                           # validate live sources and report drift
@@ -120,6 +121,10 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--in <n>` | `800` | fixed input tokens per request |
 | `--cache <n>` | `50000` | fixed cache-read tokens per request |
 | `--out <n>` | `200` | fixed output tokens per request |
+| `--reasoning <n>` | `0` | reasoning tokens per request, billed at the output rate on top of output |
+| `--cache-write <n>` | `0` | cache-write tokens per request; a model that publishes no cache-write rate is priced at its input rate |
+| `--shape <spec>` | `off` | `measured` = one profile per side from `reqshape`, or a path to a saved `reqshape --format json` payload; `off` keeps the fixed workload |
+| `--since <date>` | — | measured shape: only requests on or after this date |
 | `--metric <name>` | `val` | sort by `val`, `cost`, `perreq`, `req` or `name`; `cost` and `perreq` ascend (lower better), `val`/`req` descend, `--asc` flips; rows with no `VAL` always sort last |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
 | `--only <scope>` | `all` | `all` = union of both catalogs, `both` = only shared models |
@@ -194,14 +199,22 @@ The footer keeps a running **win tally** over head-to-head models (`oc-go N · c
 
 ## How the numbers are computed
 
-For a fixed workload of `IN` input, `CACHE` cache-read and `OUT` output tokens:
+For a fixed workload of `IN` input, `CACHE` cache-read, `OUT` output, `RSN` reasoning and `CW` cache-write tokens:
 
 ```
-costPerRequest   = (IN*input + CACHE*cacheRead + OUT*output) / 1e6   # USD, list rates
+costPerRequest   = (IN*input + CACHE*cacheRead + (OUT+RSN)*output + CW*cacheWrite) / 1e6   # USD, list rates
 requestsPerMonth = allowance / costPerRequest
 payPerRequest    = planPrice * costPerRequest / allowance            # what you really pay
 multiplier       = allowance / planPrice                             # $usage per $paid
 ```
+
+Reasoning bills at the output rate *on top of* output — opencode's own provider-priced rows reproduce exactly that way (a GLM-5.3 turn of 8,689 input / 14 output / 38 reasoning / 128 cache-read is priced at `0.01242668`, which only matches when reasoning joins the output term). A cache-write rate the model does not publish falls back to its input rate rather than to free.
+
+### Measuring instead of assuming
+
+`--shape measured` replaces the fixed workload with one profile per side, measured by **reqshape** from the traffic you actually ran against opencode's store: OpenCode Go's rows priced on what went to `opencode*`, CommandCode's on what went to `command-code*`. Because the two sides serve very different requests, the footer prints one workload line per side when they differ.
+
+`req/mo` then answers "how many of *my* requests fit this allowance" rather than "how many of a hypothetical 800/50K/200 ones do". Save a payload once with `reqshape --format json > shape.json` and reuse it with `--shape shape.json`; `--since <date>` narrows the window. A missing `reqshape` binary (`REQSHAPE_BIN` overrides it) is a warning, not a failure: mpc keeps the fixed workload and carries on.
 
 The **index** is a 0-100 blended value score across every model-provider entry:
 

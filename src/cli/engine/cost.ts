@@ -2,15 +2,25 @@ import type { ModelPricing, PlanInfo, Workload } from "~/types.ts";
 
 const PER_MILLION = 1_000_000;
 
-/** USD of list-rate spend for a single request under the fixed workload. */
+/**
+ * USD of list-rate spend for a single request under the fixed workload.
+ *
+ * Reasoning bills at the output rate *on top of* output: the store's own
+ * provider-priced rows reproduce exactly that way (a GLM-5.3 turn costing
+ * 0.01242668 only matches when the 38 reasoning tokens are added to the 14
+ * output ones at the 4.4 $/M output rate). A model that publishes no
+ * cache-write rate is priced at its input rate rather than assumed free.
+ */
 export function costPerRequest(
 	pricing: ModelPricing,
 	workload: Workload,
 ): number {
+	const output = workload.output + workload.reasoning;
 	return (
 		(workload.input * pricing.input +
 			workload.cacheRead * pricing.cacheRead +
-			workload.output * pricing.output) /
+			output * pricing.output +
+			workload.cacheWrite * (pricing.cacheWrite ?? pricing.input)) /
 		PER_MILLION
 	);
 }

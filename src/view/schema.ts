@@ -1,4 +1,4 @@
-import type { CompareRow, PlanInfo, Workload } from "~/types.ts";
+import type { CompareRow, PlanInfo, ProviderId, Workload } from "~/types.ts";
 
 export type Row = CompareRow;
 
@@ -50,7 +50,8 @@ export interface Tally {
 export interface ReportMeta {
 	ocPlan: PlanInfo;
 	ccPlan: PlanInfo;
-	workload: Workload;
+	/** The request shape actually priced — one per side when a shape was measured. */
+	workloads: Record<ProviderId, Workload>;
 	/** Ability source label, e.g. "CommandCode Intelligence". */
 	abilityLabel?: string;
 	abilityNote?: string;

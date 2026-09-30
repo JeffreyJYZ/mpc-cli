@@ -54,6 +54,10 @@ export interface Workload {
 	input: number;
 	cacheRead: number;
 	output: number;
+	/** Reasoning tokens, billed at the output rate on top of `output`. */
+	reasoning: number;
+	/** Cache-write tokens, billed at the model's cache-write rate. */
+	cacheWrite: number;
 }
 
 export interface EntryMetrics {

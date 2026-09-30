@@ -26,7 +26,7 @@ export function buildRows(
 	ccEntries: CatalogEntry[],
 	ocPlan: PlanInfo,
 	ccPlan: PlanInfo,
-	workload: Workload,
+	workloads: Record<ProviderId, Workload>,
 	ability: Map<string, number> = new Map(),
 	tps: Map<string, number> = new Map(),
 	config: ScoreConfig = DEFAULT_SCORE,
@@ -39,7 +39,7 @@ export function buildRows(
 	const all = buildMetrics(
 		[...ocEntries, ...ccEntries],
 		plans,
-		workload,
+		workloads,
 		ability,
 		tps,
 		config,

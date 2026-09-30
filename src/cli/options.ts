@@ -8,6 +8,10 @@ export type Format = "table" | "json" | "csv" | "md";
 export interface Options {
 	ccPlan: string;
 	workload: Workload;
+	/** `off` (the default), `measured`, or a path to a saved reqshape JSON. */
+	shape: string;
+	/** Lower bound for the measured shape, passed through to reqshape. */
+	since?: string;
 	metric: Metric;
 	model?: string;
 	only: "both" | "all";

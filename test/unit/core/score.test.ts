@@ -1,14 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import { buildMetrics } from "~/cli/engine/index.ts";
 import { DEFAULT_SCORE } from "~/cli/engine/score.ts";
-import { ccPlan, entry, workload } from "../fixtures.ts";
+import { ccPlan, entry, workloads } from "../fixtures.ts";
 
 describe("buildMetrics", () => {
 	test("payPerRequest * requestsPerMonth equals plan price", () => {
 		const [m] = buildMetrics(
 			[entry({})],
 			new Map([["cc", ccPlan]]),
-			workload,
+			workloads,
 		);
 		expect(m?.requestsPerMonth).toBeGreaterThan(0);
 		expect(
@@ -20,7 +20,7 @@ describe("buildMetrics", () => {
 		const free = entry({
 			pricing: { input: 0, output: 0, cacheRead: 0, cacheWrite: null },
 		});
-		const [m] = buildMetrics([free], new Map([["cc", ccPlan]]), workload);
+		const [m] = buildMetrics([free], new Map([["cc", ccPlan]]), workloads);
 		expect(m?.free).toBe(true);
 		expect(m?.requestsPerMonth).toBe(Number.POSITIVE_INFINITY);
 		expect(m?.index).toBe(100);
@@ -50,7 +50,7 @@ describe("buildMetrics", () => {
 		for (const m of buildMetrics(
 			entries,
 			new Map([["cc", ccPlan]]),
-			workload,
+			workloads,
 		)) {
 			expect(m.index).toBeGreaterThanOrEqual(0);
 			expect(m.index).toBeLessThanOrEqual(100);
@@ -73,7 +73,7 @@ describe("ability value index", () => {
 		const metrics = buildMetrics(
 			entries,
 			new Map([["cc", ccPlan]]),
-			workload,
+			workloads,
 			ability,
 			new Map(),
 			{ ...DEFAULT_SCORE, abilityWeight: 0.4 },

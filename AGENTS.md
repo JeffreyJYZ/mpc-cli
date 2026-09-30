@@ -12,11 +12,14 @@ architecture, gotchas and contributor rules here.
 | --- | --- |
 | `cmduse` (Rust CLI, `cli/`) | shelled out for `plans --json` (plan price/windows), `-1 --json` (account totals, coverage), `model --json --since <ISO>` (windowed per-model local usage) |
 | `@jeffreyjyz/opencode-command-code` (`opencode/`) | consumes `mpc --json` for its session sidebar (allowance, rates, Intelligence, Tok/s per model) |
+| `reqshape` (`~/dev/clis/reqshape`) | `--shape measured` runs `reqshape --format json` and reads `sides.{oc,cc}.profile` as one workload per side (`REQSHAPE_BIN` overrides the binary) |
 
 Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and
 `mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps,deal},oc:{...}}`, which the plugin's sidebar
 reads. A change on either side updates the other in the same effort. `CMDUSE_BIN` points every
-cmduse call at a dev build (`cmdusedev`).
+cmduse call at a dev build (`cmdusedev`). The payload's top-level `workload` became `workloads`
+(one entry per side) when per-side shapes landed; the plugin reads `rows[]` only, so that rename
+did not need a companion change — check `useRows.ts` before assuming any other key is unread.
 
 ## What this is
 
@@ -42,6 +45,7 @@ src/data/scrape/             index.ts, tables.ts, roleRows.ts; catalog/ (catalog
 src/data/usage/              index.ts (loadUsage), parse.ts (UsageEntry), log.ts (JSONL + merge),
                              logs.ts (session scan), opencodeDb.ts (opencode store, both
                              layouts), opencodeV2.ts (session_message reader)
+src/data/shape.ts            --shape: reqshape payload -> one workload per side (REQSHAPE_BIN)
 src/view/render.ts           renderText / renderJson + frame constants
 src/view/schema.ts           view types + the column registry
 src/view/columns/            oc.ts, cc.ts, meta.ts
@@ -210,6 +214,35 @@ distinct keys.
 - Skewed terms use `logMinmax` (log10 then min-max): volume, tps, cache price, output price. Without
   it a single outlier (e.g. a 1000 tps model, or a $0.002 cache) squashes everyone else toward one
   end. Ability stays linear. Non-positive values clamp to `1e-6`.
+
+## Workload and measured shape
+
+- `Workload` is five fields: `input`, `cacheRead`, `output`, `reasoning`, `cacheWrite`
+  (defaults `800 / 50000 / 200 / 0 / 0`). The defaults for `reasoning` and `cacheWrite` are 0 so
+  plain `mpc` keeps producing yesterday's numbers; `--reasoning` / `--cache-write` set them.
+- **Reasoning bills at the output rate *on top of* output.** opencode's store keeps
+  `tokens.output` and `tokens.reasoning` as *separate* counters (one row had `output 14,
+  reasoning 38`, so reasoning is not a subset of output), and the store's own provider-priced
+  `cost` reproduces only when reasoning joins the output term: GLM-5.3 at 1.4 / 4.4 / 0.26 $/M
+  with 8,689 in · 14 out · 38 reasoning · 128 cache-read is `0.01242668`, exactly what
+  `((8689*1.4) + (14+38)*4.4 + (128*0.26))/1e6` gives. `test/unit/core/cost.test.ts` pins it.
+  This was a silent underestimate of CommandCode's cost per request for months — its measured
+  reasoning (≈308/req) is nearly as large as its output (≈337/req).
+- A cache-write rate the model does not publish is priced at its **input** rate, never free
+  (`pricing.cacheWrite ?? pricing.input`) — same rule reqshape documents.
+- `buildMetrics` / `buildRows` take `Record<ProviderId, Workload>`, not one workload.
+  `collect` resolves it as `shapes.<side> ?? options.workload`, so each side is priced on its own
+  traffic while an unmeasured run stays a single fixed workload.
+- `--shape measured` shells out to `reqshape --format json [--since <date>]` (`REQSHAPE_BIN`
+  overrides) and maps `sides.{oc,cc}.profile` onto a `Workload`, rounding the means — a footer
+  line and a priced workload must show the same digits. `--shape <path>` reads a saved payload.
+  Both sides come from **one source**: opencode's own store, split by `model.providerID`
+  (`command-code*`/`commandcode` → cc, `opencode*` → oc) inside reqshape. cmduse's log is far too
+  thin (173 requests / 4 models) to be the CommandCode side.
+- A missing binary or a payload with no `sides` is a stderr warning and a fallback to the fixed
+  workload, never a failed run.
+- The footer prints **two** workload lines when the sides differ (`OC … tokens` / `CC …`), so it
+  never claims one shape when two were priced.
 
 ## Ability scores
 

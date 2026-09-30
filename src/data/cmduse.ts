@@ -1,22 +1,25 @@
-/** CommandCode CLI to shell out to; override to test a dev build. */
-export function cmduseBin(): string {
-	return process.env.CMDUSE_BIN || "cmduse";
-}
-
-export interface CmduseResult {
+export interface RunResult {
 	ok: boolean;
 	stdout: string;
 	stderr: string;
 }
 
+/** CommandCode CLI to shell out to; override to test a dev build. */
+export function cmduseBin(): string {
+	return process.env.CMDUSE_BIN || "cmduse";
+}
+
 /**
- * Run `cmduse` with args. Never throws: a missing or failing binary comes back
- * as `ok: false` so callers can pick a fallback.
+ * Run a binary with args. Never throws: a missing or failing binary comes back
+ * as `ok: false` so callers can pick a fallback rather than crash the report.
  */
-export async function runCmduse(args: string[]): Promise<CmduseResult> {
+export async function runBinary(
+	cmd: string,
+	args: string[],
+): Promise<RunResult> {
 	let proc: Bun.Subprocess<"pipe", "pipe", "pipe">;
 	try {
-		proc = Bun.spawn([cmduseBin(), ...args], {
+		proc = Bun.spawn([cmd, ...args], {
 			stdout: "pipe",
 			stderr: "pipe",
 		});
@@ -29,4 +32,8 @@ export async function runCmduse(args: string[]): Promise<CmduseResult> {
 		proc.exited,
 	]);
 	return { ok: code === 0, stdout, stderr };
+}
+
+export async function runCmduse(args: string[]): Promise<RunResult> {
+	return runBinary(cmduseBin(), args);
 }

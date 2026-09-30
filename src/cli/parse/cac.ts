@@ -13,6 +13,19 @@ export function parseFlags(argv: string[]): Bag {
 		.option("--in <n>", "input tokens per request")
 		.option("--cache <n>", "cache-read tokens per request")
 		.option("--out <n>", "output tokens per request")
+		.option(
+			"--reasoning <n>",
+			"reasoning tokens, billed at the output rate",
+		)
+		.option("--cache-write <n>", "cache-write tokens per request")
+		.option(
+			"--shape <spec>",
+			"measured | <file> | off: per-side shape from reqshape",
+		)
+		.option(
+			"--since <date>",
+			"measured shape: only requests on or after this date",
+		)
 		.option("--metric <name>", "val | cost | perreq | req | name")
 		.option("--model <re>", "only rows whose name matches")
 		.option("--only <scope>", "both | all")

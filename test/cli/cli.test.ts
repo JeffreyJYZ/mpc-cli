@@ -9,6 +9,8 @@ describe("parseArgs", () => {
 			input: 800,
 			cacheRead: 50_000,
 			output: 200,
+			reasoning: 0,
+			cacheWrite: 0,
 		});
 		expect(o.metric).toBe("val");
 		expect(o.only).toBe("all");
@@ -17,7 +19,13 @@ describe("parseArgs", () => {
 
 	test("workload overrides, space and equals forms", () => {
 		const o = parseArgs(["--in", "1200", "--cache=0", "--out", "500"]);
-		expect(o.workload).toEqual({ input: 1200, cacheRead: 0, output: 500 });
+		expect(o.workload).toEqual({
+			input: 1200,
+			cacheRead: 0,
+			output: 500,
+			reasoning: 0,
+			cacheWrite: 0,
+		});
 	});
 
 	test("plan, metric and boolean flags", () => {
@@ -65,6 +73,23 @@ describe("parseArgs", () => {
 		expect(parseArgs(["--minimal"]).minimal).toBe(true);
 		expect(parseArgs(["--medium"]).medium).toBe(true);
 		expect(parseArgs(["--no-fit"]).fit).toBe(false);
+	});
+
+	test("measured shape flags parse", () => {
+		const o = parseArgs([
+			"--shape",
+			"measured",
+			"--since",
+			"2026-09-01",
+			"--reasoning",
+			"140",
+			"--cache-write",
+			"8",
+		]);
+		expect(o.shape).toBe("measured");
+		expect(o.since).toBe("2026-09-01");
+		expect(o.workload.reasoning).toBe(140);
+		expect(o.workload.cacheWrite).toBe(8);
 	});
 
 	test("rejects unknown flags and bad values", () => {

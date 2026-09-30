@@ -1,9 +1,17 @@
-import type { CatalogEntry, PlanInfo, Workload } from "~/types.ts";
+import type { CatalogEntry, PlanInfo, ProviderId, Workload } from "~/types.ts";
 
 export const workload: Workload = {
 	input: 1_000,
 	cacheRead: 50_000,
 	output: 200,
+	reasoning: 0,
+	cacheWrite: 0,
+};
+
+/** Both sides on the same fixed workload, for tests that measure no shape. */
+export const workloads: Record<ProviderId, Workload> = {
+	"oc-go": workload,
+	cc: workload,
 };
 
 export const ccPlan: PlanInfo = {
