@@ -71,6 +71,16 @@ bun link                       # exposes the `mpc` binary
 
 Before every commit: `bunx biome check --write .`, `bun run typecheck`, `bun test` all clean.
 
+**`bun link`'s global entry can be pruned — the bin then dangles and `mpc` dies `ENOENT`.**
+`bun link` (run in this repo) creates `~/.bun/bin/mpc` →
+`~/.bun/install/global/node_modules/mpc/src/index.ts`, but that global `node_modules` is shared
+with every `bun install -g`, so a global install/uninstall can remove the entry while the bin
+symlink stays. The failure is silent: `command -v mpc` reports nothing (a dangling symlink is
+not executable), and a consumer that spawns `mpc` gets `ENOENT` with no local symptom — the
+plugin's model block degrades to name-only. Restore with `bun link` here; check the target
+directly with `test -e ~/.bun/install/global/node_modules/mpc/src/index.ts` (the bin's
+`ls -l` still *shows* the old path, so it proves nothing).
+
 ## Usage projection
 
 - `--usage` merges sources. Primary is **opencode's own store** (`data/usage/opencodeDb.ts`, read-only via
