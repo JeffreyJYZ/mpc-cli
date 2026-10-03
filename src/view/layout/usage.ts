@@ -58,6 +58,56 @@ const HEADERS = [
 	"flag",
 ];
 
+export interface HeadToHead {
+	/** Rows priced on both sides — the only ones a head-to-head can use. */
+	shared: number;
+	total: number;
+	cc: number;
+	oc: number;
+	winner: "OpenCode" | "CommandCode" | "tie" | "none";
+}
+
+/**
+ * Compare the plans on the models both of them price. Summing every row lets a
+ * CC-only model add to CC's total and nothing to OpenCode's, which then "proves"
+ * OpenCode cheaper on traffic it cannot serve at all — the artefact that made a
+ * mix of one tied model plus two CC-only ones read as "OpenCode cheaper by 45%".
+ */
+export function headToHead(rows: UsageRow[]): HeadToHead {
+	const shared = rows.filter((row) => row.oc && row.cc);
+	const cc = shared.reduce((sum, row) => sum + (row.cc?.monthly ?? 0), 0);
+	const oc = shared.reduce((sum, row) => sum + (row.oc?.monthly ?? 0), 0);
+	if (shared.length === 0) {
+		return { shared: 0, total: rows.length, cc: 0, oc: 0, winner: "none" };
+	}
+	return {
+		shared: shared.length,
+		total: rows.length,
+		cc,
+		oc,
+		winner: cc > oc ? "OpenCode" : cc < oc ? "CommandCode" : "tie",
+	};
+}
+
+function headToHeadLine(report: UsageProjection): string {
+	const head = headToHead(report.rows);
+	if (head.winner === "none") {
+		return "        head-to-head  no model is priced on both sides — nothing to compare";
+	}
+	const excluded = head.total - head.shared;
+	const note =
+		excluded > 0
+			? ` (${excluded} one-sided row${excluded === 1 ? "" : "s"} excluded)`
+			: "";
+	const delta = Math.abs(head.cc - head.oc);
+	const pct = head.cc > 0 ? (delta / head.cc) * 100 : 0;
+	const verdict =
+		head.winner === "tie"
+			? "tie"
+			: `cheaper ${head.winner} by ${fmtUsd(delta)} (${pct.toFixed(0)}%)`;
+	return `        head-to-head  ${head.shared} of ${head.total} models${note} · CC ${fmtUsd(head.cc)}/mo · OpenCode ${fmtUsd(head.oc)}/mo · ${verdict}`;
+}
+
 export function renderUsage(report: UsageProjection, meta: UsageMeta): void {
 	const dim = (text: string): string => paint("2", text);
 	const scale = meta.months === 1 ? "" : ` · scaled to ${meta.months} months`;
@@ -104,13 +154,11 @@ export function renderUsage(report: UsageProjection, meta: UsageMeta): void {
 	console.log(widths.map((w) => "─".repeat(w)).join("  "));
 	for (const row of rows) console.log(line(row, right));
 
-	const delta = report.ccMonthly - report.ocMonthly;
-	const pct = report.ccMonthly > 0 ? (delta / report.ccMonthly) * 100 : 0;
-	const winner = delta > 0 ? "OpenCode" : delta < 0 ? "CommandCode" : "tie";
 	console.log();
 	console.log(
-		`totals  CC ${fmtUsd(report.ccMonthly)}/mo · OpenCode ${fmtUsd(report.ocMonthly)}/mo · cheaper ${winner}${winner === "tie" ? "" : ` by ${fmtUsd(Math.abs(delta))} (${Math.abs(pct).toFixed(0)}%)`}`,
+		`totals  your mix · CC ${fmtUsd(report.ccMonthly)}/mo · OpenCode ${fmtUsd(report.ocMonthly)}/mo`,
 	);
+	console.log(dim(headToHeadLine(report)));
 	console.log(
 		dim(
 			`plans   ${planTitle(meta.plans["oc-go"])} $${meta.plans["oc-go"].price}/mo · ${planTitle(meta.plans.cc)} $${meta.plans.cc.price}/mo`,

@@ -72,11 +72,15 @@ rather than silently wrong.
 MODEL          your req    your $    CC $/req  CC $/mo    OC $/req  OC $/mo  cheaper
 GLM-5.2             142  $15.7237     $0.0158  $2.2462     $0.0185  $2.6206  CC
 GLM-5.3 Flash        29   $0.7203  $0.0062091  $0.1801  $0.0041394    $0.12  OC
-totals  CC $2.4761/mo · OpenCode $2.7686/mo · cheaper CommandCode by $0.2925 (12%)
+totals  your mix · CC $2.4761/mo · OpenCode $2.7686/mo
+        head-to-head  2 of 2 models · CC $2.4761/mo · OpenCode $2.7686/mo · cheaper CommandCode by $0.2925 (12%)
 ```
 
 Usage is per-model **totals**, so `your $` is the list value of the tokens, `CC $/mo` is what that
 subscription would cost you, and models that exceed a plan's allowance are flagged `over cap`.
+The `head-to-head` line answers "which plan is cheaper *for my mix*", so it is restricted to the
+models **both** plans price — a model only one provider sells would otherwise pad that side's total
+and "prove" the other cheaper on traffic it cannot serve. One-sided rows are excluded and counted.
 Unknown models are listed, never dropped. Accepts the cmduse shape, `{"entries": [...]}`, or a bare
 array of `{ model, requests, tokensIn, cacheRead, tokensOut }`.
 

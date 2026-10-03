@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { project } from "~/cli/engine/project.ts";
 import type { UsageEntry } from "~/data/usage/index.ts";
+import { headToHead } from "~/view/layout/usage.ts";
 import { ccPlan, entry, ocPlan } from "../fixtures.ts";
 
 const usage: UsageEntry = {
@@ -77,5 +78,66 @@ describe("project", () => {
 		);
 		expect(result.unmatched).toEqual(["Ghost"]);
 		expect(result.rows).toHaveLength(0);
+	});
+});
+
+describe("headToHead", () => {
+	const both: UsageEntry = { ...usage, key: "both", name: "Both" };
+	const ccOnly: UsageEntry = { ...usage, key: "cconly", name: "CC Only" };
+
+	test("compares only the models both plans price", () => {
+		const result = project(
+			[both, ccOnly],
+			{
+				"oc-go": [
+					entry({
+						provider: "oc-go",
+						plan: "Go",
+						key: "both",
+						allowance: 20,
+					}),
+				],
+				cc: [
+					entry({
+						provider: "cc",
+						plan: "GOAT",
+						key: "both",
+						allowance: 10,
+					}),
+					entry({
+						provider: "cc",
+						plan: "GOAT",
+						key: "cconly",
+						allowance: 10,
+					}),
+				],
+			},
+			{ "oc-go": ocPlan, cc: ccPlan },
+			{ months: 1 },
+		);
+		const head = headToHead(result.rows);
+		const shared = result.rows.find((row) => row.oc && row.cc);
+		expect(head.total).toBe(2);
+		expect(head.shared).toBe(1);
+		// The verdict is the shared row alone; the CC-only figure must not reach it.
+		expect(head.cc).toBeCloseTo(shared?.cc?.monthly ?? -1, 10);
+		expect(head.oc).toBeCloseTo(shared?.oc?.monthly ?? -1, 10);
+		// The per-side total does count it, which is exactly the artefact avoided.
+		expect(result.ccMonthly).toBeGreaterThan(head.cc);
+	});
+
+	test("no overlap is not a win for either side", () => {
+		const result = project(
+			[ccOnly],
+			{
+				"oc-go": [],
+				cc: [entry({ provider: "cc", plan: "GOAT", key: "cconly" })],
+			},
+			{ "oc-go": ocPlan, cc: ccPlan },
+			{ months: 1 },
+		);
+		const head = headToHead(result.rows);
+		expect(head.shared).toBe(0);
+		expect(head.winner).toBe("none");
 	});
 });
