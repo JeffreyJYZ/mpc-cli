@@ -21,6 +21,7 @@ interface AssistantData {
 	tokens?: {
 		input?: number;
 		output?: number;
+		reasoning?: number;
 		cache?: { read?: number; write?: number };
 	};
 	time?: { created?: number; completed?: number };
@@ -80,6 +81,7 @@ export function readOpencodeDb(
 				cacheRead: 0,
 				cacheWrite: 0,
 				tokensOut: 0,
+				reasoning: 0,
 				costUsd: 0,
 			};
 			entry.requests += 1;
@@ -87,6 +89,7 @@ export function readOpencodeDb(
 			entry.cacheRead += numberOr(turn.tokens.cache?.read);
 			entry.cacheWrite += numberOr(turn.tokens.cache?.write);
 			entry.tokensOut += numberOr(turn.tokens.output);
+			entry.reasoning += numberOr(turn.tokens.reasoning);
 			entry.costUsd += numberOr(turn.cost);
 			byKey.set(key, entry);
 		}

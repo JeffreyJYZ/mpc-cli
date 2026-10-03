@@ -1,16 +1,26 @@
 export type Bag = Record<string, unknown>;
 
-export function int(name: string, value: unknown): number {
+// `Number("")` is 0 and `Number(true)` is 1, so a blank or bare flag would be
+// coerced into a plausible-looking value (`--out ""` silently priced every model
+// with zero output tokens, `--width ""` became 0 and disabled trimming). Reject
+// both shapes before the conversion; a bare boolean is also caught by
+// `assertValues`, but config/plugin layers reach here without that guard.
+export function int(name: string, value: unknown, min = 0): number {
+	const want = min === 0 ? "a non-negative integer" : `an integer ≥ ${min}`;
+	if (value === true || value === "" || Number(value) < min) {
+		throw new Error(`--${name} expects ${want}, got "${value}"`);
+	}
 	const n = Number(value);
-	if (!Number.isFinite(n) || n < 0 || !Number.isInteger(n)) {
-		throw new Error(
-			`--${name} expects a non-negative integer, got "${value}"`,
-		);
+	if (!Number.isFinite(n) || !Number.isInteger(n)) {
+		throw new Error(`--${name} expects ${want}, got "${value}"`);
 	}
 	return n;
 }
 
 export function share(name: string, value: unknown): number {
+	if (value === true || value === "") {
+		throw new Error(`--${name} expects a number between 0 and 1`);
+	}
 	const n = Number(value);
 	if (!Number.isFinite(n) || n < 0 || n > 1) {
 		throw new Error(`--${name} expects a number between 0 and 1`);

@@ -73,7 +73,9 @@ export function toOptions(bag: Bag): Options {
 		detail: bag.detail === true,
 		minimal: bag.minimal === true,
 		medium: bag.medium === true,
-		width: bag.width === undefined ? undefined : int("width", bag.width),
+		// Width 0 is meaningless and silently disabled trimming; cac coerces a
+		// blank `--width ""` to 0, so require at least one column.
+		width: bag.width === undefined ? undefined : int("width", bag.width, 1),
 		fit: bag.fit !== false,
 		bench: String(pick(bag, "bench")),
 		benchWeight: share("bench-weight", pick(bag, "benchWeight")),

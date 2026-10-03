@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { dealIn, extractCatalog, parseTables } from "~/data/scrape/index.ts";
 import { fillDeals } from "~/data/sources/cc/catalog.ts";
+import { CC_PLANS } from "~/data/sources/cc/plans.ts";
 import type { CatalogEntry } from "~/types.ts";
 
 const FIXTURE = `
@@ -100,6 +101,15 @@ describe("parseTables + extractCatalog", () => {
 		expect(priced[0]?.deal?.badge).toBe("-40%");
 		expect(priced).toHaveLength(2);
 		expect(priced[1]?.name).toBe("Pixel Canary");
+	});
+});
+
+describe("CommandCode plan shapes", () => {
+	test("Go is a table plan with a flat allowance", () => {
+		// The Go docs moved from a `role="row"` div grid to <table>; the loader
+		// branches on this flag, so a wrong value is a hard load failure.
+		expect(CC_PLANS.go?.grid).toBeFalsy();
+		expect(CC_PLANS.go?.standardAllowance).toBe(10);
 	});
 });
 

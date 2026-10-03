@@ -10,6 +10,7 @@ interface Totals {
 	cacheRead: number;
 	cacheWrite: number;
 	tokensOut: number;
+	reasoning: number;
 	costUsd: number;
 }
 
@@ -20,6 +21,8 @@ function empty(): Totals {
 		cacheRead: 0,
 		cacheWrite: 0,
 		tokensOut: 0,
+		// The CommandCode session-log usage block carries no reasoning counter.
+		reasoning: 0,
 		costUsd: 0,
 	};
 }

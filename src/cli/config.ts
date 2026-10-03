@@ -51,14 +51,16 @@ export async function resolveBag(argv: string[]): Promise<Bag> {
 	const relativeTo = dirname(path);
 	const fromCli = pluginList(cli);
 
-	const merged: Bag = {
-		...(await loadPlugins(pluginList(file), relativeTo)),
-	};
-	for (const [key, value] of Object.entries(file)) {
-		if (value !== undefined) merged[key] = value;
-	}
+	// Plugins (from the config file and from `--plugin` alike) are the lowest
+	// layer, so the user config overrides them. Loading `--plugin` last made a
+	// CLI plugin beat the config file, contradicting the documented order.
+	const merged: Bag = {};
+	Object.assign(merged, await loadPlugins(pluginList(file), relativeTo));
 	if (fromCli.length > 0) {
 		Object.assign(merged, await loadPlugins(fromCli, process.cwd()));
+	}
+	for (const [key, value] of Object.entries(file)) {
+		if (value !== undefined) merged[key] = value;
 	}
 	for (const [key, value] of Object.entries(cli)) {
 		if (value !== undefined && key !== "config" && key !== "plugin") {

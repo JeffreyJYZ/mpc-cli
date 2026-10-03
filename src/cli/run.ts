@@ -20,6 +20,7 @@ import { resolveColumns, trimsToWidth } from "./flow/columns.ts";
 import { matches, sortRows } from "./flow/sort.ts";
 import { COLUMN_HELP } from "./options.ts";
 import { toOptions } from "./parse/map.ts";
+import { assertKnown, assertValues } from "./parse/validate.ts";
 
 export type { Metric, Options } from "./options.ts";
 export { parseArgs } from "./parse/cac.ts";
@@ -38,6 +39,10 @@ export async function run(argv: string[]): Promise<number> {
 		return 0;
 	}
 	if (bag.printConfig === true) {
+		// This is the one mode meant to check a config, so a typo must fail here
+		// rather than on the next real run.
+		assertKnown(bag);
+		assertValues(bag);
 		process.stdout.write(describeConfig(bag));
 		return 0;
 	}

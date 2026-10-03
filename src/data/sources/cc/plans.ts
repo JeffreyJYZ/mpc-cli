@@ -24,7 +24,6 @@ export const CC_PLANS: Record<string, CcPlanDef> = {
 		cmduse: "Go",
 		label: "Go",
 		slug: "go",
-		grid: true,
 		standardAllowance: 10,
 	},
 	goat: {

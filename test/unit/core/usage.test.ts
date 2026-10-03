@@ -12,6 +12,7 @@ const usage: UsageEntry = {
 	cacheRead: 0,
 	cacheWrite: 0,
 	tokensOut: 0,
+	reasoning: 0,
 	costUsd: 0,
 };
 
@@ -44,6 +45,36 @@ describe("project", () => {
 		// allowance 10 vs 10 drawn -> right at the cap, not over.
 		expect(row?.cc?.overCap).toBe(false);
 		expect(row?.cc?.creditsDrawn).toBeCloseTo(10, 6);
+	});
+
+	test("bills reasoning at output and unpublished cache-write at input", () => {
+		// The fixed-workload rule (cost.ts) must hold here too: reasoning joins
+		// the output term, and a model with no cache-write rate bills writes at
+		// its input rate rather than at zero.
+		const priced = entry({
+			provider: "cc",
+			plan: "GOAT",
+			key: "m",
+			allowance: 10,
+			pricing: { input: 1, output: 4, cacheRead: 0, cacheWrite: null },
+		});
+		const result = project(
+			[
+				{
+					...usage,
+					tokensIn: 0,
+					tokensOut: 0,
+					reasoning: 1_000_000,
+					cacheWrite: 1_000_000,
+				},
+			],
+			{ "oc-go": [], cc: [priced] },
+			{ "oc-go": ocPlan, cc: ccPlan },
+			{ months: 1 },
+		);
+		// 1M reasoning at $4/M = $4, plus 1M cache-write at the $1/M input
+		// rate = $1; over 100 requests that is $0.05 each.
+		expect(result.rows[0]?.cc?.costPerRequest).toBeCloseTo(0.05, 6);
 	});
 
 	test("flags over-cap usage and scales by months", () => {

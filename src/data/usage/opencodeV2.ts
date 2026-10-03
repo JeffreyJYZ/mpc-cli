@@ -9,6 +9,8 @@ export interface Turn {
 	tokens: {
 		input?: number;
 		output?: number;
+		/** Separate counter, billed at the output rate on top of `output`. */
+		reasoning?: number;
 		cache?: { read?: number; write?: number };
 	};
 }

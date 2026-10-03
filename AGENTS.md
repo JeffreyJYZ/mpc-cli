@@ -120,6 +120,12 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   machine); `--usage-file` covers that.
 - cmduse reports **per-model totals**, not per-request — `engine/project.ts` divides by `requests`
   only for the per-request figures.
+- **`--usage` prices with the same rule as the fixed workload** (`project.ts`'s `totalCost`):
+  reasoning joins the output term and an unpublished cache-write rate bills at the input rate.
+  It once omitted reasoning and billed cache-write at `0`, so `your $` / `$/req` / `$/mo` read low
+  on reasoning-heavy traffic. The `UsageEntry` now carries a `reasoning` counter, populated from
+  opencode's store (`tokens.reasoning`); the CommandCode session-log block has no such counter and
+  stays at 0.
 - `--usage-months` scales the period to a month; the header says which. Unmatched models are
   listed in the report, never silently dropped. `--format json` dumps the whole projection.
 - **The `head-to-head` line compares the plans only on the models both price** (`headToHead` in
@@ -162,8 +168,17 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   makes `true` its default, so bare `--config` cannot be distinguished from "use the default path".
   Every `--no-<x>` flag defaults its positive to `true` — that is why `fit`/`fallback`/`ability`
   read `true` with no flag given.
+- **cac/mri coerces a blank value to `0`**, not to `""` (`--width ""` arrived as `0` and silently
+  disabled trimming; `--out ""` arrived as `0`). `assertValues` covers the bare-flag case;
+  `int`/`share` reject `""`/boolean for values that arrive from config/plugin layers, and `width`
+  is required to be `≥ 1` because a real `0` is meaningless.
 - `--no-color` / `--no-fallback` / `--no-ability` are cac negations: the code reads
   `color === false`, `fallback === false`, `ability === false`.
+- **Plugins are the lowest layer, `--plugin` included.** `resolveBag` merges the config file's
+  plugins *and* the CLI's plugins before the user config, so the config overrides both; loading
+  `--plugin` last let a CLI plugin beat the config file, contradicting the documented order.
+- **`--print-config` validates before it prints** (`assertKnown` + `assertValues`), so a typo or an
+  unknown key fails there instead of on the next real run.
 - `resolveBag(argv)` is the real entry point (async, applies config + plugins); `parseArgs(argv)`
   is CLI-only and sync, for tests. `--columns help` still prints
   `COLUMN_HELP` from `src/cli/options.ts`. `-h`/`-v` exit inside cac, so tests must not pass them.
@@ -181,7 +196,8 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   `baseUrl` — TypeScript resolves `paths` relative to the tsconfig, and `baseUrl` is
   deprecated. Bun honours it at runtime and in tests, so `mpc` and `bun test` need no
   build step. Targets outside `src/` (test fixtures, `package.json`) stay relative.
-- Tests must not hit the network — extend the inline fixtures in `test/html.test.ts`.
+- Tests must not hit the network — extend the inline fixtures in `test/data/catalog.test.ts`
+  and `test/unit/scrape.test.ts`.
 - Contracts to preserve:
   - `buildMetrics` invariant: `payPerRequest * requestsPerMonth === plan.price`.
   - Free models: `costPerRequest === 0` ⇒ `requestsPerMonth = Infinity`, `index = 100`.
@@ -225,10 +241,13 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
 - **OpenCode Go rows duplicate models**: off-peak vs peak, and `≤ 256K` vs `> 256K` tiers.
   `variantScore` picks the base tier and off-peak by default; `--peak` flips the preference.
   Dedup is by canonical key.
-- **CommandCode layouts differ per plan.** GOAT/Pro/Max publish `<table>`s with explicit
-  per-model credits (Pro has three tables; Max has two credit columns). The **Go ($1) plan
-  has no table at all** — its catalog is a `role="row"` div grid parsed by `parseRoleRows`,
-  and every model is assigned the plan's whole credit pool via `defaultAllowance`.
+- **CommandCode layouts differ per plan, and the shape is declared, never inferred.** GOAT/Pro/Max
+  publish `<table>`s with explicit per-model credits (Pro has three tables; Max has two credit
+  columns). The **Go ($1) plan publishes no credits column but is a `<table>` now** (it used to be a
+  `role="row"` div grid): every model gets the plan's whole credit pool via `defaultAllowance`.
+  `loadCcCatalog` selects the parser from `CC_PLANS[id].grid` — **do not branch on
+  `!creditHeader`**, which is what broke Go: "no credit header" no longer means "grid", so Go was
+  sent to `parseRoleRows`, matched nothing, and the load threw.
 - **"Older models also available" are prose-only** on GOAT/Pro. They are filled with the
   documented standard allowance (`standardAllowance`: $20 GOAT, $30 Pro) from the wide
   catalog grid, not a credits table. Prefer explicit allowance rows over fallbacks when both
@@ -241,7 +260,7 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
 
 `normalizeKey` lowercases, drops the vendor prefix and parentheticals, strips punctuation,
 then applies `model-aliases.ts`. Add an alias whenever a model appears on one side only
-because of branding (check `mpc --check`, which lists `only in oc-go` / `only in cc`). Speed
+because of branding (check `mpc --check`, which lists `only in OpenCode` / `only in CommandCode`). Speed
 variants (GLM-5.2 Fast, Kimi K2.7 Code HighSpeed, MiMo V2.6 Pro UltraSpeed) are intentionally
 distinct keys.
 

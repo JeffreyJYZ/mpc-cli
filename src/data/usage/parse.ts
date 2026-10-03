@@ -9,6 +9,8 @@ export interface UsageEntry {
 	cacheRead: number;
 	cacheWrite: number;
 	tokensOut: number;
+	/** Reasoning tokens, billed at the output rate on top of `tokensOut`. */
+	reasoning: number;
 	costUsd: number;
 }
 
@@ -29,6 +31,7 @@ function entryFrom(id: string, row: CmduseModel): UsageEntry {
 		cacheRead: Number(row.cacheRead ?? 0),
 		cacheWrite: Number(row.cacheWrite ?? 0),
 		tokensOut: Number(row.tokensOut ?? 0),
+		reasoning: Number(row.reasoning ?? 0),
 		costUsd: Number(row.costUsd ?? 0),
 	};
 }

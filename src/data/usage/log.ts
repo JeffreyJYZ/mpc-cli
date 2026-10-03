@@ -11,6 +11,7 @@ interface LogLine {
 	cacheRead?: number;
 	cacheWrite?: number;
 	output?: number;
+	reasoning?: number;
 	costUsd?: number;
 }
 
@@ -52,6 +53,7 @@ export function readUsageLog(path: string, since?: Date): UsageEntry[] | null {
 			cacheRead: 0,
 			cacheWrite: 0,
 			tokensOut: 0,
+			reasoning: 0,
 			costUsd: 0,
 		};
 		entry.requests += 1;
@@ -59,6 +61,7 @@ export function readUsageLog(path: string, since?: Date): UsageEntry[] | null {
 		entry.cacheRead += line.cacheRead ?? 0;
 		entry.cacheWrite += line.cacheWrite ?? 0;
 		entry.tokensOut += line.output ?? 0;
+		entry.reasoning += line.reasoning ?? 0;
 		entry.costUsd += line.costUsd ?? 0;
 		byKey.set(key, entry);
 	}
@@ -79,6 +82,7 @@ export function mergeUsage(a: UsageEntry[], b: UsageEntry[]): UsageEntry[] {
 		existing.cacheRead += entry.cacheRead;
 		existing.cacheWrite += entry.cacheWrite;
 		existing.tokensOut += entry.tokensOut;
+		existing.reasoning += entry.reasoning;
 		existing.costUsd += entry.costUsd;
 	}
 	return [...byKey.values()];

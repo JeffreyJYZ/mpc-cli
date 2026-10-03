@@ -20,7 +20,12 @@ export interface UsageRow {
 	key: string;
 	name: string;
 	requests: number;
-	tokens: { input: number; cacheRead: number; output: number };
+	tokens: {
+		input: number;
+		cacheRead: number;
+		output: number;
+		reasoning: number;
+	};
 	/** List-rate value of the tokens for the period, scaled to a month. */
 	listCost: number;
 	oc?: SideProjection;
@@ -40,14 +45,21 @@ export interface UsageProjection {
 	ccListCost: number;
 }
 
-/** cmduse reports per-model totals, so this is the whole period's list cost. */
+/**
+ * cmduse reports per-model totals, so this is the whole period's list cost.
+ *
+ * Same rule as the fixed-workload path (`cost.ts`): reasoning bills at the
+ * output rate *on top of* output, and an unpublished cache-write rate is billed
+ * at the input rate, never free. Diverging here made `--usage`'s `your $` read
+ * low (worst on reasoning-heavy models).
+ */
 function totalCost(entry: CatalogEntry, usage: UsageEntry): number {
 	const p = entry.pricing;
 	return (
 		(usage.tokensIn * p.input +
 			usage.cacheRead * p.cacheRead +
-			usage.tokensOut * p.output +
-			usage.cacheWrite * (p.cacheWrite ?? 0)) /
+			(usage.tokensOut + usage.reasoning) * p.output +
+			usage.cacheWrite * (p.cacheWrite ?? p.input)) /
 		PER_MILLION
 	);
 }
@@ -113,6 +125,7 @@ export function project(
 				input: item.tokensIn,
 				cacheRead: item.cacheRead,
 				output: item.tokensOut,
+				reasoning: item.reasoning,
 			},
 			listCost: periodCost / months,
 		};

@@ -1,4 +1,8 @@
 import { describe, expect, test } from "bun:test";
+import { mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { resolveBag } from "~/cli/config.ts";
 import { parseArgs, run } from "~/cli/run.ts";
 
 describe("parseArgs", () => {
@@ -100,6 +104,9 @@ describe("parseArgs", () => {
 		expect(() => parseArgs(["--bench-weight", "2"])).toThrow();
 		expect(() => parseArgs(["--metric", "wat"])).toThrow();
 		expect(() => parseArgs(["--only", "some"])).toThrow();
+		// cac coerces `--width ""` to 0, which used to disable trimming silently.
+		expect(() => parseArgs(["--width", ""])).toThrow();
+		expect(() => parseArgs(["--width", "0"])).toThrow();
 	});
 
 	test("a value-taking flag used bare names the flag", () => {
@@ -126,5 +133,28 @@ describe("parseArgs", () => {
 		}
 		// Help text prints, but the table must not follow it.
 		expect(logged.join("\n")).not.toContain("USAGE");
+	});
+});
+
+describe("config layering and --print-config", () => {
+	const tmp = () => mkdtempSync(join(tmpdir(), "mpc-cfg-"));
+
+	test("a CLI plugin does not outrank the user config", async () => {
+		const dir = tmp();
+		const cfg = join(dir, "config.json");
+		const plug = join(dir, "plug.json");
+		writeFileSync(cfg, JSON.stringify({ ccPlan: "goat" }));
+		writeFileSync(plug, JSON.stringify({ ccPlan: "pro" }));
+		const bag = await resolveBag(["--config", cfg, "--plugin", plug]);
+		expect(bag.ccPlan).toBe("goat");
+	});
+
+	test("an unknown config key fails under --print-config", async () => {
+		const dir = tmp();
+		const cfg = join(dir, "config.json");
+		writeFileSync(cfg, JSON.stringify({ bogusKey: 1 }));
+		await expect(run(["--config", cfg, "--print-config"])).rejects.toThrow(
+			/bogusKey/,
+		);
 	});
 });

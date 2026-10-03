@@ -14,35 +14,28 @@ export async function loadCcCatalog(planId: string): Promise<CatalogEntry[]> {
 	const url = `https://commandcode.ai/docs/plans/${def.slug}`;
 	const html = await fetchText(url);
 
-	if (!def.creditHeader) {
-		// No credits column: the plan publishes a rate-only model list, so every
-		// model draws on the plan's whole credit pool.
-		const grid = await parseRoleRows(html);
-		const entries = extractCatalog(grid, {
-			provider: "cc",
-			plan: def.label,
-			defaultAllowance: def.standardAllowance ?? 0,
-		});
-		if (entries.length === 0) {
-			throw new Error(
-				`no model rows parsed from ${url} — docs layout may have changed`,
-			);
-		}
-		return entries;
-	}
-
-	const tables = await parseTables(html);
+	// The page shape is chosen by the plan, not inferred from the absence of a
+	// credit column. Go's list moved from a `role="row"` div grid to a real
+	// <table> while still publishing no per-model credits, so "no credit header"
+	// no longer means "grid" — inferring it sent Go down `parseRoleRows`, which
+	// matches no row, and the load threw.
+	const tables = def.grid
+		? await parseRoleRows(html)
+		: await parseTables(html);
 	const entries = extractCatalog(tables, {
 		provider: "cc",
 		plan: def.label,
 		creditHeader: def.creditHeader,
+		// A rate-only list (Go) bills every model against the plan's whole pool.
+		defaultAllowance: def.standardAllowance,
 	});
 	if (entries.length === 0) {
+		const shape = def.grid ? "row" : "table";
 		throw new Error(
-			`no model tables parsed from ${url} — docs layout may have changed`,
+			`no model ${shape}s parsed from ${url} — docs layout may have changed`,
 		);
 	}
-	if (def.standardAllowance !== undefined) {
+	if (def.creditHeader && def.standardAllowance !== undefined) {
 		fillDeals(
 			entries,
 			extractCatalog(tables, {
