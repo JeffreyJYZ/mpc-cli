@@ -106,10 +106,14 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   `~/Library/Application Support/delta/user_<id>/data.sqlite` — but the conversation lives in a
   content-addressed **CRDT blob store** (`nodes`: `MapInner.CowHashMapNode` protobufs, tens of
   thousands of rows, next to a WAL that dwarfs the db), not a per-message table like opencode's
-  `session_message`. There is no model/token/cost column to join on, so delta's traffic is visible
-  only where cmduse already sees it: the **account totals** (`-1 --json`), which is exactly the gap
-  the usage report's `cover` line shows (`local usage N of M account requests`). Adding it as a
-  source means decoding that CRDT, not another `--usage-db`-style reader.
+  `session_message`. There is no model/token/cost column to join on. Note the split this exposes in
+  cmduse itself: its **account-wide** views (`-1 --json`, `daily`, `hourly`) come from the account
+  API's cumulative summary (`fetch_pool` → `daily_from_cumulative`, `ByDay` only) and so *do* count
+  every harness — delta included — but carry **no model dimension**; its **per-model** views
+  (`cmduse model`, `cmduse session`, `--local`) walk `~/.commandcode/projects`, the CommandCode
+  CLI's own sessions only. So delta lands in your totals and in nobody's per-model mix, which is
+  exactly the gap the usage report's `cover` line shows (`local usage N of M account requests`).
+  Adding it as a source means decoding that CRDT, not another `--usage-db`-style reader.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals), so the
   report prints a coverage line against `cmduse -1` totals and warns when coverage < 90%. Coverage
   below 100% means some traffic came from a harness that stores nothing locally (or another
