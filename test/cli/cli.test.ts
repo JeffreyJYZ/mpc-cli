@@ -110,13 +110,20 @@ describe("parseArgs", () => {
 	});
 
 	test("a value-taking flag used bare names the flag", () => {
-		expect(() => parseArgs(["--shape"])).toThrow(/--shape expects a value/);
 		expect(() => parseArgs(["--usage-window"])).toThrow(
 			/--usage-window expects a value/,
 		);
 		expect(() => parseArgs(["--cache-write"])).toThrow(
 			/--cache-write expects a value/,
 		);
+	});
+
+	test("--shape defaults to off, and bare means measured", () => {
+		expect(parseArgs([]).shape).toBe("off");
+		expect(parseArgs(["--shape"]).shape).toBe("measured");
+		expect(parseArgs(["--shape", "off"]).shape).toBe("off");
+		expect(parseArgs(["--shape", "measured"]).shape).toBe("measured");
+		expect(parseArgs(["--shape", "/tmp/x.json"]).shape).toBe("/tmp/x.json");
 	});
 
 	test("help and version exit cleanly before any work", async () => {

@@ -100,10 +100,11 @@ export function assertKnown(bag: Bag): void {
 /**
  * Flags cac declares with a required value (`--x <v>`). Given without one, cac
  * yields the boolean `true`, which `String(...)` would quietly turn into the
- * literal "true" — `--shape` then tried to read a file named `true`.
+ * literal "true" and be used as the value.
  *
- * `config` is absent on purpose: `--no-config` makes `true` its *default*, so a
- * bare `--config` cannot be told from "use the default path".
+ * Two are deliberately absent: `config` (`--no-config` makes `true` its
+ * *default*, so a bare `--config` cannot be told from "use the default path")
+ * and `shape` (a bare `--shape` means `measured`, handled in `map.ts`).
  */
 const VALUED = new Set([
 	"ccPlan",
@@ -112,7 +113,6 @@ const VALUED = new Set([
 	"out",
 	"reasoning",
 	"cacheWrite",
-	"shape",
 	"since",
 	"metric",
 	"model",

@@ -162,10 +162,11 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   `INTERNAL` set lists all four, and `run()` returns `0` on either pair before any work — without
   the early return the whole table printed after the help text, and `-h`/`-v` died on
   `unknown flag "--h"` (exit 1, which also broke piping the help).
-- **A value-taking flag used bare yields the boolean `true`, not undefined** — `--shape` then
-  stringified to `"true"` and tried to read a file named `true`. `assertValues` rejects a bare
-  value flag by name (`--shape expects a value`). `config` is deliberately exempt: `--no-config`
-  makes `true` its default, so bare `--config` cannot be distinguished from "use the default path".
+- **A value-taking flag used bare yields the boolean `true`, not undefined.** `assertValues`
+  rejects a bare value flag by name (`--usage-window expects a value`), which stops `String(true)`
+  becoming the literal `"true"` (that once tried to read a file named `true`). Two are exempt:
+  `config` (`--no-config` makes `true` its default, so bare `--config` cannot be told from "use
+  the default path") and `shape` (**bare `--shape` means `measured`**, mapped in `map.ts`).
   Every `--no-<x>` flag defaults its positive to `true` — that is why `fit`/`fallback`/`ability`
   read `true` with no flag given.
 - **cac/mri coerces a blank value to `0`**, not to `""` (`--width ""` arrived as `0` and silently
@@ -303,6 +304,8 @@ distinct keys.
   Both sides come from **one source**: opencode's own store, split by `model.providerID`
   (`command-code*`/`commandcode` → cc, `opencode*` → oc) inside reqshape. cmduse's log is far too
   thin (173 requests / 4 models) to be the CommandCode side.
+- `--shape` with no value means `measured` (you asked to measure); no `--shape` at all means `off`.
+  `--shape <file>` reads a saved payload.
 - A missing binary or a payload with no `sides` is a stderr warning and a fallback to the fixed
   workload, never a failed run.
 - The footer prints **two** workload lines when the sides differ (`OC … tokens` / `CC …`), so it

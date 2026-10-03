@@ -56,7 +56,9 @@ export function toOptions(bag: Bag): Options {
 			reasoning: int("reasoning", pick(bag, "reasoning")),
 			cacheWrite: int("cache-write", pick(bag, "cacheWrite")),
 		},
-		shape: String(pick(bag, "shape")),
+		// A bare `--shape` means "measure it" (`cac` yields `true`); the default
+		// with no flag at all is `off`.
+		shape: bag.shape === true ? "measured" : String(pick(bag, "shape")),
 		since: bag.since === undefined ? undefined : String(bag.since),
 		metric: parseMetric(String(pick(bag, "metric"))) as Metric,
 		model: bag.model === undefined ? undefined : String(bag.model),
