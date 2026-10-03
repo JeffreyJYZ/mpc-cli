@@ -26,6 +26,17 @@ export { parseArgs } from "./parse/cac.ts";
 
 export async function run(argv: string[]): Promise<number> {
 	const bag = await resolveBag(argv);
+	// cac prints the help text / version line itself and returns the parsed bag
+	// (with the `h`/`v` aliases) instead of exiting, so stop here — otherwise the
+	// full table would print after the help, and the aliases would trip assertKnown.
+	if (
+		bag.help === true ||
+		bag.h === true ||
+		bag.version === true ||
+		bag.v === true
+	) {
+		return 0;
+	}
 	if (bag.printConfig === true) {
 		process.stdout.write(describeConfig(bag));
 		return 0;

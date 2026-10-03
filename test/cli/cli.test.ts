@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { parseArgs } from "~/cli/run.ts";
+import { parseArgs, run } from "~/cli/run.ts";
 
 describe("parseArgs", () => {
 	test("defaults", () => {
@@ -100,5 +100,31 @@ describe("parseArgs", () => {
 		expect(() => parseArgs(["--bench-weight", "2"])).toThrow();
 		expect(() => parseArgs(["--metric", "wat"])).toThrow();
 		expect(() => parseArgs(["--only", "some"])).toThrow();
+	});
+
+	test("a value-taking flag used bare names the flag", () => {
+		expect(() => parseArgs(["--shape"])).toThrow(/--shape expects a value/);
+		expect(() => parseArgs(["--usage-window"])).toThrow(
+			/--usage-window expects a value/,
+		);
+		expect(() => parseArgs(["--cache-write"])).toThrow(
+			/--cache-write expects a value/,
+		);
+	});
+
+	test("help and version exit cleanly before any work", async () => {
+		const logged: string[] = [];
+		const original = console.log;
+		console.log = (...args: unknown[]) => {
+			logged.push(args.map(String).join(" "));
+		};
+		try {
+			expect(await run(["--no-config", "--help"])).toBe(0);
+			expect(await run(["--no-config", "-v"])).toBe(0);
+		} finally {
+			console.log = original;
+		}
+		// Help text prints, but the table must not follow it.
+		expect(logged.join("\n")).not.toContain("USAGE");
 	});
 });

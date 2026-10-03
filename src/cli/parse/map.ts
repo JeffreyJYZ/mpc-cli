@@ -15,7 +15,7 @@ import {
 	usageWindow,
 	words,
 } from "./fields.ts";
-import { assertKnown, type Bag, int, share } from "./validate.ts";
+import { assertKnown, assertValues, type Bag, int, share } from "./validate.ts";
 
 export type { Bag } from "./validate.ts";
 
@@ -44,6 +44,7 @@ const pick = (bag: Bag, key: string): unknown =>
 /** Reduce the merged bag (plugins < config < CLI) to Options. */
 export function toOptions(bag: Bag): Options {
 	assertKnown(bag);
+	assertValues(bag);
 	const columns = bag.columns === undefined ? undefined : String(bag.columns);
 	const window = numbers(bag, "window");
 	return {

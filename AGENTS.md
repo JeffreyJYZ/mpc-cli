@@ -101,6 +101,15 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   (dev builds).
 - The account API has no per-model dimension (Studio's surface is the same endpoint), which is why
   opencode's own store is the per-model source.
+- **delta (Zed's new app) is not a usable per-model source.** It does run Command Code — its model
+  ids (`command-code-openai`, `command-code-zed/…`, `deepseek-v4-flash`) appear in
+  `~/Library/Application Support/delta/user_<id>/data.sqlite` — but the conversation lives in a
+  content-addressed **CRDT blob store** (`nodes`: `MapInner.CowHashMapNode` protobufs, tens of
+  thousands of rows, next to a WAL that dwarfs the db), not a per-message table like opencode's
+  `session_message`. There is no model/token/cost column to join on, so delta's traffic is visible
+  only where cmduse already sees it: the **account totals** (`-1 --json`), which is exactly the gap
+  the usage report's `cover` line shows (`local usage N of M account requests`). Adding it as a
+  source means decoding that CRDT, not another `--usage-db`-style reader.
 - There is **no per-model account endpoint** (`cmduse mcp` exposes only account totals), so the
   report prints a coverage line against `cmduse -1` totals and warns when coverage < 90%. Coverage
   below 100% means some traffic came from a harness that stores nothing locally (or another
@@ -109,6 +118,12 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   only for the per-request figures.
 - `--usage-months` scales the period to a month; the header says which. Unmatched models are
   listed in the report, never silently dropped. `--format json` dumps the whole projection.
+- **The `head-to-head` line compares the plans only on the models both price** (`headToHead` in
+  `view/layout/usage.ts`). Summing every row lets a model only one provider sells pad that side's
+  total while adding nothing to the other — a real mix of one tied model plus two CC-only ones
+  read as "OpenCode cheaper by 45%", which was 100% the CC-only rows. One-sided rows are excluded
+  and the count printed; with no overlap the verdict is `none`, never a win. The plain per-side
+  `totals` line stays, because each side's own projected cost is still true.
 
 ## Config and plugins
 
@@ -132,6 +147,17 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
 - Flags are declared once in `src/cli/parse/cac.ts` and parsed with `cac`; it owns `--help` and
   `--version`. `src/cli/parse/map.ts` reduces the parsed bag to `Options`; `src/cli/parse/validate.ts`
   whitelists keys (unknown flags throw) and checks ranges.
+- **cac does not exit on `--help`/`--version` — it prints and returns.** With `run: false` the
+  parse comes back carrying `help`/`h` and `version`/`v` as *four* separate keys, so `validate.ts`'s
+  `INTERNAL` set lists all four, and `run()` returns `0` on either pair before any work — without
+  the early return the whole table printed after the help text, and `-h`/`-v` died on
+  `unknown flag "--h"` (exit 1, which also broke piping the help).
+- **A value-taking flag used bare yields the boolean `true`, not undefined** — `--shape` then
+  stringified to `"true"` and tried to read a file named `true`. `assertValues` rejects a bare
+  value flag by name (`--shape expects a value`). `config` is deliberately exempt: `--no-config`
+  makes `true` its default, so bare `--config` cannot be distinguished from "use the default path".
+  Every `--no-<x>` flag defaults its positive to `true` — that is why `fit`/`fallback`/`ability`
+  read `true` with no flag given.
 - `--no-color` / `--no-fallback` / `--no-ability` are cac negations: the code reads
   `color === false`, `fallback === false`, `ability === false`.
 - `resolveBag(argv)` is the real entry point (async, applies config + plugins); `parseArgs(argv)`

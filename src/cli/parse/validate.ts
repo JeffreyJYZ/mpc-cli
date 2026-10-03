@@ -18,7 +18,9 @@ export function share(name: string, value: unknown): number {
 	return n;
 }
 
-const INTERNAL = new Set(["--", "help", "version"]);
+// cac registers `--help`/`--version` **and** their `-h`/`-v` aliases as separate
+// keys, so all four must be tolerated here; `run` then returns before any work.
+const INTERNAL = new Set(["--", "help", "h", "version", "v"]);
 
 const KNOWN = new Set([
 	"ccPlan",
@@ -81,6 +83,68 @@ export function assertKnown(bag: Bag): void {
 	if (extra.length > 0) {
 		throw new Error(
 			`unknown flag "--${extra[0]}" — see --help for the full list`,
+		);
+	}
+}
+
+/**
+ * Flags cac declares with a required value (`--x <v>`). Given without one, cac
+ * yields the boolean `true`, which `String(...)` would quietly turn into the
+ * literal "true" — `--shape` then tried to read a file named `true`.
+ *
+ * `config` is absent on purpose: `--no-config` makes `true` its *default*, so a
+ * bare `--config` cannot be told from "use the default path".
+ */
+const VALUED = new Set([
+	"ccPlan",
+	"in",
+	"cache",
+	"out",
+	"reasoning",
+	"cacheWrite",
+	"shape",
+	"since",
+	"metric",
+	"model",
+	"only",
+	"width",
+	"columns",
+	"preset",
+	"bench",
+	"benchWeight",
+	"tpsWeight",
+	"valWeights",
+	"idxWeights",
+	"scale",
+	"inheritSuffixes",
+	"window",
+	"costThresholds",
+	"valThresholds",
+	"benchName",
+	"aaKey",
+	"format",
+	"color",
+	"plugin",
+	"usageFile",
+	"usageWindow",
+	"usageDb",
+	"usageLog",
+	"usageMonths",
+]);
+
+/** camelCase key -> the `--kebab-case` spelling the user typed. */
+function flag(key: string): string {
+	return `--${key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`)}`;
+}
+
+/** Reject a value-taking flag used bare (`--shape` with no argument). */
+export function assertValues(bag: Bag): void {
+	const bare = Object.keys(bag).filter(
+		(key) => VALUED.has(key) && bag[key] === true,
+	);
+	if (bare.length > 0) {
+		throw new Error(
+			`${flag(String(bare[0]))} expects a value — see --help`,
 		);
 	}
 }
