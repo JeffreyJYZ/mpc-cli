@@ -81,6 +81,11 @@ plugin's model block degrades to name-only. Restore with `bun link` here; check 
 directly with `test -e ~/.bun/install/global/node_modules/mpc/src/index.ts` (the bin's
 `ls -l` still *shows* the old path, so it proves nothing).
 
+The same prune hits every `bun link` in the group (`reqshape` too), and the global symlink
+stores an **absolute** path — so moving a repo breaks it before any prune does. When
+`--shape measured` warns that reqshape is missing, restore with `bun link` in
+`~/dev/cmdcode-tools/reqshape` (see that repo's AGENTS.md).
+
 ## Usage projection
 
 - `--usage` merges sources. Primary is **opencode's own store** (`data/usage/opencodeDb.ts`, read-only via
