@@ -72,6 +72,7 @@ export async function loadUsage(
 	window: UsageWindow = "period",
 	logPath?: string,
 	dbPath?: string,
+	sessionRoot?: string,
 ): Promise<UsageReportInput> {
 	if (source) {
 		const file = Bun.file(source);
@@ -86,7 +87,7 @@ export async function loadUsage(
 	const account = await accountSummary();
 	const since = sinceFor(window, account);
 	const fromCmduse = await cmduseModel(since);
-	const sessions = fromCmduse ?? scanLogs(since);
+	const sessions = fromCmduse ?? scanLogs(since, sessionRoot);
 
 	// opencode's own store is complete and backfilled for every provider it
 	// ran, so it supersedes the provider plugin's log (a subset of it).

@@ -73,13 +73,34 @@ describe("loadUsage", () => {
 
 	test("falls back to scanning session logs on a bad binary", async () => {
 		process.env[BIN] = "/nonexistent/cmdusedev";
+		// scanLogs otherwise reads $HOME/.commandcode/projects; inject a fixture
+		// root so this does not depend on the machine having CommandCode sessions
+		// (which is what made it pass locally and fail on CI).
+		const root = mkdtempSync(join(tmpdir(), "mpc-cmdcode-"));
+		writeFileSync(
+			join(root, "session.jsonl"),
+			`${JSON.stringify({
+				timestamp: "2026-09-20T10:00:00Z",
+				model: "GLM-5.3 Flash",
+				usage: {
+					inputTokens: 100,
+					outputTokens: 10,
+					cacheReadTokens: 1000,
+					cacheWriteTokens: 0,
+					costUsd: 0.5,
+				},
+			})}\n`,
+		);
+
 		const usage = await loadUsage(
 			undefined,
 			"all",
 			"/nonexistent/usage.jsonl",
 			"/nonexistent/opencode.db",
+			root,
 		);
 		expect(usage.label).toBe("local session logs");
+		expect(usage.entries[0]?.key).toBe("glm53flash");
 	});
 });
 
