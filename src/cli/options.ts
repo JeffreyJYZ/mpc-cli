@@ -26,7 +26,6 @@ export interface Options {
 	bench: string;
 	benchWeight: number;
 	tpsWeight: number;
-	idxWeights?: number[];
 	valWeights?: number[];
 	scale: ScaleMode;
 	inheritSuffixes?: string[];

@@ -52,7 +52,6 @@ export function parseFlags(argv: string[]): Bag {
 		.option("--bench-weight <n>", "ability share of VAL")
 		.option("--tps-weight <n>", "speed share of VAL")
 		.option("--val-weights <w>", "ability,tps,volume,cache,output shares")
-		.option("--idx-weights <w>", "volume,cache,output shares for COST")
 		.option("--scale <mode>", "log | linear for skewed terms")
 		.option(
 			"--inherit-suffixes <s>",

@@ -82,7 +82,6 @@ export function toOptions(bag: Bag): Options {
 		bench: String(pick(bag, "bench")),
 		benchWeight: share("bench-weight", pick(bag, "benchWeight")),
 		tpsWeight: share("tps-weight", pick(bag, "tpsWeight")),
-		idxWeights: numbers(bag, "idxWeights"),
 		valWeights: numbers(bag, "valWeights"),
 		scale: String(pick(bag, "scale")) as ScaleMode,
 		// Absent means "use the built-in suffixes"; an empty list means "inherit

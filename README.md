@@ -146,7 +146,6 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--refresh` | off | ignore the `aa-web` cache |
 | `--no-ability` | off | hide `ability` and `VAL` |
 | `--preset <name>` | — | named column set from `presets` in config |
-| `--idx-weights <a,b,c>` | `0.6,0.2,0.2` | COST weights (volume, cache, output), normalised |
 | `--val-weights <a,b,c,d,e>` | see above | VAL weights (ability, tps, volume, cache, output) |
 | `--scale <mode>` | `log` | `log` or `linear` normalisation for skewed terms |
 | `--inherit-suffixes <s>` | built-in | speed-variant suffixes that inherit ability |
@@ -190,7 +189,7 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `ability` | benchmark score for the model |
 | `tps` | output tokens per second |
 | `WIN` | side with the lower per-request cost |
-| `COST` | 0-100 cost index, **lower is better** (no ability) |
+| `COST` | 0-100 volume index: `requests/mo`, **lower is better** (no ability) |
 | `VAL` | 0-100 ability-aware value score |
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set. Without it, plain `mpc` shows every column that fits the terminal, `--minimal` and `--medium` narrow the set, and `--detail` prints all of them untrimmed.
@@ -220,22 +219,22 @@ Reasoning bills at the output rate *on top of* output — opencode's own provide
 
 `req/mo` then answers "how many of *my* requests fit this allowance" rather than "how many of a hypothetical 800/50K/200 ones do". Save a payload once with `reqshape --format json > shape.json` and reuse it with `--shape shape.json`; `--since <date>` narrows the window. A missing `reqshape` binary (`REQSHAPE_BIN` overrides it) is a warning, not a failure: mpc keeps the fixed workload and carries on.
 
-The **index** is a 0-100 blended value score across every model-provider entry:
+The **index** behind `COST` is a 0-100 volume score across every model-provider entry:
 
 ```
-index = 100 * (0.60*volume + 0.20*cachePrice + 0.20*outputPrice)
+index = 100 * volume
 ```
 
-where `volume` is min-max normalised `log10(requestsPerMonth)` and the two price terms are
-min-max normalised and inverted (cheaper scores higher). Free models get `∞` requests and
-`index = 100`.
+where `volume` is min-max normalised `log10(requestsPerMonth)`. Cache and output prices are **not**
+folded in — they are their own columns — so `COST` reads as "how many requests the plan buys".
+Free models get `∞` requests and `index = 100`.
 
 ## Ability scores (`VAL`)
 
-`VAL` reuses the `COST` recipe with a benchmark term:
+`VAL` adds a benchmark term alongside the same volume/price terms:
 
 ```
-COST = 100 - 100·(0.60*volume + 0.20*cache + 0.20*output)   # inverted: 0 is best
+COST = 100 - 100·volume                                     # inverted: 0 is best
 VAL = 100 * (0.35*ability + 0.10*tps + 0.25*volume + 0.15*cache + 0.15*output)
 ```
 

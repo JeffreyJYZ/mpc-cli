@@ -26,7 +26,7 @@ did not need a companion change — check `useRows.ts` before assuming any other
 A `bun`/TypeScript CLI comparing model pricing across **OpenCode Go** and **CommandCode**
 (GOAT / Pro / Max / Go). Both providers sell a monthly subscription granting usage credits
 with per-model allowances priced at API token rates, so `mpc` normalises both onto one table
-per model: cost per request, requests per month and per rolling window, and a blended score.
+per model: cost per request, requests per month and per rolling window, and a volume index.
 
 ## Layout
 
@@ -148,7 +148,7 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   or a factory `(ctx) => bag`. Relative paths resolve against the config file's directory.
 - Every flag is persistable because the config keys are the raw camelCase bag; `assertKnown`
   validates every layer, so typos in a plugin or config fail loud.
-- All scoring knobs live in `ScoreConfig` (`cli/engine/score.ts`): `idxWeights`, `valWeights`,
+- All scoring knobs live in `ScoreConfig` (`cli/engine/score.ts`): `valWeights`,
   `scale`, `inheritSuffixes`, `window`. Colour thresholds go through `setThresholds`, colour mode
   through `setColorMode`.
 
@@ -273,8 +273,10 @@ distinct keys.
 - Rolling windows scale the monthly figure by the plan's own ratio: OpenCode Go fixed
   20%/50%; CommandCode derives it from the plan's 5h/weekly dollar caps (20%/50% on GOAT and
   Pro, 30%/60% on Max and Go).
-- `COST` = inverted value score: `100 - 100*(0.6*volume + 0.2*cachePrice + 0.2*outputPrice)`, min-max normalised across
-  every model-provider entry. Lower is better, so its colour thresholds and default sort are the
+- `COST` = inverted **volume** score: `100 - 100*volume`, min-max normalised `log10(requestsPerMonth)`
+  across every model-provider entry — "how many requests the plan buys". Cache and output prices are
+  their own columns and are **not** folded in (this was the `--idx-weights` blend; that flag and the
+  blended index were dropped). Lower is better, so its colour thresholds and default sort are the
   opposite of VAL.
 - Skewed terms use `logMinmax` (log10 then min-max): volume, tps, cache price, output price. Without
   it a single outlier (e.g. a 1000 tps model, or a $0.002 cache) squashes everyone else toward one

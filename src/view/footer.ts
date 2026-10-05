@@ -130,7 +130,7 @@ export const LEGEND: [string, string][] = [
 	],
 	["ability", "benchmark score for the model (source above)"],
 	["tps", "output tokens per second (source above)"],
-	["COST", "0-100 cost index, lower is better (no ability)"],
+	["COST", "0-100 volume index: requests/mo, lower is better (no ability)"],
 	[
 		"VAL",
 		"0-100 ability-aware value: ability + speed + volume + cache + output",

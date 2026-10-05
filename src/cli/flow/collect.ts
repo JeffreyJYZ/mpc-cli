@@ -12,7 +12,6 @@ function scoreConfig(options: Options): ScoreConfig {
 	return {
 		abilityWeight: options.benchWeight,
 		tpsWeight: options.tpsWeight,
-		idxWeights: options.idxWeights,
 		valWeights: options.valWeights,
 		scale: options.scale,
 		inheritSuffixes: options.inheritSuffixes,

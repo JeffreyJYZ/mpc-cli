@@ -63,14 +63,11 @@ describe("parseArgs defaults", () => {
 
 	test("weights parse from comma lists", () => {
 		const o = parseArgs([
-			"--idx-weights",
-			"1,0,0",
 			"--val-weights",
 			"1,0,0,0,0",
 			"--window",
 			"0.3,0.6",
 		]);
-		expect(o.idxWeights).toEqual([1, 0, 0]);
 		expect(o.valWeights).toEqual([1, 0, 0, 0, 0]);
 		expect(o.window).toEqual([0.3, 0.6]);
 	});

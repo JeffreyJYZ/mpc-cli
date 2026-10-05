@@ -52,7 +52,7 @@ export function buildMetrics(
 			free,
 		};
 	});
-	assignIndex(metrics, config.idxWeights, config.scale);
+	assignIndex(metrics);
 	assignValueIndex(metrics, config);
 	return metrics;
 }

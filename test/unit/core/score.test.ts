@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { buildMetrics } from "~/cli/engine/index.ts";
-import { DEFAULT_SCORE } from "~/cli/engine/score.ts";
-import { ccPlan, entry, workloads } from "../fixtures.ts";
+import { assignIndex, DEFAULT_SCORE } from "~/cli/engine/score.ts";
+import { ccPlan, entry, metric, workloads } from "../fixtures.ts";
 
 describe("buildMetrics", () => {
 	test("payPerRequest * requestsPerMonth equals plan price", () => {
@@ -24,6 +24,27 @@ describe("buildMetrics", () => {
 		expect(m?.free).toBe(true);
 		expect(m?.requestsPerMonth).toBe(Number.POSITIVE_INFINITY);
 		expect(m?.index).toBe(100);
+	});
+
+	test("COST index is volume only: equal requests/mo ⇒ equal index, price fields ignored", () => {
+		const high = metric(1);
+		high.requestsPerMonth = 1_000;
+		high.pricing = { input: 9, output: 99, cacheRead: 9, cacheWrite: null };
+		const high2 = metric(1);
+		high2.requestsPerMonth = 1_000;
+		high2.pricing = {
+			input: 0.001,
+			output: 0.001,
+			cacheRead: 0.001,
+			cacheWrite: null,
+		};
+		const low = metric(1);
+		low.requestsPerMonth = 1;
+		const metrics = [high, high2, low];
+		assignIndex(metrics);
+		expect(high.index).toBe(high2.index);
+		expect(high.index).toBe(100);
+		expect(low.index).toBe(0);
 	});
 
 	test("index stays within 0..100", () => {

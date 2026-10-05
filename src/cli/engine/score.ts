@@ -6,8 +6,6 @@ import { logMinmax, minmax } from "./cost.ts";
 export interface ScoreConfig {
 	abilityWeight: number;
 	tpsWeight: number;
-	/** volume, cache, output — normalised to sum 1. */
-	idxWeights?: number[];
 	/** ability, tps, volume, cache, output — normalised to sum 1. */
 	valWeights?: number[];
 	scale: ScaleMode;
@@ -34,33 +32,18 @@ function normalise(
 const scale = (values: number[], mode: ScaleMode): number[] =>
 	mode === "linear" ? minmax(values) : logMinmax(values);
 
-/** COST index (inverted later): volume / cache price / output price. */
-export function assignIndex(
-	metrics: EntryMetrics[],
-	weights?: number[],
-	mode: ScaleMode = "log",
-): void {
-	const [wVolume, wCache, wOutput] = normalise(weights, [0.6, 0.2, 0.2]);
+/** COST index (inverted for display, so 0 = most requests = best): volume only,
+ * the log-scaled requests/month, min-max normalised across every entry. Cache
+ * and output prices are their own columns and are deliberately not folded in —
+ * "cost" here means "how many requests the plan buys". */
+export function assignIndex(metrics: EntryMetrics[]): void {
 	const priced = metrics.filter((m) => Number.isFinite(m.requestsPerMonth));
 	const volume = minmax(
 		priced.map((m) => Math.log10(Math.max(m.requestsPerMonth, 1))),
 	);
-	const cache = scale(
-		priced.map((m) => m.pricing.cacheRead),
-		mode,
-	);
-	const output = scale(
-		priced.map((m) => m.pricing.output),
-		mode,
-	);
 
 	priced.forEach((m, i) => {
-		m.index = Math.round(
-			100 *
-				((wVolume ?? 0.6) * (volume[i] ?? 0.5) +
-					(wCache ?? 0.2) * (1 - (cache[i] ?? 0.5)) +
-					(wOutput ?? 0.2) * (1 - (output[i] ?? 0.5))),
-		);
+		m.index = Math.round(100 * (volume[i] ?? 0.5));
 	});
 	for (const m of metrics) {
 		if (!Number.isFinite(m.requestsPerMonth)) m.index = 100;
