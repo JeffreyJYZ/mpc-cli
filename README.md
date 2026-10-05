@@ -137,12 +137,12 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--medium` | off | preset: allowance and the rate views per side + win + cost + val |
 | `--no-fit` | off | keep the preset's full width instead of trimming to the terminal |
 | `--columns <ids>` | preset | comma-separated columns to show, in order (overrides presets and trimming); `--columns help` lists ids |
-| `--bench <src>` | `cc` | ability scores: `cc`, `aa`, `aa-web`, `file:<path>`, `url:<url>` |
+| `--bench <src>` | `aa` with a key, else `cc` | ability scores: `cc`, `aa`, `aa-web`, `file:<path>`, `url:<url>` |
 | `--bench-weight <n>` | `0.35` | ability share of `VAL`, 0-1 |
 | `--tps-weight <n>` | `0.10` | output-speed share of `VAL`, 0-1 |
 | `--bench-name <label>` | source | footer label for the ability source |
 | `--aa-key <key>` | `AA_API_KEY` | Artificial Analysis API key |
-| `--no-fallback` | off | with `--bench cc`, skip the Artificial Analysis fill |
+| `--no-fallback` | off | skip filling ability misses from the other sources |
 | `--refresh` | off | ignore the `aa-web` cache |
 | `--no-ability` | off | hide `ability` and `VAL` |
 | `--preset <name>` | — | named column set from `presets` in config |
@@ -249,15 +249,18 @@ and are excluded from the ability normalisation range.
 
 | `--bench` | source | coverage |
 | --- | --- | --- |
-| `cc` (default) | CommandCode's `Intelligence` column | every matched model |
 | `aa` | Artificial Analysis API (paginated) | full; needs `AA_API_KEY` |
 | `aa-web` | Artificial Analysis models page scrape | partial (only the models AA embeds) |
+| `cc` | CommandCode's `Intelligence` column | every matched model |
 | `file:<path>` / `url:<url>` | your JSON, `{ "model": score }` or `[{ model, score }]` | whatever you supply |
 
-Default is `cc`. Because CC's `Intelligence` column and Artificial Analysis publish the same
-index, CC is used alone — no second round-trip. Pick `--bench aa` for AA's own catalog; other
-sources fall back to CC, then to `--no-fallback` to disable. The `aa-web` result is cached under
-`$XDG_CACHE_HOME/mpc/` (or `~/.cache/mpc/`) for 7 days; `--refresh` busts it.
+The default is `aa` when an AA key is available (`AA_API_KEY` or `--aa-key`), otherwise `cc`; an
+explicit `--bench` always wins. After the lead source, misses are filled from the same benchmark's
+keyless page scrape (`aa-web`) and then from CommandCode, the last resort — `--no-fallback`
+disables the fills. Because CC's `Intelligence` column and AA publish the same index, a `cc`-led
+run asks AA only when it still lacks throughput (CC's plan pages no longer publish `Tok/s`). The
+`aa-web` result is cached under `$XDG_CACHE_HOME/mpc/` (or `~/.cache/mpc/`) for 7 days;
+`--refresh` busts it.
 
 ## Model matching
 

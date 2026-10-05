@@ -1,5 +1,5 @@
 import { loadCc } from "./cc.ts";
-import { loadAaFallback, resolvePrimary } from "./resolve.ts";
+import { loadAaFallback, loadAaWeb, resolvePrimary } from "./resolve.ts";
 import { fillFromCache, readAbilityCache, writeAbilityCache } from "./store.ts";
 import type { AbilityOptions, AbilityResult } from "./types.ts";
 
@@ -82,6 +82,17 @@ async function loadLiveAbility(opts: AbilityOptions): Promise<AbilityResult> {
 	}
 
 	const fills: string[] = [];
+	// The API leads, so give the same benchmark's keyless page scrape a second
+	// look (cached, free when warm) before the cross-source fallback.
+	if (primary.scheme === "aa") {
+		const web = await loadAaWeb(opts);
+		const added = merge(
+			primary.data.intelligence,
+			web.intelligence,
+			opts.keys,
+		);
+		if (added > 0) fills.push(`${added} values from AA web scrape`);
+	}
 	{
 		const cc = await loadCc();
 		const added =

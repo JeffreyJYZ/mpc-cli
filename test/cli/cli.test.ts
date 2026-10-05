@@ -4,6 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { resolveBag } from "~/cli/config.ts";
 import { parseArgs, run } from "~/cli/run.ts";
+import { BENCH_DEFAULT } from "~/constants/cli.ts";
 
 describe("parseArgs", () => {
 	test("defaults", () => {
@@ -19,6 +20,26 @@ describe("parseArgs", () => {
 		expect(o.metric).toBe("val");
 		expect(o.only).toBe("all");
 		expect(o.colorMode).toBe("auto");
+	});
+
+	test("--bench default follows the AA key; an explicit --bench wins", () => {
+		const saved = process.env.AA_API_KEY;
+		try {
+			delete process.env.AA_API_KEY;
+			expect(parseArgs([]).bench).toBe(BENCH_DEFAULT.keyless);
+			process.env.AA_API_KEY = "test-key";
+			expect(parseArgs([]).bench).toBe(BENCH_DEFAULT.keyed);
+			expect(parseArgs(["--bench", "cc"]).bench).toBe(
+				BENCH_DEFAULT.keyless,
+			);
+			delete process.env.AA_API_KEY;
+			expect(parseArgs(["--aa-key", "k"]).bench).toBe(
+				BENCH_DEFAULT.keyed,
+			);
+		} finally {
+			if (saved === undefined) delete process.env.AA_API_KEY;
+			else process.env.AA_API_KEY = saved;
+		}
 	});
 
 	test("workload overrides, space and equals forms", () => {

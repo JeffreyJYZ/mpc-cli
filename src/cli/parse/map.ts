@@ -7,7 +7,7 @@ import {
 	parseOnly,
 	type ScaleMode,
 } from "~/cli/options.ts";
-import { ARG_DEFAULTS } from "~/constants/cli.ts";
+import { ARG_DEFAULTS, BENCH_DEFAULT } from "~/constants/cli.ts";
 import {
 	colorMode,
 	numbers,
@@ -24,6 +24,12 @@ const pick = (bag: Bag, key: string): unknown =>
 	bag[key] === undefined
 		? ARG_DEFAULTS[key as keyof typeof ARG_DEFAULTS]
 		: bag[key];
+
+/** `--bench` default is contextual: the AA API leads only when a key exists. */
+function benchDefault(bag: Bag): string {
+	const keyed = bag.aaKey !== undefined || Boolean(process.env.AA_API_KEY);
+	return keyed ? BENCH_DEFAULT.keyed : BENCH_DEFAULT.keyless;
+}
 
 /** Reduce the merged bag (plugins < config < CLI) to Options. */
 export function toOptions(bag: Bag): Options {
@@ -63,7 +69,7 @@ export function toOptions(bag: Bag): Options {
 		// blank `--width ""` to 0, so require at least one column.
 		width: bag.width === undefined ? undefined : int("width", bag.width, 1),
 		fit: bag.fit !== false,
-		bench: String(pick(bag, "bench")),
+		bench: bag.bench === undefined ? benchDefault(bag) : String(bag.bench),
 		benchWeight: share("bench-weight", pick(bag, "benchWeight")),
 		tpsWeight: share("tps-weight", pick(bag, "tpsWeight")),
 		valWeights: numbers(bag, "valWeights"),

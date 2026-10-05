@@ -12,6 +12,13 @@ export const OPTION_DEFAULTS = {
 	output: 200,
 };
 
+/**
+ * `--bench` default is contextual: the AA API gives full coverage when a key
+ * is available (`AA_API_KEY` / `--aa-key`), so it leads there; otherwise the
+ * CommandCode scrape does.
+ */
+export const BENCH_DEFAULT = { keyed: "aa", keyless: "cc" } as const;
+
 /** The raw CLI bag defaults, before config/plugin layering. */
 export const ARG_DEFAULTS = {
 	ccPlan: "goat",
@@ -23,7 +30,7 @@ export const ARG_DEFAULTS = {
 	shape: "off",
 	metric: "val",
 	only: "all",
-	bench: "cc",
+	bench: BENCH_DEFAULT.keyless,
 	benchWeight: 0.35,
 	tpsWeight: 0.1,
 	costThresholds: [30, 60],

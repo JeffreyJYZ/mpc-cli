@@ -48,7 +48,10 @@ export function parseFlags(argv: string[]): Bag {
 			"comma-separated columns (--columns help to list)",
 		)
 		.option("--preset <name>", "named column preset from config")
-		.option("--bench <src>", "cc | aa | aa-web | file:<path> | url:<url>")
+		.option(
+			"--bench <src>",
+			"cc | aa | aa-web | file:<path> | url:<url> (aa with a key, else cc)",
+		)
 		.option("--bench-weight <n>", "ability share of VAL")
 		.option("--tps-weight <n>", "speed share of VAL")
 		.option("--val-weights <w>", "ability,tps,volume,cache,output shares")

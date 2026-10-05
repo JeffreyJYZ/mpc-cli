@@ -322,15 +322,15 @@ distinct keys.
 ## Ability scores
 
 - `data/bench/` (`index.ts`/`resolve.ts`) resolves benchmark scores; `--bench` picks the scheme.
-  Default `cc` (`constants/cli.ts`) scrapes CommandCode's `Intelligence` column from a fixed
-  reference page (GOAT, since plan pages vary and the Go grid has no Intelligence). Unscored models
-  are filled from AA.
-- **A key does not change the default scheme — `cc` stays `cc`.** `AA_API_KEY` / `--aa-key` only
-  (a) gates `--bench aa`, which throws without one, and (b) upgrades the fallback filler from the
-  keyless `aa-web` page scrape (partial) to the full paginated API. A `cc` primary still merges AA
-  values in as filler (usually, since CC's pages dropped `Tok/s`, leaving tps empty), but the
-  scheme and footer label remain `cc`. Only an explicit `--bench aa` makes AA lead.
-- `sources/artificialAnalysis.ts` parses the `{label, intelligenceIndex, detailsUrl}` dataset
+  `constants/cli.ts`'s `BENCH_DEFAULT` makes the default **contextual: `aa` when an AA key is
+  present (`AA_API_KEY` or `--aa-key`), else `cc`**. An explicit `--bench` always wins — a key only
+  chooses the default and upgrades the API path.
+- **Fill order after the lead: the same benchmark's keyless `aa-web` scrape, then CommandCode (last
+  resort).** So an `aa` primary merges `aa-web` then `cc`; a `cc` primary merges AA (API when keyed,
+  else `aa-web`); `aa-web`/`file`/`url` fall back to `cc`. The `cc`-primary path re-merges `loadCc()`
+  (a no-op — the primary already loaded it) before AA; CC's pages dropped `Tok/s`, so a `cc` primary
+  usually still needs the AA fill for speed. `--no-fallback` disables the fills entirely.
+- `data/sources/aa/` parses the `{label, intelligenceIndex, detailsUrl}` dataset
   embedded in AA flight JSON. That page only embeds its chart top-N, so `aa-web` is **partial**;
   full coverage needs `AA_API_KEY` (`--bench aa`), which is **paginated** (`pagination.has_more`,
   page_size 200) — follow every page or most models silently miss. The API row shape is
@@ -339,8 +339,9 @@ distinct keys.
   per key. AA slugs normalize cleanly via `normalizeKey`
   (`qwen3-8-max-0902` -> `qwen38max0902`); slug keys win over label keys to keep variant suffixes.
 - `aa-web` caches to `$XDG_CACHE_HOME/mpc/ability-aa-web.json` (7d TTL, `--refresh` busts).
-- CC's `Intelligence` and AA's index are the *same* benchmark (agree to ~2dp), so `--bench cc`
-  returns early without an AA round-trip. Only non-cc primaries fill from CC / AA.
+- CC's `Intelligence` and AA's index are the *same* benchmark (agree to ~2dp), so a `cc` primary
+  with its own throughput returns early without an AA round-trip; otherwise it, and every non-`cc`
+  primary, fills from `aa-web` and then CC per the order above.
 - Ability and speed come from one source: CC's `Intelligence` and `Tok/s` columns (`BenchData`).
   A model with no speed figure gets the neutral 0.5 in VAL, not a penalty.
 - `VAL` uses `abilityWeight` (default 0.35) and `tpsWeight` (default 0.10); remaining weight splits

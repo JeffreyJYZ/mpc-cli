@@ -73,6 +73,15 @@ export async function resolvePrimary(opts: AbilityOptions): Promise<Resolved> {
 }
 
 /**
+ * Keyless Artificial Analysis page scrape (partial — only the models AA embeds).
+ */
+export async function loadAaWeb(opts: AbilityOptions): Promise<BenchData> {
+	const data = emptyData();
+	data.intelligence = await loadAaWebCached(Boolean(opts.refresh));
+	return data;
+}
+
+/**
  * Artificial Analysis as a gap filler: the full API when a key is available,
  * otherwise the keyless page scrape (partial).
  */
@@ -87,9 +96,7 @@ export async function loadAaFallback(
 			// fall through to the scrape
 		}
 	}
-	const data = emptyData();
-	data.intelligence = await loadAaWebCached(Boolean(opts.refresh));
-	return { data, how: "AA web scrape" };
+	return { data: await loadAaWeb(opts), how: "AA web scrape" };
 }
 
 export type {
