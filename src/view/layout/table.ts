@@ -1,4 +1,4 @@
-import { BAR, BAR_RULE } from "~/constants/view.ts";
+import { BAR, BAR_RULE, SGR } from "~/constants/view.ts";
 import type { Column, GroupKey, GroupLabel, Row } from "~/view/schema.ts";
 import { columns } from "~/view/schema.ts";
 import { paint } from "~/view/text/index.ts";
@@ -26,7 +26,7 @@ export function printTable(
 ): void {
 	const { cols, widths } = measure(rows, columnIds);
 	const segs = buildSegments(columnIds, cols, widths);
-	const bar = paint("2", BAR);
+	const bar = paint(SGR.dim, BAR);
 
 	if (segs.some((seg) => labels[seg.key])) {
 		console.log(
@@ -52,8 +52,10 @@ export function printTable(
 	console.log(
 		segs
 			.map((seg) =>
+				// Each provider block's headers take that provider's colour, so a
+				// column's side reads from the header, not only the banner above.
 				paint(
-					"1",
+					labels[seg.key]?.color ?? SGR.bold,
 					renderSegment(
 						seg,
 						seg.columns.map((c) => c.header),
@@ -64,7 +66,7 @@ export function printTable(
 			.join(bar),
 	);
 	console.log(
-		segs.map((seg) => "─".repeat(seg.width)).join(paint("2", BAR_RULE)),
+		segs.map((seg) => "─".repeat(seg.width)).join(paint(SGR.dim, BAR_RULE)),
 	);
 	for (const row of rows) {
 		console.log(

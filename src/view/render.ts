@@ -1,3 +1,4 @@
+import { PROVIDER_COLOR, SGR } from "~/constants/view.ts";
 import type { CompareRow } from "~/types.ts";
 import { footer } from "./footer.ts";
 import { tally } from "./layout/segments.ts";
@@ -25,13 +26,13 @@ export function renderText(
 	dropped: string[] = [],
 ): void {
 	printTable(rows, columnIds, {
-		oc: { title: planTitle(meta.ocPlan), color: "1;36" },
-		cc: { title: planTitle(meta.ccPlan), color: "1;35" },
+		oc: { title: planTitle(meta.ocPlan), color: PROVIDER_COLOR["oc-go"] },
+		cc: { title: planTitle(meta.ccPlan), color: PROVIDER_COLOR.cc },
 	});
 	if (dropped.length > 0) {
 		console.log(
 			paint(
-				"2",
+				SGR.dim,
 				`\ndropped for width: ${[...new Set(dropped)].join(", ")} (use --columns to force, --width <n> to widen)`,
 			),
 		);

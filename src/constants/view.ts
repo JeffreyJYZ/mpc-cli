@@ -1,5 +1,25 @@
+import type { ProviderId } from "~/types.ts";
 import { CC_COLUMNS } from "~/view/columns/cc.ts";
 import { OC_COLUMNS } from "~/view/columns/oc.ts";
+
+/**
+ * SGR codes with **one meaning each**. `green` = favourable (cheaper side, free,
+ * a good score), `yellow` = middling score, `dim` = absent value or a structural
+ * annotation — never a quality and never a side. Provider identity is
+ * `PROVIDER_COLOR`, kept out of this scale so cyan never means "ability" too.
+ */
+export const SGR = {
+	bold: "1",
+	dim: "2",
+	green: "32",
+	yellow: "33",
+} as const;
+
+/** Provider identity colour, shared by the table banners and the footer plans. */
+export const PROVIDER_COLOR: Record<ProviderId, string> = {
+	"oc-go": "1;36",
+	cc: "1;35",
+};
 
 export const GAP = "  ";
 export const BAR = " │ ";

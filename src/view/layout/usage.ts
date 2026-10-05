@@ -1,5 +1,5 @@
 import type { UsageProjection, UsageRow } from "~/cli/engine/project.ts";
-import { HEADERS } from "~/constants/view.ts";
+import { HEADERS, SGR } from "~/constants/view.ts";
 import type { PlanInfo, ProviderId } from "~/types.ts";
 import { fmtCount, fmtUsd, paint, planTitle } from "~/view/text/index.ts";
 
@@ -106,14 +106,12 @@ export function renderUsage(report: UsageProjection, meta: UsageMeta): void {
 			`USAGE  your logged mix · ${meta.window}${scale} · list value ${fmtUsd(report.ccListCost)}${meta.months === 1 ? "" : "/mo"}`,
 		),
 	);
-	console.log(dim(`source  ${meta.label}`));
+	console.log(`${paint(SGR.bold, "source")}  ${meta.label}`);
 	const local = report.rows.reduce((sum, row) => sum + row.requests, 0);
 	if (meta.account && meta.account.requests > 0) {
 		const pct = (local / meta.account.requests) * 100;
 		console.log(
-			dim(
-				`cover   local usage ${fmtCount(local)} of ${fmtCount(meta.account.requests)} account requests (${pct.toFixed(0)}%)`,
-			),
+			`${paint(SGR.bold, "cover")}   local usage ${fmtCount(local)} of ${fmtCount(meta.account.requests)} account requests (${pct.toFixed(0)}%)`,
 		);
 		if (pct < 90) {
 			console.log(
@@ -145,13 +143,11 @@ export function renderUsage(report: UsageProjection, meta: UsageMeta): void {
 
 	console.log();
 	console.log(
-		`totals  your mix · CC ${fmtUsd(report.ccMonthly)}/mo · OpenCode ${fmtUsd(report.ocMonthly)}/mo`,
+		`${paint(SGR.bold, "totals")}  your mix · CC ${fmtUsd(report.ccMonthly)}/mo · OpenCode ${fmtUsd(report.ocMonthly)}/mo`,
 	);
-	console.log(dim(headToHeadLine(report)));
+	console.log(headToHeadLine(report));
 	console.log(
-		dim(
-			`plans   ${planTitle(meta.plans["oc-go"])} $${meta.plans["oc-go"].price}/mo · ${planTitle(meta.plans.cc)} $${meta.plans.cc.price}/mo`,
-		),
+		`${paint(SGR.bold, "plans")}   ${planTitle(meta.plans["oc-go"])} $${meta.plans["oc-go"].price}/mo · ${planTitle(meta.plans.cc)} $${meta.plans.cc.price}/mo`,
 	);
 	const over = report.rows
 		.filter((r) => r.cc?.overCap || r.oc?.overCap)

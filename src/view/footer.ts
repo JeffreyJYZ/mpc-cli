@@ -1,4 +1,4 @@
-import { LEGEND } from "~/constants/view.ts";
+import { LEGEND, PROVIDER_COLOR, SGR } from "~/constants/view.ts";
 import type { CompareRow, PlanInfo, Workload } from "~/types.ts";
 import { tally } from "./layout/segments.ts";
 import type { ReportMeta } from "./schema.ts";
@@ -59,12 +59,15 @@ function windowPercents(plan: PlanInfo, override?: [number, number]): string {
 }
 
 export function footer(rows: CompareRow[], meta: ReportMeta): void {
-	const dim = (text: string): string => paint("2", text);
+	// A key/value list: labels bold, values plain. It used to be SGR 2 end to
+	// end, which made every label as faint as its value and read as one grey
+	// block (the shape decision among it).
+	const label = (text: string): string => paint(SGR.bold, text.padEnd(10));
+	const line = (key: string, text: string): void =>
+		console.log(`${label(key)}${text}`);
 	const plans = [meta.ocPlan, meta.ccPlan].map(planBlock);
 	const planWidth = Math.max(...plans.map((p) => p.title.length));
 	const [ocBlock, ccBlock] = plans;
-	const line = (label: string, text: string): void =>
-		console.log(`${dim(label.padEnd(10))}${dim(text)}`);
 
 	// A measured shape is one profile for both plans, so this reads as a single
 	// line; a second is printed only if the two sides ever diverge.
@@ -82,11 +85,12 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 		);
 	}
 	if (meta.shapeNote) line("shape", meta.shapeNote);
+
 	console.log(
-		`${dim("plans     ")}${paint("1;36", (ocBlock?.title ?? "").padEnd(planWidth))}  ${dim(ocBlock?.rest ?? "")}`,
+		`${label("plans")}${paint(PROVIDER_COLOR["oc-go"], (ocBlock?.title ?? "").padEnd(planWidth))}  ${ocBlock?.rest ?? ""}`,
 	);
 	console.log(
-		`${dim("          ")}${paint("1;35", (ccBlock?.title ?? "").padEnd(planWidth))}  ${dim(ccBlock?.rest ?? "")}`,
+		`${label("")}${paint(PROVIDER_COLOR.cc, (ccBlock?.title ?? "").padEnd(planWidth))}  ${ccBlock?.rest ?? ""}`,
 	);
 	line(
 		"windows",
@@ -112,6 +116,9 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 	);
 
 	LEGEND.forEach(([key, text], i) => {
-		line(i === 0 ? "legend" : "", `${(key ?? "").padEnd(9)}${text}`);
+		line(
+			i === 0 ? "legend" : "",
+			`${paint(SGR.bold, (key ?? "").padEnd(9))}${text}`,
+		);
 	});
 }

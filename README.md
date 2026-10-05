@@ -195,6 +195,8 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 
 `--columns a,b,c` picks and orders columns; ids are listed under `--columns help`, and `cc-*` mirrors the `oc-*` set. Without it, plain `mpc` shows every column that fits the terminal, `--minimal` and `--medium` narrow the set, and `--detail` prints all of them untrimmed.
 
+Colour carries one meaning per code. Bold **cyan** is OpenCode and bold **magenta** is CommandCode — the group banner, that block's column headers, and the footer plan rows. **Green** is favourable (the cheaper side, a free model, a good `COST`/`VAL`), **yellow** is a middling score, and `COST`/`VAL` fall to plain — not red — below that, because the score is relative to the table, so the last row is not a failure. Dim is reserved for a missing value or a footnote. `--no-color`, or stdout that is not a terminal, turns it all off.
+
 Rolling-window columns scale the monthly figure by each plan's own window ratio (OpenCode Go fixes 5h = 20%, weekly = 50%; CommandCode derives it from the plan's 5h/weekly dollar caps — 20%/50% on GOAT and Pro, 30%/60% on the Max plans).
 
 `--json` reports the raw `costPerRequest`, `payPerRequest`, `requestsPerMonth`, `requestsPerFiveHour`, `requestsPerWeek`, `multiplier` and `index` per model-provider, plus a `tally` object.
