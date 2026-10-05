@@ -15,10 +15,16 @@ export const SGR = {
 	yellow: "33",
 } as const;
 
-/** Provider identity colour, shared by the table banners and the footer plans. */
+/** Provider identity colour (bold), for banners, headers and a winning cell. */
 export const PROVIDER_COLOR: Record<ProviderId, string> = {
 	"oc-go": "1;36",
 	cc: "1;35",
+};
+
+/** The same identity as a quiet tint, for a provider's whole column set. */
+export const PROVIDER_TINT: Record<ProviderId, string> = {
+	"oc-go": "36",
+	cc: "35",
 };
 
 export const GAP = "  ";

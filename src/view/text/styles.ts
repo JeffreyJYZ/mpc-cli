@@ -1,5 +1,5 @@
-import { SGR } from "~/constants/view.ts";
-import type { EntryMetrics } from "~/types.ts";
+import { PROVIDER_COLOR, PROVIDER_TINT, SGR } from "~/constants/view.ts";
+import type { EntryMetrics, ProviderId } from "~/types.ts";
 import type { Row } from "~/view/schema.ts";
 import { fmtRate, shortProviderName } from "./format.ts";
 
@@ -47,22 +47,49 @@ export const ccRates = (r: Row): string => pricingTriple(r.cc);
 export const freeOc = (r: Row): boolean => Boolean(r.oc?.free);
 export const freeCc = (r: Row): boolean => Boolean(r.cc?.free);
 
-export const winnerStyle = (r: Row): string | undefined => {
-	const side = cheaperSide(r);
-	// A tie and a one-sided row are not wins, so no colour — not a faint grey,
-	// which must keep meaning "absent".
-	return side === "oc" || side === "cc" ? SGR.green : undefined;
-};
-
-export function sideStyle(side: "oc" | "cc") {
-	return (row: Row): string | undefined =>
-		cheaperSide(row) === side ? SGR.green : undefined;
+function entryOf(row: Row, provider: ProviderId): EntryMetrics | undefined {
+	return provider === "oc-go" ? row.oc : row.cc;
 }
 
-export const freeStyle =
-	(pick: (row: Row) => EntryMetrics | undefined) =>
+/**
+ * A provider's whole column set is tinted with its identity colour, so the two
+ * halves of the table read apart. An absent cell stays `dim` (dim = missing).
+ */
+export const tint =
+	(provider: ProviderId) =>
 	(row: Row): string | undefined =>
-		pick(row)?.free ? SGR.green : undefined;
+		entryOf(row, provider) ? PROVIDER_TINT[provider] : SGR.dim;
+
+/** The tint, except a free model goes green (favourable). */
+export const tintOrFree =
+	(provider: ProviderId) =>
+	(row: Row): string | undefined => {
+		const entry = entryOf(row, provider);
+		if (!entry) return SGR.dim;
+		return entry.free ? SGR.green : PROVIDER_TINT[provider];
+	};
+
+/**
+ * The cheaper side's cell in its provider's **bold** colour, the other side in
+ * the quiet tint — so the win reads from brightness, and an OC win (cyan) never
+ * looks like a CC win (magenta).
+ */
+export function sideStyle(side: "oc" | "cc") {
+	const provider: ProviderId = side === "oc" ? "oc-go" : "cc";
+	return (row: Row): string | undefined => {
+		if (!entryOf(row, provider)) return SGR.dim;
+		return cheaperSide(row) === side
+			? PROVIDER_COLOR[provider]
+			: PROVIDER_TINT[provider];
+	};
+}
+
+/** WIN column: the winning side's own colour; a tie or a one-sided row plain. */
+export const winnerStyle = (row: Row): string | undefined => {
+	const side = cheaperSide(row);
+	if (side === "tie" || side === "none") return undefined;
+	return PROVIDER_COLOR[side === "oc" ? "oc-go" : "cc"];
+};
 
 let costCuts: [number, number] = [30, 60];
 let valCuts: [number, number] = [40, 70];
