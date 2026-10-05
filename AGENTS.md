@@ -321,9 +321,15 @@ distinct keys.
 
 ## Ability scores
 
-- `sources/bench.ts` resolves benchmark scores; `--bench` picks the scheme. Default `cc` scrapes
-  CommandCode's `Intelligence` column from a fixed reference page (GOAT, since plan pages vary and
-  the Go grid has no Intelligence). Unscored models are filled from the keyless AA page scrape.
+- `data/bench/` (`index.ts`/`resolve.ts`) resolves benchmark scores; `--bench` picks the scheme.
+  Default `cc` (`constants/cli.ts`) scrapes CommandCode's `Intelligence` column from a fixed
+  reference page (GOAT, since plan pages vary and the Go grid has no Intelligence). Unscored models
+  are filled from AA.
+- **A key does not change the default scheme — `cc` stays `cc`.** `AA_API_KEY` / `--aa-key` only
+  (a) gates `--bench aa`, which throws without one, and (b) upgrades the fallback filler from the
+  keyless `aa-web` page scrape (partial) to the full paginated API. A `cc` primary still merges AA
+  values in as filler (usually, since CC's pages dropped `Tok/s`, leaving tps empty), but the
+  scheme and footer label remain `cc`. Only an explicit `--bench aa` makes AA lead.
 - `sources/artificialAnalysis.ts` parses the `{label, intelligenceIndex, detailsUrl}` dataset
   embedded in AA flight JSON. That page only embeds its chart top-N, so `aa-web` is **partial**;
   full coverage needs `AA_API_KEY` (`--bench aa`), which is **paginated** (`pagination.has_more`,
