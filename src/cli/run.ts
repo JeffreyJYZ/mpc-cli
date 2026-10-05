@@ -1,8 +1,8 @@
 #!/usr/bin/env bun
+import { COLUMN_HELP, COLUMN_IDS } from "~/constants/view.ts";
 import { loadUsage } from "~/data/usage/index.ts";
 import { renderUsage } from "~/view/layout/usage.ts";
 import {
-	COLUMN_IDS,
 	fitColumns,
 	renderCsv,
 	renderJson,
@@ -18,7 +18,6 @@ import { runCheck } from "./flow/check.ts";
 import { collect } from "./flow/collect.ts";
 import { resolveColumns, trimsToWidth } from "./flow/columns.ts";
 import { matches, sortRows } from "./flow/sort.ts";
-import { COLUMN_HELP } from "./options.ts";
 import { toOptions } from "./parse/map.ts";
 import { assertKnown, assertValues } from "./parse/validate.ts";
 

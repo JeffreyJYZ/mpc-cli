@@ -1,3 +1,5 @@
+import { INTERNAL, KNOWN, VALUED } from "~/constants/cli.ts";
+
 export type Bag = Record<string, unknown>;
 
 // `Number("")` is 0 and `Number(true)` is 1, so a blank or bare flag would be
@@ -28,62 +30,6 @@ export function share(name: string, value: unknown): number {
 	return n;
 }
 
-// cac registers `--help`/`--version` **and** their `-h`/`-v` aliases as separate
-// keys, so all four must be tolerated here; `run` then returns before any work.
-const INTERNAL = new Set(["--", "help", "h", "version", "v"]);
-
-const KNOWN = new Set([
-	"ccPlan",
-	"in",
-	"cache",
-	"out",
-	"reasoning",
-	"cacheWrite",
-	"shape",
-	"since",
-	"metric",
-	"model",
-	"only",
-	"fit",
-	"bench",
-	"benchWeight",
-	"tpsWeight",
-	"benchName",
-	"aaKey",
-	"fallback",
-	"refresh",
-	"ability",
-	"peak",
-	"asc",
-	"json",
-	"detail",
-	"minimal",
-	"medium",
-	"width",
-	"columns",
-	"color",
-	"check",
-	"config",
-	"printConfig",
-	"usage",
-	"usageFile",
-	"usageLog",
-	"usageDb",
-	"usageMonths",
-	"usageWindow",
-	"plugins",
-	"plugin",
-	"preset",
-	"presets",
-	"format",
-	"scale",
-	"valWeights",
-	"inheritSuffixes",
-	"window",
-	"costThresholds",
-	"valThresholds",
-]);
-
 /** Reject undeclared flags before mapping. */
 export function assertKnown(bag: Bag): void {
 	const extra = Object.keys(bag).filter(
@@ -95,50 +41,6 @@ export function assertKnown(bag: Bag): void {
 		);
 	}
 }
-
-/**
- * Flags cac declares with a required value (`--x <v>`). Given without one, cac
- * yields the boolean `true`, which `String(...)` would quietly turn into the
- * literal "true" and be used as the value.
- *
- * Two are deliberately absent: `config` (`--no-config` makes `true` its
- * *default*, so a bare `--config` cannot be told from "use the default path")
- * and `shape` (a bare `--shape` means `measured`, handled in `map.ts`).
- */
-const VALUED = new Set([
-	"ccPlan",
-	"in",
-	"cache",
-	"out",
-	"reasoning",
-	"cacheWrite",
-	"since",
-	"metric",
-	"model",
-	"only",
-	"width",
-	"columns",
-	"preset",
-	"bench",
-	"benchWeight",
-	"tpsWeight",
-	"valWeights",
-	"scale",
-	"inheritSuffixes",
-	"window",
-	"costThresholds",
-	"valThresholds",
-	"benchName",
-	"aaKey",
-	"format",
-	"color",
-	"plugin",
-	"usageFile",
-	"usageWindow",
-	"usageDb",
-	"usageLog",
-	"usageMonths",
-]);
 
 /** camelCase key -> the `--kebab-case` spelling the user typed. */
 function flag(key: string): string {

@@ -1,3 +1,4 @@
+import { DEFAULT_SCORE } from "~/constants/scoring.ts";
 import type {
 	CatalogEntry,
 	EntryMetrics,
@@ -7,12 +8,7 @@ import type {
 } from "~/types.ts";
 import { lookupAbility, lookupTps } from "./ability.ts";
 import { costPerRequest, windowRatios } from "./cost.ts";
-import {
-	assignIndex,
-	assignValueIndex,
-	DEFAULT_SCORE,
-	type ScoreConfig,
-} from "./score.ts";
+import { assignIndex, assignValueIndex, type ScoreConfig } from "./score.ts";
 
 export function buildMetrics(
 	entries: CatalogEntry[],

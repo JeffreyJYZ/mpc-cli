@@ -1,14 +1,4 @@
-/** Speed-variant suffixes that share the base model's weights. */
-const SPEED_SUFFIXES = ["ultraspeed", "highspeed", "fastx", "fast"];
-
-/**
- * Throughput a speed variant without its own figure borrows from its base.
- * Serving differs, so the base's number is not inherited verbatim, but leaving
- * the variant at `null` scores it at the neutral 0.5 — as if a "Fast" model
- * were mid-pack on speed, which is what made DeepSeek V4.1 Flash Fast rank
- * below its slower base. A speed tier is multiples of its base, so claim 2x.
- */
-export const SPEED_TPS_FACTOR = 2;
+import { SPEED_SUFFIXES, SPEED_TPS_FACTOR } from "~/constants/scoring.ts";
 
 /**
  * The base key a speed variant shares weights with, or undefined. FlashX is the

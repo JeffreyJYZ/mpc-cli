@@ -1,3 +1,4 @@
+import { CC_PLANS } from "~/constants/sources.ts";
 import {
 	extractCatalog,
 	fetchText,
@@ -5,7 +6,6 @@ import {
 	parseTables,
 } from "~/data/scrape/index.ts";
 import type { CatalogEntry } from "~/types.ts";
-import { CC_PLANS } from "./plans.ts";
 
 /** Per-model token rates + monthly credit allowance for a CommandCode plan. */
 export async function loadCcCatalog(planId: string): Promise<CatalogEntry[]> {

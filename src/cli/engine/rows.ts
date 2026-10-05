@@ -1,3 +1,4 @@
+import { DEFAULT_SCORE } from "~/constants/scoring.ts";
 import type {
 	CatalogEntry,
 	CompareRow,
@@ -7,7 +8,7 @@ import type {
 	Workload,
 } from "~/types.ts";
 import { buildMetrics } from "./index.ts";
-import { DEFAULT_SCORE, type ScoreConfig } from "./score.ts";
+import type { ScoreConfig } from "./score.ts";
 
 function indexByKey(
 	entries: CatalogEntry[],

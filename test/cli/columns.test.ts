@@ -5,7 +5,7 @@ import {
 	DETAIL_COLUMNS,
 	MEDIUM_COLUMNS,
 	MINIMAL_COLUMNS,
-} from "~/view/render.ts";
+} from "~/constants/view.ts";
 
 describe("resolveColumns", () => {
 	test("plain mpc is the full set, trimmed to the terminal", () => {

@@ -1,9 +1,10 @@
+import {
+	DOC_URL,
+	OC_MODELS_URL,
+	PRICE_PER_MONTH,
+} from "~/constants/sources.ts";
 import { extractCatalog, fetchText, parseTables } from "~/data/scrape/index.ts";
 import type { CatalogEntry, PlanInfo } from "~/types.ts";
-
-const DOC_URL = "https://opencode.ai/docs/go/";
-const MODELS_URL = "https://opencode.ai/zen/go/v1/models";
-const PRICE_PER_MONTH = 10;
 
 /** Per-model token rates + monthly usage limit for OpenCode Go. */
 export async function loadOcGoCatalog(peak = false): Promise<CatalogEntry[]> {
@@ -38,10 +39,10 @@ export function ocGoPlan(entries: CatalogEntry[]): PlanInfo {
 
 /** Live model ids from the Go endpoint, for drift detection. */
 export async function loadOcGoModelIds(): Promise<string[]> {
-	const res = await fetch(MODELS_URL, {
+	const res = await fetch(OC_MODELS_URL, {
 		headers: { "user-agent": "mpc/0.1 (+model price compare)" },
 	});
-	if (!res.ok) throw new Error(`GET ${MODELS_URL} -> ${res.status}`);
+	if (!res.ok) throw new Error(`GET ${OC_MODELS_URL} -> ${res.status}`);
 	const body = (await res.json()) as { data?: { id: string }[] };
 	return (body.data ?? []).map((m) => m.id);
 }

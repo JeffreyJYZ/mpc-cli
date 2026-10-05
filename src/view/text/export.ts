@@ -1,19 +1,7 @@
+import { CSV_HEADER } from "~/constants/view.ts";
 import type { PlanInfo } from "~/types.ts";
 import type { Row, Tally } from "~/view/schema.ts";
 import { fmtAbility, fmtCount, fmtTps, planTitle } from "./format.ts";
-
-const CSV_HEADER = [
-	"model",
-	"plan",
-	"allowance",
-	"req_month",
-	"usd_per_1k",
-	"usd_per_request",
-	"ability",
-	"tps",
-	"cost_index",
-	"val_index",
-];
 
 function csvCell(value: string | number): string {
 	const text = String(value);

@@ -1,11 +1,5 @@
 export type ProviderId = "oc-go" | "cc";
 
-/**
- * Marks a text-node boundary inside a scraped cell, so "$60" + "4x" stays two
- * tokens instead of collapsing into an ambiguous "$604x".
- */
-export const BOUNDARY = "\u0001";
-
 /** Per-1M-token rates in USD. */
 export interface ModelPricing {
 	input: number;

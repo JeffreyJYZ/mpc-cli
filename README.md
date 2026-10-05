@@ -243,7 +243,7 @@ splits volume/cache/output 50/25/25. Ability and `tps` come from the same source
 reads both CommandCode's `Intelligence` and `Tok/s` columns.
 Speed variants (`…Fast`, `…HighSpeed`, `…UltraSpeed`, `…FlashX`) inherit their base model's
 ability — same weights — and, when the benchmark publishes no throughput for the variant, the
-base's throughput ×2 (a speed tier is multiples of its base). Without that a Fast model was scored
+base's throughput ×`SPEED_TPS_FACTOR` (a speed tier is multiples of its base). Without that a Fast model was scored
 at the neutral rate, ranking it below its slower base. Unscored models show `ability —` and `VAL —`
 and are excluded from the ability normalisation range.
 

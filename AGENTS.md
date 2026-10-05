@@ -32,10 +32,15 @@ per model: cost per request, requests per month and per rolling window, and a vo
 
 ```
 src/index.ts                 entry
-src/types.ts                 shared types + BOUNDARY
+src/types.ts                 shared types
 src/keys.ts                  canonical model key + branding aliases
+src/constants/               module-level data constants: sources.ts (URLs, CC_PLANS, TTL),
+                             scoring.ts (PER_MILLION, SPEED_*), view.ts (frame, columns,
+                             LEGEND, CSV_HEADER, HEADERS, COLUMN_HELP), cli.ts (DEFAULTS
+                             pairs, flag sets, METRICS/FORMATS/TIERS/SETS), data.ts (BOUNDARY,
+                             ALIASES, deal regexes)
 src/cli/run.ts               run(): orchestration
-src/cli/options.ts           Options, DEFAULTS, validators, COLUMN_HELP
+src/cli/options.ts           Options, validators
 src/cli/parse/               cac.ts (declarations), map.ts (bag -> Options), fields.ts, validate.ts
 src/cli/flow/                collect.ts, sort.ts, check.ts, columns.ts
 src/cli/engine/              cost.ts, rows.ts, score.ts, ability.ts, scale.ts, index.ts
@@ -46,7 +51,7 @@ src/data/usage/              index.ts (loadUsage), parse.ts (UsageEntry), log.ts
                              logs.ts (session scan), opencodeDb.ts (opencode store, both
                              layouts), opencodeV2.ts (session_message reader)
 src/data/shape.ts            --shape: reqshape payload -> one workload for both sides (REQSHAPE_BIN)
-src/view/render.ts           renderText / renderJson + frame constants
+src/view/render.ts           renderText / renderJson
 src/view/schema.ts           view types + the column registry
 src/view/columns/            oc.ts, cc.ts, meta.ts
 src/view/layout/             segments.ts, fit.ts, table.ts
@@ -182,7 +187,7 @@ stores an **absolute** path — so moving a repo breaks it before any prune does
   unknown key fails there instead of on the next real run.
 - `resolveBag(argv)` is the real entry point (async, applies config + plugins); `parseArgs(argv)`
   is CLI-only and sync, for tests. `--columns help` still prints
-  `COLUMN_HELP` from `src/cli/options.ts`. `-h`/`-v` exit inside cac, so tests must not pass them.
+  `COLUMN_HELP` from `src/constants/view.ts`. `-h`/`-v` exit inside cac, so tests must not pass them.
 
 ## Rules
 
@@ -222,7 +227,7 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
 
 - **Text nodes concatenate.** A cell like `<del>$15</del> <strong>$60</strong><small>4x</small>`
   flattens to `$604x`. `parseTables`/`parseRoleRows` insert `BOUNDARY` (`\u0001`, from
-  `types.ts`) between text nodes, and `parseMoney` splits on it and takes the **last**
+  `constants/data.ts`) between text nodes, and `parseMoney` splits on it and takes the **last**
   segment carrying a price. Don't join text nodes without the marker.
 - **Biome forbids control chars in regex literals** (`noControlCharactersInRegex`). Never
   write `/\u0001/`. Use `str.split(BOUNDARY)` — not a regex.
@@ -260,7 +265,7 @@ Everything below was a real bug. Keep them in mind when touching `src/html.ts`.
 ## Model matching
 
 `normalizeKey` lowercases, drops the vendor prefix and parentheticals, strips punctuation,
-then applies `model-aliases.ts`. Add an alias whenever a model appears on one side only
+then applies the `ALIASES` table in `constants/data.ts`. Add an alias whenever a model appears on one side only
 because of branding (check `mpc --check`, which lists `only in OpenCode` / `only in CommandCode`). Speed
 variants (GLM-5.2 Fast, Kimi K2.7 Code HighSpeed, MiMo V2.6 Pro UltraSpeed) are intentionally
 distinct keys.
@@ -338,15 +343,16 @@ distinct keys.
 - `lookupAbility` makes speed variants (`...Fast`, `...HighSpeed`, `...UltraSpeed`) inherit the base
   model's ability, since the weights are the same. `...FlashX` is the exception: it is the faster tier
   of `...Flash`, so it inherits `...Flash`, not the base. `lookupTps` gives a variant with no
-  throughput of its own the base's ×`SPEED_TPS_FACTOR` (2): serving differs, but leaving it `null`
+  throughput of its own the base's ×`SPEED_TPS_FACTOR`: serving differs, but leaving it `null`
   scored a Fast model at the neutral 0.5 — as if it were mid-pack — which ranked DeepSeek V4.1
-  Flash Fast below its slower base. Add a suffix to `SPEED_SUFFIXES` in `ability.ts` only when the
+  Flash Fast below its slower base. Add a suffix to `SPEED_SUFFIXES` in `constants/scoring.ts` only when the
   weights really are shared.
 
 ## Rendering
 
-- `render.ts` owns the column registry (`COLUMNS`), the tiers (`MINIMAL_COLUMNS`, `MEDIUM_COLUMNS`,
-  `DETAIL_COLUMNS`) and the grouped table. Group banner = provider (`planTitle`), so column headers
+- `src/view/schema.ts` owns the column registry (`COLUMNS`) and the grouped table; the tiers
+  (`MINIMAL_COLUMNS`, `MEDIUM_COLUMNS`, `DETAIL_COLUMNS`) live in `src/constants/view.ts`.
+  Group banner = provider (`planTitle`), so column headers
   stay unprefixed.
 - Provider names: `providerName` (OpenCode/CommandCode, used in banners and the footer) and
   `shortProviderName` (OC/CC, used in the WIN column). Use these helpers, not literals.

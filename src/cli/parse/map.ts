@@ -7,6 +7,7 @@ import {
 	parseOnly,
 	type ScaleMode,
 } from "~/cli/options.ts";
+import { ARG_DEFAULTS } from "~/constants/cli.ts";
 import {
 	colorMode,
 	numbers,
@@ -19,27 +20,10 @@ import { assertKnown, assertValues, type Bag, int, share } from "./validate.ts";
 
 export type { Bag } from "./validate.ts";
 
-const DEFAULTS = {
-	ccPlan: "goat",
-	in: 800,
-	cache: 50_000,
-	out: 200,
-	reasoning: 0,
-	cacheWrite: 0,
-	shape: "off",
-	metric: "val",
-	only: "all",
-	bench: "cc",
-	benchWeight: 0.35,
-	tpsWeight: 0.1,
-	costThresholds: [30, 60],
-	valThresholds: [40, 70],
-	scale: "log",
-	format: "table",
-} as const;
-
 const pick = (bag: Bag, key: string): unknown =>
-	bag[key] === undefined ? DEFAULTS[key as keyof typeof DEFAULTS] : bag[key];
+	bag[key] === undefined
+		? ARG_DEFAULTS[key as keyof typeof ARG_DEFAULTS]
+		: bag[key];
 
 /** Reduce the merged bag (plugins < config < CLI) to Options. */
 export function toOptions(bag: Bag): Options {

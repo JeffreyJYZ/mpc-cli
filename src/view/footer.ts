@@ -1,3 +1,4 @@
+import { LEGEND } from "~/constants/view.ts";
 import type { CompareRow, PlanInfo, Workload } from "~/types.ts";
 import { tally } from "./layout/segments.ts";
 import type { ReportMeta } from "./schema.ts";
@@ -113,26 +114,3 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 		line(i === 0 ? "legend" : "", `${(key ?? "").padEnd(9)}${text}`);
 	});
 }
-
-export const LEGEND: [string, string][] = [
-	["rates", "token price per 1M tokens, in/out/cache"],
-	["allow", "monthly credits this plan gives the model"],
-	["5h wk mo", "requests the rolling 5-hour / weekly / monthly window buys"],
-	["$/1K", "your cost per 1,000 requests, at the plan's price"],
-	["req/$", "requests one dollar of subscription buys"],
-	[
-		"DEAL",
-		"active CommandCode promotion: -98%, Free, 2x usage (expiry line is in --json)",
-	],
-	[
-		"WIN",
-		"cheaper side: OC / CC / tie · 'x only' = only that provider has it",
-	],
-	["ability", "benchmark score for the model (source above)"],
-	["tps", "output tokens per second (source above)"],
-	["COST", "0-100 volume index: requests/mo, lower is better (no ability)"],
-	[
-		"VAL",
-		"0-100 ability-aware value: ability + speed + volume + cache + output",
-	],
-];

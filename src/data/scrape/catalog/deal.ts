@@ -1,10 +1,6 @@
+import { BADGE, BOUNDARY, ENDS } from "~/constants/data.ts";
 import { cellText } from "~/data/scrape/tables.ts";
-import { BOUNDARY, type Deal } from "~/types.ts";
-
-/** The chip text of a promotion: "-40%", "-98%", "Free", "2x usage". */
-const BADGE = /^-?\d+(?:\.\d+)?%$|^free$|^\d+x(?:\s+usage)?$/i;
-/** How CommandCode prints the deal's window beside the chip. */
-const ENDS = /^(?:ends|through|until)\b/i;
+import type { Deal } from "~/types.ts";
 
 /**
  * Read the promotion from a raw model name cell. `nameCell` deliberately keeps

@@ -70,18 +70,6 @@ const COLUMNS: Record<string, Column> = {
 	...CC_COLUMNS,
 };
 
-export const COLUMN_IDS = [
-	"model",
-	...Object.keys(OC_COLUMNS),
-	...Object.keys(CC_COLUMNS),
-	"win",
-	"cost",
-	"ability",
-	"tps",
-	"deal",
-	"val",
-];
-
 export function columns(ids: string[]): Column[] {
 	return ids.map((id) => {
 		const column = COLUMNS[id];

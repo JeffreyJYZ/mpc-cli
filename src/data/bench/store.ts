@@ -1,3 +1,4 @@
+import { CACHE_TTL_MS } from "~/constants/sources.ts";
 import { fetchText } from "~/data/scrape/index.ts";
 import { normalizeKey } from "~/keys.ts";
 
@@ -39,8 +40,6 @@ import { mkdir } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { loadAaWeb } from "~/data/sources/aa/web.ts";
-
-const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 function cachePath(): string {
 	const base = process.env.XDG_CACHE_HOME ?? join(homedir(), ".cache");

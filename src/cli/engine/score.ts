@@ -13,12 +13,6 @@ export interface ScoreConfig {
 	window?: [number, number];
 }
 
-export const DEFAULT_SCORE: ScoreConfig = {
-	abilityWeight: 0.35,
-	tpsWeight: 0.1,
-	scale: "log",
-};
-
 function normalise(
 	weights: number[] | undefined,
 	fallback: number[],

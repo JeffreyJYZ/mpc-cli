@@ -1,7 +1,6 @@
+import { AA_MODELS_URL } from "~/constants/sources.ts";
 import { fetchText } from "~/data/scrape/index.ts";
 import { normalizeKey } from "~/keys.ts";
-
-const MODELS_URL = "https://artificialanalysis.ai/models";
 
 /** A model label and its Artificial Analysis Intelligence Index. */
 interface Scored {
@@ -44,7 +43,7 @@ function toMap(scored: Scored[]): Map<string, number> {
  * catalog.
  */
 export async function loadAaWeb(): Promise<Map<string, number>> {
-	const html = await fetchText(MODELS_URL);
+	const html = await fetchText(AA_MODELS_URL);
 	return parseAaWeb(html);
 }
 

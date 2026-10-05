@@ -4,6 +4,7 @@ import {
 	lookupAbility,
 	lookupTps,
 } from "~/cli/engine/index.ts";
+import { SPEED_TPS_FACTOR } from "~/constants/scoring.ts";
 
 describe("costPerRequest", () => {
 	test("sums input, cache and output at per-million rates", () => {
@@ -86,11 +87,13 @@ describe("lookupTps", () => {
 		expect(lookupTps(tps, "glm53flash")).toBe(51);
 		expect(lookupTps(tps, "kimik27codehighspeed")).toBe(300);
 	});
-	test("a variant with no figure takes the base ×2", () => {
-		expect(lookupTps(tps, "deepseekv41flashfast")).toBe(432);
+	test("a variant with no figure scales the base by SPEED_TPS_FACTOR", () => {
+		expect(lookupTps(tps, "deepseekv41flashfast")).toBe(
+			216 * SPEED_TPS_FACTOR,
+		);
 	});
 	test("flashx multiplies the flash tier, not the base", () => {
-		expect(lookupTps(tps, "glm53flashx")).toBe(102);
+		expect(lookupTps(tps, "glm53flashx")).toBe(51 * SPEED_TPS_FACTOR);
 	});
 	test("no base figure means no throughput", () => {
 		expect(lookupTps(tps, "mimov26proultraspeed")).toBeNull();

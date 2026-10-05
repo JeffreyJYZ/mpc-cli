@@ -1,16 +1,10 @@
+import { PAGES, TPS_HEADER } from "~/constants/sources.ts";
 import {
 	extractNumericColumn,
 	fetchText,
 	parseTables,
 } from "~/data/scrape/index.ts";
 import { type BenchData, emptyData } from "./types.ts";
-
-// CommandCode only publishes Intelligence and Tok/s on the GOAT/Pro catalogs.
-const PAGES = [
-	"https://commandcode.ai/docs/plans/goat",
-	"https://commandcode.ai/docs/plans/pro",
-];
-const TPS_HEADER = /tok\s*\/?\s*s|tokens?\s*per\s*sec/i;
 
 export async function loadCc(): Promise<BenchData> {
 	const pages = await Promise.all(

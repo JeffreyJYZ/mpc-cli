@@ -1,4 +1,4 @@
-import { GAP } from "~/view/render.ts";
+import { GAP } from "~/constants/view.ts";
 import type { Column, GroupKey, Segment } from "~/view/schema.ts";
 import { paint } from "~/view/text/index.ts";
 

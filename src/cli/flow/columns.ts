@@ -1,18 +1,5 @@
 import type { Options } from "~/cli/options.ts";
-import {
-	DETAIL_COLUMNS,
-	MEDIUM_COLUMNS,
-	MINIMAL_COLUMNS,
-} from "~/view/render.ts";
-
-const TIERS = ["minimal", "medium", "detail"] as const;
-type Tier = (typeof TIERS)[number];
-
-const SETS: Record<Tier, string[]> = {
-	minimal: MINIMAL_COLUMNS,
-	medium: MEDIUM_COLUMNS,
-	detail: DETAIL_COLUMNS,
-};
+import { SETS, TIERS, type Tier } from "~/constants/cli.ts";
 
 /**
  * The tier the flags asked for. The default is the full set — `--fit` used to

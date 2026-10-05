@@ -1,6 +1,5 @@
+import { API_URL } from "~/constants/sources.ts";
 import { parseAaApi } from "./parse.ts";
-
-const API_URL = "https://artificialanalysis.ai/api/v2/data/llms/models";
 
 /** Full catalog via the Artificial Analysis API. Needs a key. Paginated. */
 export async function loadAaApi(

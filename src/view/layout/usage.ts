@@ -1,4 +1,5 @@
 import type { UsageProjection, UsageRow } from "~/cli/engine/project.ts";
+import { HEADERS } from "~/constants/view.ts";
 import type { PlanInfo, ProviderId } from "~/types.ts";
 import { fmtCount, fmtUsd, paint, planTitle } from "~/view/text/index.ts";
 
@@ -45,18 +46,6 @@ function cells(row: UsageRow): string[] {
 		row.cc?.overCap || row.oc?.overCap ? "over cap" : "",
 	];
 }
-
-const HEADERS = [
-	"MODEL",
-	"your req",
-	"your $",
-	"CC $/req",
-	"CC $/mo",
-	"OC $/req",
-	"OC $/mo",
-	"cheaper",
-	"flag",
-];
 
 export interface HeadToHead {
 	/** Rows priced on both sides — the only ones a head-to-head can use. */

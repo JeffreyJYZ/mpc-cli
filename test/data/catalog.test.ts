@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
+import { CC_PLANS } from "~/constants/sources.ts";
 import { dealIn, extractCatalog, parseTables } from "~/data/scrape/index.ts";
 import { fillDeals } from "~/data/sources/cc/catalog.ts";
-import { CC_PLANS } from "~/data/sources/cc/plans.ts";
 import type { CatalogEntry } from "~/types.ts";
 
 const FIXTURE = `

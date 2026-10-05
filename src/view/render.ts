@@ -7,7 +7,7 @@ import { paint, planTitle, setColor, setColorMode } from "./text/index.ts";
 
 export { fitColumns, tableWidth } from "./layout/fit.ts";
 export { tally } from "./layout/segments.ts";
-export { COLUMN_IDS, columns } from "./schema.ts";
+export { columns } from "./schema.ts";
 export { renderCsv, renderMarkdown } from "./text/export.ts";
 export {
 	fmtUsd,
@@ -52,51 +52,3 @@ export function renderJson(rows: CompareRow[], meta: ReportMeta): string {
 		2,
 	);
 }
-
-export const GAP = "  ";
-export const BAR = " │ ";
-export const BAR_RULE = "─┼─";
-
-/** Fewest columns that still answer "which model, how many requests, who wins". */
-export const MINIMAL_COLUMNS = ["model", "oc-reqmo", "cc-reqmo", "win", "val"];
-
-/** The everyday middle set: allowance plus the three rate views per side. */
-export const MEDIUM_COLUMNS = [
-	"model",
-	"oc-allow",
-	"oc-reqmo",
-	"oc-per1k",
-	"oc-reqdollar",
-	"cc-allow",
-	"cc-reqmo",
-	"cc-per1k",
-	"cc-reqdollar",
-	"win",
-	"cost",
-	"val",
-];
-
-/** Every column: the width-trimmed default, and `--detail` untrimmed. */
-export const DETAIL_COLUMNS = [
-	"model",
-	"oc-rates",
-	"oc-allow",
-	"oc-req5h",
-	"oc-reqwk",
-	"oc-reqmo",
-	"oc-per1k",
-	"oc-reqdollar",
-	"cc-rates",
-	"cc-allow",
-	"cc-req5h",
-	"cc-reqwk",
-	"cc-reqmo",
-	"cc-per1k",
-	"cc-reqdollar",
-	"ability",
-	"tps",
-	"deal",
-	"win",
-	"cost",
-	"val",
-];
