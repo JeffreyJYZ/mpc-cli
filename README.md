@@ -19,7 +19,8 @@ mpc --medium                          # allowances + the rate views per side
 mpc --detail                          # every column, untrimmed (for copy/paste or agents)
 mpc --model 'kimi|glm' --metric req   # filter, sort by requests/month
 mpc --in 2000 --cache 80000 --out 400 # override the fixed workload
-mpc --shape measured                  # price each side on its own measured shape
+mpc --shape measured                  # force reqshape even on a thin sample
+mpc --shape off                       # force the fixed workload (default: auto)
 mpc --bench aa-web                    # ability scores from Artificial Analysis
 mpc --json                            # machine-readable output
 mpc --check                           # validate live sources and report drift
@@ -127,7 +128,7 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--out <n>` | `200` | fixed output tokens per request |
 | `--reasoning <n>` | `0` | reasoning tokens per request, billed at the output rate on top of output |
 | `--cache-write <n>` | `0` | cache-write tokens per request; a model that publishes no cache-write rate is priced at its input rate |
-| `--shape <spec>` | `off` | `measured` = reqshape's combined per-req profile, applied to both sides, or a path to a saved `reqshape --format json` payload; `off` keeps the fixed workload |
+| `--shape <spec>` | `auto` | `auto` = reqshape's measured profile when it has ≥ `SHAPE_MIN_REQS` (500) reqs, else the fixed workload; `measured` forces reqshape; `off` keeps the fixed workload; a path reads a saved `reqshape --format json` payload |
 | `--since <date>` | — | measured shape: only requests on or after this date |
 | `--metric <name>` | `val` | sort by `val`, `cost`, `perreq`, `req` or `name`; `cost` and `perreq` ascend (lower better), `val`/`req` descend, `--asc` flips; rows with no `VAL` always sort last |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
@@ -215,9 +216,19 @@ Reasoning bills at the output rate *on top of* output — opencode's own provide
 
 ### Measuring instead of assuming
 
-`--shape measured` replaces the fixed workload with one profile, measured by **reqshape** from the traffic you actually ran against opencode's store. That single per-req shape prices **both** plans, so the comparison isolates price and allowance from traffic; the footer prints one workload line. (reqshape still reports per-side splits in its own output; mpc does not use them.)
+By default mpc asks **reqshape** for the shape of your real traffic, read from opencode's own
+store, and prices **both** plans on that single per-req profile, so the comparison isolates price
+and allowance from traffic and the footer prints one workload line. reqshape only leads once it has
+`SHAPE_MIN_REQS` (500) measured requests — below that the fixed 800/50K/200 workload is steadier.
+The footer's `shape` line says plainly which was used, the sample size behind the choice, and the
+alternative flag.
 
-`req/mo` then answers "how many of *my* requests fit this allowance" rather than "how many of a hypothetical 800/50K/200 ones do". Save a payload once with `reqshape --format json > shape.json` and reuse it with `--shape shape.json`; `--since <date>` narrows the window. A missing `reqshape` binary (`REQSHAPE_BIN` overrides it) is a warning, not a failure: mpc keeps the fixed workload and carries on.
+`req/mo` then answers "how many of *my* requests fit this allowance" rather than "how many of a
+hypothetical 800/50K/200 ones do". Force the fixed workload with `--shape off`, force reqshape
+regardless of sample with `--shape measured`, or save a payload once with
+`reqshape --format json > shape.json` and reuse it with `--shape shape.json`; `--since <date>`
+narrows the window. A missing `reqshape` binary (`REQSHAPE_BIN` overrides it) is a warning, not a
+failure: mpc keeps the fixed workload and carries on.
 
 The **index** behind `COST` is a 0-100 volume score across every model-provider entry:
 

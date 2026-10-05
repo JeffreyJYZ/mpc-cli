@@ -55,6 +55,8 @@ export interface ReportMeta {
 	/** Ability source label, e.g. "CommandCode Intelligence". */
 	abilityLabel?: string;
 	abilityNote?: string;
+	/** Whether reqshape was used for the workload, and the alternative flags. */
+	shapeNote?: string;
 	/** Override for the rolling-window ratios, five-hour then weekly. */
 	window?: [number, number];
 }

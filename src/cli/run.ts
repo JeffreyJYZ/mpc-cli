@@ -70,6 +70,7 @@ export async function run(argv: string[]): Promise<number> {
 		rows,
 		ability,
 		workloads,
+		shapeNote,
 	} = await collect(options);
 	if (options.check) {
 		return runCheck(options, ocEntries, ccEntries, rows, ability);
@@ -121,6 +122,7 @@ export async function run(argv: string[]): Promise<number> {
 			? undefined
 			: (options.benchName ?? ability.label),
 		abilityNote: options.noAbility ? undefined : ability.note,
+		shapeNote,
 		window: options.window,
 	};
 

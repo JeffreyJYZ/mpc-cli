@@ -8,6 +8,7 @@ import {
 	type ScaleMode,
 } from "~/cli/options.ts";
 import { ARG_DEFAULTS, BENCH_DEFAULT } from "~/constants/cli.ts";
+import { SHAPE_MEASURED } from "~/constants/shape.ts";
 import {
 	colorMode,
 	numbers,
@@ -46,9 +47,9 @@ export function toOptions(bag: Bag): Options {
 			reasoning: int("reasoning", pick(bag, "reasoning")),
 			cacheWrite: int("cache-write", pick(bag, "cacheWrite")),
 		},
-		// A bare `--shape` means "measure it" (`cac` yields `true`); the default
-		// with no flag at all is `off`.
-		shape: bag.shape === true ? "measured" : String(pick(bag, "shape")),
+		// A bare `--shape` means "measure it" (`cac` yields `true`); no flag at
+		// all leaves the default (`auto`, which trusts reqshape when it has data).
+		shape: bag.shape === true ? SHAPE_MEASURED : String(pick(bag, "shape")),
 		since: bag.since === undefined ? undefined : String(bag.since),
 		metric: parseMetric(String(pick(bag, "metric"))) as Metric,
 		model: bag.model === undefined ? undefined : String(bag.model),

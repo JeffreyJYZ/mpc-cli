@@ -20,7 +20,7 @@ export function parseFlags(argv: string[]): Bag {
 		.option("--cache-write <n>", "cache-write tokens per request")
 		.option(
 			"--shape <spec>",
-			"measured | <file> | off: per-side shape from reqshape (bare = measured)",
+			"auto | measured | <file> | off: reqshape shape (auto = measured with enough data)",
 		)
 		.option(
 			"--since <date>",

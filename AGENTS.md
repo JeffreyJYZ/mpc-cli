@@ -12,7 +12,7 @@ architecture, gotchas and contributor rules here.
 | --- | --- |
 | `cmduse` (Rust CLI, `cli/`) | shelled out for `plans --json` (plan price/windows), `-1 --json` (account totals, coverage), `model --json --since <ISO>` (windowed per-model local usage) |
 | `@jeffreyjyz/opencode-command-code` (`opencode/`) | consumes `mpc --json` for its session sidebar (allowance, rates, Intelligence, Tok/s per model) |
-| `reqshape` (`~/dev/cmdcode-tools/reqshape`) | `--shape measured` runs `reqshape --format json` and reads its combined per-req `profile` as one workload for both plans (`REQSHAPE_BIN` overrides the binary) |
+| `reqshape` (`~/dev/cmdcode-tools/reqshape`) | `--shape auto` (default) / `measured` runs `reqshape --format json` and reads its combined per-req `profile` as one workload for both plans (`REQSHAPE_BIN` overrides the binary); reqshape in turn runs `mpc --json --shape off` |
 
 Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and
 `mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps,deal},oc:{...}}`, which the plugin's sidebar
@@ -303,21 +303,32 @@ distinct keys.
 - A cache-write rate the model does not publish is priced at its **input** rate, never free
   (`pricing.cacheWrite ?? pricing.input`) — same rule reqshape documents.
 - `buildMetrics` / `buildRows` take `Record<ProviderId, Workload>`, not one workload.
-  `collect` resolves both sides to the **same** measured workload (`measured ?? options.workload`),
+  `collect` resolves both sides to the **same** workload (`shape.workload ?? options.workload`),
   so the comparison isolates price and allowance from which traffic went where.
-- `--shape measured` shells out to `reqshape --format json [--since <date>]` (`REQSHAPE_BIN`
-  overrides) and maps reqshape's **combined per-req profile** — the top-level `profile`, or
-  `shape.perReq` on an older payload — onto one `Workload`, rounding the means, then prices both
-  plans on it: a footer line and a priced workload must show the same digits, and one shape keeps
-  `req/mo` comparable. It is still measured from **one source**, opencode's own store (reqshape
-  splits it by `model.providerID`, but mpc no longer reads the per-side split). `--shape <path>`
-  reads a saved payload.
-- `--shape` with no value means `measured` (you asked to measure); no `--shape` at all means `off`.
-  `--shape <file>` reads a saved payload.
-- A missing binary or a payload with no combined profile is a stderr warning and a fallback to the
-  fixed workload, never a failed run.
-- The footer prints **one** workload line, because both sides now share a shape; the second line
-  remains for the case where `ReportMeta.workloads` sides ever diverge.
+- `--shape` is `data/shape.ts`'s state machine over the `constants/shape.ts` specs:
+  - `auto` (**the default**): run reqshape, use its profile only when `shape.reqs >=`
+    `SHAPE_MIN_REQS` (both named in `constants/shape.ts`), else the fixed workload.
+  - `measured`: force reqshape regardless of sample (bare `--shape` maps to this in `map.ts`).
+  - `off`: fixed workload (also `""`).
+  - anything else: a path to a saved `reqshape --format json` payload.
+- The profile is reqshape's **combined per-req vector** — the top-level `profile`, or
+  `shape.perReq` on an older payload — rounded to one `Workload` for **both** plans (`collect`
+  prices both sides on `shape.workload ?? options.workload`), so the footer line and the table
+  show the same digits and `req/mo` stays comparable. It is measured from **one source**,
+  opencode's own store; mpc no longer reads reqshape's per-side split.
+- `loadShapes` returns `{ workload?, note }` and never throws: a missing binary, an unreadable
+  file or a bad payload degrades to the fixed workload. The `note` is the footer's `shape` line —
+  it must say plainly **whether reqshape was used**, the sample behind `auto`'s decision, and the
+  alternative flag (`--shape measured` / `--shape off`).
+- **A consumer that only wants mpc's catalog must pass `--shape off`.** `auto` shells out to
+  reqshape, and reqshape itself runs `mpc --json`, so a bare `mpc --json` from a sibling recurses
+  (mpc -> reqshape -> mpc -> ...). reqshape's `loadMpc` and the opencode plugin's sidebar both pass
+  `--shape off` for this reason. As a backstop, `loadShapes` sets `SHAPE_GUARD_ENV`
+  (`MPC_SHAPE_RESOLVING`) on the reqshape child; a nested mpc that sees it keeps the fixed workload,
+  so the cycle breaks even for a caller that never passes the flag (a published sibling on the old
+  default).
+- The footer prints the `shape` line after **one** workload line (both sides share a shape); the
+  second workload line remains for the case where `ReportMeta.workloads` sides ever diverge.
 
 ## Ability scores
 

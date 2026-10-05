@@ -12,16 +12,20 @@ export function cmduseBin(): string {
 /**
  * Run a binary with args. Never throws: a missing or failing binary comes back
  * as `ok: false` so callers can pick a fallback rather than crash the report.
+ * `extraEnv` is merged over the environment for this child (and inherited by
+ * anything it spawns).
  */
 export async function runBinary(
 	cmd: string,
 	args: string[],
+	extraEnv?: Record<string, string>,
 ): Promise<RunResult> {
 	let proc: Bun.Subprocess<"pipe", "pipe", "pipe">;
 	try {
 		proc = Bun.spawn([cmd, ...args], {
 			stdout: "pipe",
 			stderr: "pipe",
+			env: extraEnv ? { ...process.env, ...extraEnv } : undefined,
 		});
 	} catch (error) {
 		return { ok: false, stdout: "", stderr: String(error) };

@@ -81,6 +81,7 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 			`${shortProviderName("cc")} ${shapeText(ccWorkload)} tokens per request`,
 		);
 	}
+	if (meta.shapeNote) line("shape", meta.shapeNote);
 	console.log(
 		`${dim("plans     ")}${paint("1;36", (ocBlock?.title ?? "").padEnd(planWidth))}  ${dim(ocBlock?.rest ?? "")}`,
 	);

@@ -20,7 +20,7 @@ function scoreConfig(options: Options): ScoreConfig {
 }
 
 export async function collect(options: Options) {
-	const [ocEntries, ccEntries, ccPlanInfo, measured] = await Promise.all([
+	const [ocEntries, ccEntries, ccPlanInfo, shape] = await Promise.all([
 		loadOcGoCatalog(options.peak),
 		loadCcCatalog(options.ccPlan),
 		loadCcPlan(options.ccPlan),
@@ -29,9 +29,10 @@ export async function collect(options: Options) {
 	// A measured shape prices both sides on the same request, so the comparison
 	// isolates price and allowance from traffic; otherwise both fall back to the
 	// single documented fixed workload.
+	const workload = shape.workload ?? options.workload;
 	const workloads: Record<ProviderId, Workload> = {
-		"oc-go": measured ?? options.workload,
-		cc: measured ?? options.workload,
+		"oc-go": workload,
+		cc: workload,
 	};
 	// Ability is loaded after the catalogs so fills can be limited to our rows.
 	const keys = new Set(
@@ -70,5 +71,6 @@ export async function collect(options: Options) {
 		rows,
 		ability,
 		workloads,
+		shapeNote: shape.note,
 	};
 }

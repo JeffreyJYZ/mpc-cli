@@ -5,6 +5,7 @@ import { join } from "node:path";
 import { resolveBag } from "~/cli/config.ts";
 import { parseArgs, run } from "~/cli/run.ts";
 import { BENCH_DEFAULT } from "~/constants/cli.ts";
+import { SHAPE_AUTO, SHAPE_MEASURED, SHAPE_OFF } from "~/constants/shape.ts";
 
 describe("parseArgs", () => {
 	test("defaults", () => {
@@ -139,11 +140,11 @@ describe("parseArgs", () => {
 		);
 	});
 
-	test("--shape defaults to off, and bare means measured", () => {
-		expect(parseArgs([]).shape).toBe("off");
-		expect(parseArgs(["--shape"]).shape).toBe("measured");
-		expect(parseArgs(["--shape", "off"]).shape).toBe("off");
-		expect(parseArgs(["--shape", "measured"]).shape).toBe("measured");
+	test("--shape defaults to auto, and bare means measured", () => {
+		expect(parseArgs([]).shape).toBe(SHAPE_AUTO);
+		expect(parseArgs(["--shape"]).shape).toBe(SHAPE_MEASURED);
+		expect(parseArgs(["--shape", SHAPE_OFF]).shape).toBe(SHAPE_OFF);
+		expect(parseArgs(["--shape", "measured"]).shape).toBe(SHAPE_MEASURED);
 		expect(parseArgs(["--shape", "/tmp/x.json"]).shape).toBe("/tmp/x.json");
 	});
 

@@ -1,4 +1,5 @@
 import type { Format, Metric } from "~/cli/options.ts";
+import { SHAPE_AUTO } from "~/constants/shape.ts";
 import {
 	DETAIL_COLUMNS,
 	MEDIUM_COLUMNS,
@@ -27,7 +28,7 @@ export const ARG_DEFAULTS = {
 	out: 200,
 	reasoning: 0,
 	cacheWrite: 0,
-	shape: "off",
+	shape: SHAPE_AUTO,
 	metric: "val",
 	only: "all",
 	bench: BENCH_DEFAULT.keyless,
