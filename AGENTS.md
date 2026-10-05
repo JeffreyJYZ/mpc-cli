@@ -337,8 +337,11 @@ distinct keys.
   Unscored models get `valueIndex = null`; never coerce a missing score to zero.
 - `lookupAbility` makes speed variants (`...Fast`, `...HighSpeed`, `...UltraSpeed`) inherit the base
   model's ability, since the weights are the same. `...FlashX` is the exception: it is the faster tier
-  of `...Flash`, so it inherits `...Flash`, not the base. Throughput is never inherited — serving
-  differs. Add to `SPEED_SUFFIXES` in `metrics.ts` only when the weights really are shared.
+  of `...Flash`, so it inherits `...Flash`, not the base. `lookupTps` gives a variant with no
+  throughput of its own the base's ×`SPEED_TPS_FACTOR` (2): serving differs, but leaving it `null`
+  scored a Fast model at the neutral 0.5 — as if it were mid-pack — which ranked DeepSeek V4.1
+  Flash Fast below its slower base. Add a suffix to `SPEED_SUFFIXES` in `ability.ts` only when the
+  weights really are shared.
 
 ## Rendering
 

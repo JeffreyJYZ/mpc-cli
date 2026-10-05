@@ -1,5 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import { costPerRequest, lookupAbility } from "~/cli/engine/index.ts";
+import {
+	costPerRequest,
+	lookupAbility,
+	lookupTps,
+} from "~/cli/engine/index.ts";
 
 describe("costPerRequest", () => {
 	test("sums input, cache and output at per-million rates", () => {
@@ -69,5 +73,26 @@ describe("lookupAbility", () => {
 	});
 	test("no base means no score", () => {
 		expect(lookupAbility(scores, "mimov26proultraspeed")).toBeNull();
+	});
+});
+
+describe("lookupTps", () => {
+	const tps = new Map([
+		["glm53flash", 51],
+		["deepseekv41flash", 216],
+		["kimik27codehighspeed", 300],
+	]);
+	test("an exact figure wins", () => {
+		expect(lookupTps(tps, "glm53flash")).toBe(51);
+		expect(lookupTps(tps, "kimik27codehighspeed")).toBe(300);
+	});
+	test("a variant with no figure takes the base ×2", () => {
+		expect(lookupTps(tps, "deepseekv41flashfast")).toBe(432);
+	});
+	test("flashx multiplies the flash tier, not the base", () => {
+		expect(lookupTps(tps, "glm53flashx")).toBe(102);
+	});
+	test("no base figure means no throughput", () => {
+		expect(lookupTps(tps, "mimov26proultraspeed")).toBeNull();
 	});
 });

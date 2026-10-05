@@ -5,7 +5,7 @@ import type {
 	ProviderId,
 	Workload,
 } from "~/types.ts";
-import { lookupAbility } from "./ability.ts";
+import { lookupAbility, lookupTps } from "./ability.ts";
 import { costPerRequest, windowRatios } from "./cost.ts";
 import {
 	assignIndex,
@@ -45,7 +45,7 @@ export function buildMetrics(
 			payPerRequest: free ? 0 : (plan.price * cost) / entry.allowance,
 			multiplier: plan.price > 0 ? entry.allowance / plan.price : 0,
 			ability: lookupAbility(ability, entry.key, config.inheritSuffixes),
-			tps: tps.get(entry.key) ?? null,
+			tps: lookupTps(tps, entry.key, config.inheritSuffixes),
 			deal: entry.deal,
 			index: 0,
 			valueIndex: null,
@@ -57,7 +57,7 @@ export function buildMetrics(
 	return metrics;
 }
 
-export { lookupAbility } from "./ability.ts";
+export { lookupAbility, lookupTps } from "./ability.ts";
 export { costPerRequest, windowRatios } from "./cost.ts";
 export { buildRows } from "./rows.ts";
 export { assignIndex, assignValueIndex } from "./score.ts";
