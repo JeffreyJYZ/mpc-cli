@@ -12,7 +12,7 @@ architecture, gotchas and contributor rules here.
 | --- | --- |
 | `cmduse` (Rust CLI, `cli/`) | shelled out for `plans --json` (plan price/windows), `-1 --json` (account totals, coverage), `model --json --since <ISO>` (windowed per-model local usage) |
 | `@jeffreyjyz/opencode-command-code` (`opencode/`) | consumes `mpc --json` for its session sidebar (allowance, rates, Intelligence, Tok/s per model) |
-| `reqshape` (`~/dev/cmdcode-tools/reqshape`) | `--shape measured` runs `reqshape --format json` and reads `sides.{oc,cc}.profile` as one workload per side (`REQSHAPE_BIN` overrides the binary) |
+| `reqshape` (`~/dev/cmdcode-tools/reqshape`) | `--shape measured` runs `reqshape --format json` and reads its combined per-req `profile` as one workload for both plans (`REQSHAPE_BIN` overrides the binary) |
 
 Contracts that must not drift silently: cmduse's JSON shapes (`plans`, `-1`, `model`) and
 `mpc --json`'s `rows[].{key,name,cc:{allowance,pricing,ability,tps,deal},oc:{...}}`, which the plugin's sidebar
@@ -45,7 +45,7 @@ src/data/scrape/             index.ts, tables.ts, roleRows.ts; catalog/ (catalog
 src/data/usage/              index.ts (loadUsage), parse.ts (UsageEntry), log.ts (JSONL + merge),
                              logs.ts (session scan), opencodeDb.ts (opencode store, both
                              layouts), opencodeV2.ts (session_message reader)
-src/data/shape.ts            --shape: reqshape payload -> one workload per side (REQSHAPE_BIN)
+src/data/shape.ts            --shape: reqshape payload -> one workload for both sides (REQSHAPE_BIN)
 src/view/render.ts           renderText / renderJson + frame constants
 src/view/schema.ts           view types + the column registry
 src/view/columns/            oc.ts, cc.ts, meta.ts
@@ -298,20 +298,21 @@ distinct keys.
 - A cache-write rate the model does not publish is priced at its **input** rate, never free
   (`pricing.cacheWrite ?? pricing.input`) — same rule reqshape documents.
 - `buildMetrics` / `buildRows` take `Record<ProviderId, Workload>`, not one workload.
-  `collect` resolves it as `shapes.<side> ?? options.workload`, so each side is priced on its own
-  traffic while an unmeasured run stays a single fixed workload.
+  `collect` resolves both sides to the **same** measured workload (`measured ?? options.workload`),
+  so the comparison isolates price and allowance from which traffic went where.
 - `--shape measured` shells out to `reqshape --format json [--since <date>]` (`REQSHAPE_BIN`
-  overrides) and maps `sides.{oc,cc}.profile` onto a `Workload`, rounding the means — a footer
-  line and a priced workload must show the same digits. `--shape <path>` reads a saved payload.
-  Both sides come from **one source**: opencode's own store, split by `model.providerID`
-  (`command-code*`/`commandcode` → cc, `opencode*` → oc) inside reqshape. cmduse's log is far too
-  thin (173 requests / 4 models) to be the CommandCode side.
+  overrides) and maps reqshape's **combined per-req profile** — the top-level `profile`, or
+  `shape.perReq` on an older payload — onto one `Workload`, rounding the means, then prices both
+  plans on it: a footer line and a priced workload must show the same digits, and one shape keeps
+  `req/mo` comparable. It is still measured from **one source**, opencode's own store (reqshape
+  splits it by `model.providerID`, but mpc no longer reads the per-side split). `--shape <path>`
+  reads a saved payload.
 - `--shape` with no value means `measured` (you asked to measure); no `--shape` at all means `off`.
   `--shape <file>` reads a saved payload.
-- A missing binary or a payload with no `sides` is a stderr warning and a fallback to the fixed
-  workload, never a failed run.
-- The footer prints **two** workload lines when the sides differ (`OC … tokens` / `CC …`), so it
-  never claims one shape when two were priced.
+- A missing binary or a payload with no combined profile is a stderr warning and a fallback to the
+  fixed workload, never a failed run.
+- The footer prints **one** workload line, because both sides now share a shape; the second line
+  remains for the case where `ReportMeta.workloads` sides ever diverge.
 
 ## Ability scores
 

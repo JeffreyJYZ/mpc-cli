@@ -127,7 +127,7 @@ one, given `{ env, cwd, configDir }`). JS plugins run code — same trust as you
 | `--out <n>` | `200` | fixed output tokens per request |
 | `--reasoning <n>` | `0` | reasoning tokens per request, billed at the output rate on top of output |
 | `--cache-write <n>` | `0` | cache-write tokens per request; a model that publishes no cache-write rate is priced at its input rate |
-| `--shape <spec>` | `off` | `measured` = one profile per side from `reqshape`, or a path to a saved `reqshape --format json` payload; `off` keeps the fixed workload |
+| `--shape <spec>` | `off` | `measured` = reqshape's combined per-req profile, applied to both sides, or a path to a saved `reqshape --format json` payload; `off` keeps the fixed workload |
 | `--since <date>` | — | measured shape: only requests on or after this date |
 | `--metric <name>` | `val` | sort by `val`, `cost`, `perreq`, `req` or `name`; `cost` and `perreq` ascend (lower better), `val`/`req` descend, `--asc` flips; rows with no `VAL` always sort last |
 | `--model <re>` | — | filter rows by name (regex, substring fallback) |
@@ -215,7 +215,7 @@ Reasoning bills at the output rate *on top of* output — opencode's own provide
 
 ### Measuring instead of assuming
 
-`--shape measured` replaces the fixed workload with one profile per side, measured by **reqshape** from the traffic you actually ran against opencode's store: OpenCode Go's rows priced on what went to `opencode*`, CommandCode's on what went to `command-code*`. Because the two sides serve very different requests, the footer prints one workload line per side when they differ.
+`--shape measured` replaces the fixed workload with one profile, measured by **reqshape** from the traffic you actually ran against opencode's store. That single per-req shape prices **both** plans, so the comparison isolates price and allowance from traffic; the footer prints one workload line. (reqshape still reports per-side splits in its own output; mpc does not use them.)
 
 `req/mo` then answers "how many of *my* requests fit this allowance" rather than "how many of a hypothetical 800/50K/200 ones do". Save a payload once with `reqshape --format json > shape.json` and reuse it with `--shape shape.json`; `--since <date>` narrows the window. A missing `reqshape` binary (`REQSHAPE_BIN` overrides it) is a warning, not a failure: mpc keeps the fixed workload and carries on.
 

@@ -1,65 +1,51 @@
 import { describe, expect, test } from "bun:test";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { loadShapes, sidesOf } from "~/data/shape.ts";
+import { loadShapes, workloadOf } from "~/data/shape.ts";
 
-const OC = {
+const PROFILE = {
 	input: 7_151,
 	output: 296,
 	reasoning: 18,
 	cacheRead: 135_020,
 	cacheWrite: 16,
 };
-const CC = {
-	input: 3_680,
-	output: 336,
-	reasoning: 307,
-	cacheRead: 397_217,
-	cacheWrite: 0,
-};
 
-function payload(sides: unknown): string {
-	return JSON.stringify({ weight: "turn", sides, models: [] });
+function payload(profile: unknown): string {
+	return JSON.stringify({ weight: "turn", profile, models: [] });
 }
 
-describe("sidesOf", () => {
-	test("each side becomes a workload of its own", () => {
+describe("workloadOf", () => {
+	test("reads the combined per-req profile as one workload", () => {
+		expect(workloadOf(payload(PROFILE))).toEqual(PROFILE);
+	});
+
+	test("falls back to shape.perReq for an older payload", () => {
 		expect(
-			sidesOf(
-				payload({
-					oc: { reqs: 3_676, profile: OC },
-					cc: { reqs: 3_357, profile: CC },
-				}),
-			),
-		).toEqual({ oc: OC, cc: CC });
+			workloadOf(JSON.stringify({ shape: { perReq: PROFILE } })),
+		).toEqual(PROFILE);
 	});
 
-	test("a side nobody measured is absent, not zero-filled", () => {
-		expect(sidesOf(payload({ cc: { reqs: 10, profile: CC } }))).toEqual({
-			cc: CC,
-		});
-	});
-
-	test("an older reqshape without per-side profiles yields nothing", () => {
-		expect(sidesOf("{}")).toEqual({});
+	test("a payload with no profile yields nothing", () => {
+		expect(workloadOf("{}")).toBeUndefined();
 	});
 });
 
 describe("loadShapes", () => {
 	test("off is the default and shells out to nobody", async () => {
-		expect(await loadShapes("off")).toEqual({});
-		expect(await loadShapes("")).toEqual({});
+		expect(await loadShapes("off")).toBeUndefined();
+		expect(await loadShapes("")).toBeUndefined();
 	});
 
 	test("a saved payload is read from disk", async () => {
 		const path = join(tmpdir(), `mpc-shape-${Date.now()}.json`);
-		await Bun.write(path, payload({ oc: { reqs: 1, profile: OC } }));
-		expect(await loadShapes(path)).toEqual({ oc: OC });
+		await Bun.write(path, payload(PROFILE));
+		expect(await loadShapes(path)).toEqual(PROFILE);
 	});
 
 	test("a missing file falls back rather than throwing", async () => {
 		expect(
 			await loadShapes(join(tmpdir(), "mpc-no-such-shape.json")),
-		).toEqual({});
+		).toBeUndefined();
 	});
 });

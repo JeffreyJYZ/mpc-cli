@@ -65,8 +65,8 @@ export function footer(rows: CompareRow[], meta: ReportMeta): void {
 	const line = (label: string, text: string): void =>
 		console.log(`${dim(label.padEnd(10))}${dim(text)}`);
 
-	// With a measured shape the two sides are priced on different traffic, so
-	// saying one workload would be a lie; print one line per side then.
+	// A measured shape is one profile for both plans, so this reads as a single
+	// line; a second is printed only if the two sides ever diverge.
 	const ocWorkload = meta.workloads["oc-go"];
 	const ccWorkload = meta.workloads.cc;
 	const perSide = JSON.stringify(ocWorkload) !== JSON.stringify(ccWorkload);
