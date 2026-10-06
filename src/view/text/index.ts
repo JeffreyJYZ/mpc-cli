@@ -32,6 +32,7 @@ export {
 	shortProviderName,
 } from "./format.ts";
 export {
+	abilityStyle,
 	bestCost,
 	bestIndex,
 	bestValue,
@@ -43,6 +44,7 @@ export {
 	freeOc,
 	ocRates,
 	pricingTriple,
+	setAbilityRange,
 	sideStyle,
 	tint,
 	tintOrFree,

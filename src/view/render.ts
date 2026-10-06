@@ -5,6 +5,7 @@ import { tally } from "./layout/segments.ts";
 import { printTable } from "./layout/table.ts";
 import type { ReportMeta } from "./schema.ts";
 import { paint, planTitle, setColor, setColorMode } from "./text/index.ts";
+import { setAbilityRange, setThresholds } from "./text/styles.ts";
 
 export { fitColumns, tableWidth } from "./layout/fit.ts";
 export { tally } from "./layout/segments.ts";
@@ -16,8 +17,7 @@ export {
 	providerName,
 	shortProviderName,
 } from "./text/index.ts";
-export { setThresholds } from "./text/styles.ts";
-export { setColor, setColorMode };
+export { setAbilityRange, setColor, setColorMode, setThresholds };
 
 export function renderText(
 	rows: CompareRow[],
@@ -25,6 +25,13 @@ export function renderText(
 	columnIds: string[],
 	dropped: string[] = [],
 ): void {
+	// The ability column ranks across the rows on screen, like COST/VAL.
+	const abilities = rows
+		.map((row) => row.oc?.ability ?? row.cc?.ability)
+		.filter((value): value is number => typeof value === "number");
+	if (abilities.length > 0) {
+		setAbilityRange(Math.min(...abilities), Math.max(...abilities));
+	}
 	printTable(rows, columnIds, {
 		oc: { title: planTitle(meta.ocPlan), color: PROVIDER_COLOR["oc-go"] },
 		cc: { title: planTitle(meta.ccPlan), color: PROVIDER_COLOR.cc },

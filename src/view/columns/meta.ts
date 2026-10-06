@@ -15,7 +15,7 @@ export const META_COLUMNS: Record<string, Column> = {
 		header: "ability",
 		value: f.fmtAbility,
 		right: true,
-		style: (r) => f.enabledStyle(r.oc?.ability ?? r.cc?.ability ?? null),
+		style: f.abilityStyle,
 	},
 	tps: {
 		header: "tps",

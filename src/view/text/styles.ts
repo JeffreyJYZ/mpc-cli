@@ -125,3 +125,27 @@ export const valueStyle = (row: Row): string | undefined => {
 
 export const enabledStyle = (value: number | null): string | undefined =>
 	value === null ? SGR.dim : undefined;
+
+let abilityRange: [number, number] | null = null;
+
+/** The displayed ability range, so the column can rank like COST/VAL. */
+export function setAbilityRange(min: number, max: number): void {
+	abilityRange = [min, max];
+}
+
+/**
+ * Ability is an absolute benchmark index with a narrow band, so an absolute
+ * scale would be all-red; rank it across the table (min-max) and reuse the VAL
+ * cut-offs, exactly as COST/VAL are coloured.
+ */
+export const abilityStyle = (row: Row): string | undefined => {
+	const ability = row.oc?.ability ?? row.cc?.ability ?? null;
+	if (ability === null) return SGR.dim;
+	if (!abilityRange || abilityRange[1] <= abilityRange[0]) return undefined;
+	const score =
+		(100 * (ability - abilityRange[0])) /
+		(abilityRange[1] - abilityRange[0]);
+	if (score >= valCuts[1]) return SGR.green;
+	if (score >= valCuts[0]) return SGR.yellow;
+	return SGR.red;
+};
