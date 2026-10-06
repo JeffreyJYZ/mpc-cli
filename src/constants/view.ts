@@ -11,6 +11,7 @@ import { OC_COLUMNS } from "~/view/columns/oc.ts";
 export const SGR = {
 	bold: "1",
 	dim: "2",
+	red: "31",
 	green: "32",
 	yellow: "33",
 } as const;

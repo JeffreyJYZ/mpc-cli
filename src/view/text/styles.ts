@@ -104,15 +104,14 @@ export function setThresholds(
 }
 
 /**
- * COST is inverted (0 = cheapest/best), so colour the other way round. Low is
- * left plain, not red: the index is relative (min-max across the table), so the
- * worst row is not a failure and a wall of red reads as one.
+ * COST is inverted (0 = cheapest/best), so colour the other way round:
+ * green = cheap, yellow/orange = mid, red = the pricier rows.
  */
 export const costStyle = (r: Row): string | undefined => {
 	const cost = 100 - bestIndex(r);
 	if (cost <= costCuts[0]) return SGR.green;
 	if (cost <= costCuts[1]) return SGR.yellow;
-	return undefined;
+	return SGR.red;
 };
 
 export const valueStyle = (row: Row): string | undefined => {
@@ -121,7 +120,7 @@ export const valueStyle = (row: Row): string | undefined => {
 	const best = Math.max(...scores);
 	if (best >= valCuts[1]) return SGR.green;
 	if (best >= valCuts[0]) return SGR.yellow;
-	return undefined;
+	return SGR.red;
 };
 
 export const enabledStyle = (value: number | null): string | undefined =>
